@@ -1,20 +1,21 @@
 #!/usr/bin/python2.7
-import sys
-sys.path.append("/home/malloc47/src/projects/matsci/matsciskel/gco");
-# sys.path.append(".");
-import cv
+import sys,os,cv
 import numpy as np
+sys.path.append(os.getcwd());
 import gco
-im = cv.LoadImageM("seq3/img/image0041.png")
-mat = cv.CreateMat( 3 , 3 , cv.CV_8U )
-cv.Set( mat , 1 )
-a = np.asarray( mat[:,:] )
-# a[0,1] = 2;
-# a[0,2] = 3;
-# a[1,0] = 4;
-# a[1,1] = 5;
-# a[1,2] = 6;
-# a[2,0] = 7;
-# a[2,1] = 8;
-# a[2,2] = 9;
-print gco.graph_cut(a,a,a,a,2)
+
+inimg = cv.LoadImageM("seq3/img/image0041.png")
+im = cv.CreateMat(inimg.rows, inimg.cols, cv.CV_8U)
+cv.CvtColor(inimg,im, cv.CV_RGB2GRAY)
+
+seed=np.genfromtxt("seq3/labels/image0040.label")
+
+seed[seed!=3]=0;
+seed[seed==3]=255;
+
+# im = np.asarray( im[:,:] )      # convert to numpy array
+
+print im.shape
+print seed.shape
+
+# print gco.graph_cut(a,a,a,a,2)
