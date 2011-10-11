@@ -57,7 +57,7 @@ int smoothFn(int s1, int s2, int l1, int l2, void *extraData) {
 	//return int( 1/(min(double(sites[s1]),double(sites[s2]))+1) * N );
 }
 
-void GridGraph_DArraySArray(int width,int height,int num_pixels,int num_labels);
+// void GridGraph_DArraySArray(int width,int height,int num_pixels,int num_labels);
 
 static PyObject *graph_cut(PyObject *self, PyObject *args) {
   PyArrayObject *data_p, *img_p, *seedimg_p, *adj_p, *output;
