@@ -1,8 +1,8 @@
 #include "gco.h"
 
 static PyMethodDef gcoMethods[] = { 
-      {"graph_cut", graph_cut, METH_VARARGS},
-      {NULL, NULL}};
+  {"graph_cut", graph_cut, METH_VARARGS, "Graph Cut Optimization wrapper"},
+  {NULL, NULL, 0, NULL}};
 
 PyMODINIT_FUNC initgco() { 
       (void) Py_InitModule("gco", gcoMethods);
@@ -32,7 +32,7 @@ void matset3(PyArrayObject *mat,int i, int j, int k, unsigned int val) {
 
 int valid_matrix(PyArrayObject *mat, int dim) {
   /* printf("%d==%d, %d==2\n",mat->descr->type_num,NPY_UINT8,mat->nd); */
-   if (mat->descr->type_num != NPY_UINT8 || mat->nd != dim) {
+  if ((mat->descr->type_num != NPY_UINT8 && mat->descr->type_num != NPY_INT16) || mat->nd != dim) {
      PyErr_SetString(PyExc_ValueError,
 		     "Wrong dimensions or type of input matrix");
      return 0; 
@@ -48,6 +48,7 @@ int smoothFn(int s1, int s2, int l1, int l2, void *extraData) {
 
 	if(l1 == l2) { return 0; }
 
+	// BAD: Don't do this
 	if(!matref2(adj,l1,l2)) { return INF; }
 	
 	//return int((1.0/double((abs(sites[s1]-sites[s2]) < LTHRESH ? LTHRESH : abs(sites[s1]-sites[s2]))+1)) * N);
@@ -57,7 +58,12 @@ int smoothFn(int s1, int s2, int l1, int l2, void *extraData) {
 	//return int( 1/(min(double(sites[s1]),double(sites[s2]))+1) * N );
 }
 
-// void GridGraph_DArraySArray(int width,int height,int num_pixels,int num_labels);
+void GridGraph_DArraySArray(int width,int height,int num_pixels,int num_labels);
+
+int smoothFn2(int p1, int p2, int l1, int l2) {
+	if ( (l1-l2)*(l1-l2) <= 4 ) return((l1-l2)*(l1-l2));
+	else return(4);
+}
 
 static PyObject *graph_cut(PyObject *self, PyObject *args) {
   PyArrayObject *data_p, *img_p, *seedimg_p, *adj_p, *output;
@@ -79,7 +85,7 @@ static PyObject *graph_cut(PyObject *self, PyObject *args) {
     return NULL; 
 
   // check that the objects are valid matrices
-  if(// !valid_matrix(data_p,3)    || 
+  if(!valid_matrix(data_p,3)    || 
      !valid_matrix(img_p,2)     || 
      !valid_matrix(seedimg_p,2) || 
      !valid_matrix(adj_p,2))
@@ -110,10 +116,9 @@ static PyObject *graph_cut(PyObject *self, PyObject *args) {
   // load up data term
   for(i=0;i<d[0]; i++)
     for(j=0;j<d[1]; j++)
-      for(k=0;k<d[1]; k++)
+      for(k=0;k<num_labels; k++)
   	data[ ( j+i*d[1]) * num_labels + k ] = 
   	  int(matref3(data_p,i,j,k));      
-
   printf("copying segmentation sites\n");
 
   // load up segmentation sites
@@ -143,6 +148,7 @@ static PyObject *graph_cut(PyObject *self, PyObject *args) {
 
   // set the smooth function pointer
   gc->setSmoothCost(&smoothFn,&toFn);
+  // gc->setSmoothCost(&smoothFn2);
 
   // TODO: pointless
   // initialize labeling to previous slice 
