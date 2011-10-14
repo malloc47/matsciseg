@@ -100,7 +100,7 @@ static PyObject *graph_cut(PyObject *self, PyObject *args) {
   int *sites = new int[d[0]*d[1]];
   int *result = new int[d[0]*d[1]];
 
-  unsigned int i,j,k;
+  int i=0,j=0,k=0;
 
   // load up data term
   for(i=0;i<d[0]; i++)
@@ -148,7 +148,13 @@ static PyObject *graph_cut(PyObject *self, PyObject *args) {
   if(gc->giveDataEnergy() > 0.1)
     printf("WARNING: NONZERO DATA COST %lld\n",gc->giveDataEnergy());
 
-  output = (PyArrayObject *) PyArray_FromDims(2,d,NPY_INT16);
+  npy_intp d_out[3];
+  d_out[0] = d[0];
+  d_out[1] = d[1];
+  d_out[2] = d[2];
+
+  // output = (PyArrayObject *) PyArray_FromDims(2,d,NPY_INT16);
+  output = (PyArrayObject *) PyArray_SimpleNew(2,d_out,NPY_INT16);
 
   // watch the ordering of y/i and x/j
   for(i=0;i<d[0]; i++)
