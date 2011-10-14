@@ -6,11 +6,17 @@ import gco
 
 def select_region(mat,reg):
     labels = mat.copy()
-    labels[labels!=reg]=0
+    labels[labels!=reg]=-1
     labels[labels==reg]=255
+    labels[labels==-1]=0
     return labels.astype('uint8')
 
 def data_term(seed,d):
+    # if d > 0:
+    #     data = cv2.morphologyEx(select_region(seed,0), 
+    #                             cv2.MORPH_DILATE, 
+    #                             cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(d,d)))
+    # else:
     data = select_region(seed,0)
     num_labels = int(seed.max())
     for l in range(1,num_labels) :
@@ -27,20 +33,41 @@ def display(im):
     cv2.waitKey(0)
 
 def main(*args):
-    inimg = cv.LoadImageM("seq3/img/image0041.png")
+    inimg = cv.LoadImageM("seq1/img/image0091.tif")
     im = cv.CreateMat(inimg.rows, inimg.cols, cv.CV_8U)
     cv.CvtColor(inimg,im, cv.CV_RGB2GRAY)
 
-    seed=np.genfromtxt("seq3/labels/image0040.label",dtype='int16')
+    seed=np.genfromtxt("seq1/labels/image0090.label",dtype='int16')
+    num_labels = seed.max()
 
     data = data_term(seed,10)
-    print "Python:"
-    print data[0,0,0]
-    print data.max()
-    print data.min()
 
-    # gco.graph_cut(data.astype('int16'),np.asarray(im[:,:]),seed,np.eye(7,dtype='int16'),7)
-    gco.test(data);
+    for i in range(0,num_labels) :
+        print str(i)+": "+str(data[:,:,i].max())+" "+str(data[:,:,i].min())
+        cv2.imwrite("test"+str(i)+".png",data[:,:,i])
+
+    adj=np.eye(num_labels,dtype='int16')
+    adj[0,:]=1
+    adj[:,0]=1
+
+    output = gco.graph_cut(data,np.asarray(im[:,:]),seed,adj,num_labels)
+
+    # in1 = data
+    # in2 = np.asarray(im[:,:])
+    # in3 = seed
+    # in4 = np.eye(num_labels,dtype='int16')
+    
+    # print in1.dtype
+    # print in2.dtype
+    # print in3.dtype
+    # print in4.dtype
+
+    # print in1.shape
+    # print in2.shape
+    # print in3.shape
+    # print in4.shape
+
+    # output = gco.graph_cut(in1,in2,in3,in4,7)
 
     return 0
  

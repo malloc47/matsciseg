@@ -2,46 +2,11 @@
 
 static PyMethodDef gcoMethods[] = { 
   {"graph_cut", graph_cut, METH_VARARGS, "Graph Cut Optimization wrapper"},
-  {"test", test, METH_VARARGS, "Test"},
   {NULL, NULL, 0, NULL}};
 
 PyMODINIT_FUNC initgco() { 
       (void) Py_InitModule("gco", gcoMethods);
       import_array();
-}
-
-unsigned int matref2(PyArrayObject *mat,int i, int j) {
-  return *(unsigned int*)PyArray_GETPTR2(mat,i,j);
-  // return *(unsigned int *)(mat->data + i*mat->strides[0] + j*mat->strides[1]);
-}
-
-void matset2(PyArrayObject *mat,int i, int j, unsigned int val) {
-  *(unsigned int *)(mat->data + 
-		    i*mat->strides[0] + 
-		    j*mat->strides[1]) = val;
-}
-
-int matref3(PyArrayObject *mat,int i, int j, int k) {
-  printf("%d\n",*(int*)PyArray_GETPTR3(mat,i,j,k));
-  return *(int*)PyArray_GETPTR3(mat,i,j,k);
-  // return *(unsigned int *)(mat->data + i*mat->strides[0] + j*mat->strides[1] + k*mat->strides[2]);
-}
-
-void matset3(PyArrayObject *mat,int i, int j, int k, unsigned int val) {
-  *(unsigned int *)(mat->data + 
-		    i*mat->strides[0] + 
-		    j*mat->strides[1] +
-		    k*mat->strides[2]) = val;
-}
-
-int valid_matrix(PyArrayObject *mat, int dim) {
-  /* printf("%d==%d, %d==2\n",mat->descr->type_num,NPY_UINT8,mat->nd); */
-  if ((mat->descr->type_num != NPY_UINT8 && mat->descr->type_num != NPY_INT16) || mat->nd != dim) {
-     PyErr_SetString(PyExc_ValueError,
-		     "Wrong dimensions or type of input matrix");
-     return 0; 
-   }
-   return 1;
 }
 
 int smoothFn(int s1, int s2, int l1, int l2, void *extraData) {
@@ -52,8 +17,8 @@ int smoothFn(int s1, int s2, int l1, int l2, void *extraData) {
 
 	if(l1 == l2) { return 0; }
 
-	// BAD: Don't do this
-	if(!matref2(adj,l1,l2)) { return INF; }
+	if(!(*((npy_int16*)PyArray_GETPTR2(adj,l1,l2)))) { return INF; };
+	
 	
 	//return int((1.0/double((abs(sites[s1]-sites[s2]) < LTHRESH ? LTHRESH : abs(sites[s1]-sites[s2]))+1)) * N);
 	//return int( 1/(double(sites[s1]+sites[s2])/2) * N );
@@ -64,75 +29,72 @@ int smoothFn(int s1, int s2, int l1, int l2, void *extraData) {
 
 void GridGraph_DArraySArray(int width,int height,int num_pixels,int num_labels);
 
-int smoothFn2(int p1, int p2, int l1, int l2) {
-	if ( (l1-l2)*(l1-l2) <= 4 ) return((l1-l2)*(l1-l2));
-	else return(4);
-}
-
-static PyObject *test(PyObject *self, PyObject *args) {
-  PyArrayObject *data_p;
-
-  if (!PyArg_ParseTuple(args, "O!", &PyArray_Type, &data_p))
-    return NULL;
-
-  int t = *((npy_uint8*)PyArray_GETPTR3(data_p,0,0,0));
-
-  printf("C:\n");
-  // printf("%u\n",matref3(data_p,0,0,0));
-  printf("%u\n",t);
-
-  printf("%d==%d not %d",data_p->descr->type_num,NPY_UINT8,NPY_INT16);
-
-  return Py_None;
-}
-
 static PyObject *graph_cut(PyObject *self, PyObject *args) {
   PyArrayObject *data_p, *img_p, *seedimg_p, *adj_p, *output;
   int num_labels;
-  int d[2];
+  int d[3];
+  // rediculous amount of typechecking, as it makes for fewer
+  // headaches later
   if (!PyArg_ParseTuple(args, "O!O!O!O!i", 
 			&PyArray_Type, &data_p,
 			&PyArray_Type, &img_p, 
 			&PyArray_Type, &seedimg_p, 
 			&PyArray_Type, &adj_p, 
-			&num_labels))
+			&num_labels)) {
+    PyErr_SetString(PyExc_ValueError, "Parameters not right");
     return NULL;
+  }
 
   // check that the objects were successfully assigned
   if (NULL == data_p    ||
       NULL == img_p     ||
       NULL == seedimg_p ||
-      NULL == adj_p )
+      NULL == adj_p ) {
+    PyErr_SetString(PyExc_ValueError, "No data in matrix");
     return NULL; 
+  }
 
-  // check that the objects are valid matrices
-  if(!valid_matrix(data_p,3)    || 
-     !valid_matrix(img_p,2)     || 
-     !valid_matrix(seedimg_p,2) || 
-     !valid_matrix(adj_p,2))
+  if(data_p->nd != 3    ||
+     img_p->nd != 2     ||
+     seedimg_p->nd != 2 ||
+     adj_p->nd != 2) {
+    printf("%d, %d, %d, %d\n",data_p->nd,img_p->nd,seedimg_p->nd,adj_p->nd);
+    PyErr_SetString(PyExc_ValueError, "Wrong input matrix depth");
     return NULL;
+  }
 
-  d[0] = seedimg_p->dimensions[0];
-  d[1] = seedimg_p->dimensions[1];
+  // double-check, for no particular reason
+  if(!PyArray_ISUNSIGNED(data_p)   ||
+     !PyArray_ISUNSIGNED(img_p)    ||
+     !PyArray_ISINTEGER(seedimg_p) ||
+     !PyArray_ISINTEGER(adj_p)) {
+    PyErr_SetString(PyExc_ValueError, "Wrong intput matrix type");
+    return NULL;
+  }
 
-  int t = *((int*)PyArray_GETPTR3(data_p,0,0,1));
+  if(data_p->descr->type_num != NPY_UINT8 ||
+     img_p->descr->type_num != NPY_UINT8 ||
+     seedimg_p->descr->type_num != NPY_INT16 ||
+     adj_p->descr->type_num != NPY_INT16) {
+    PyErr_SetString(PyExc_ValueError, "Wrong intput matrix type");
+    return NULL;
+  }
 
-  printf("C:\n");
-  // printf("%u\n",matref3(data_p,0,0,0));
-  printf("%d\n",t);
+  if(data_p->dimensions[0] != img_p->dimensions[0]     ||
+     data_p->dimensions[1] != img_p->dimensions[1]     ||
+     data_p->dimensions[0] != seedimg_p->dimensions[0] ||
+     data_p->dimensions[1] != seedimg_p->dimensions[1] ||
+     data_p->dimensions[2] != adj_p->dimensions[0]     ||
+     data_p->dimensions[2] != adj_p->dimensions[1]) {
+    PyErr_SetString(PyExc_ValueError, "Input sizes do not match");
+    return NULL;
+  }
 
-  printf("%d==%d not %d",data_p->descr->type_num,NPY_UINT8,NPY_INT16);
-
-  // For testing
-  // GridGraph_DArraySArray(10,5,50,7);
-  output = (PyArrayObject *) PyArray_FromDims(2,d,NPY_UINT8);
-  return PyArray_Return(output);
-
-  printf("initializing graph optimization engine\n");
-
+  d[0] = data_p->dimensions[0];
+  d[1] = data_p->dimensions[1];
+  d[2] = data_p->dimensions[2];
+  
   GCoptimizationGridGraph *gc = new GCoptimizationGridGraph(d[1],d[0],num_labels);
-
-  printf("initializing c arrays\n");
 
   int *data = new int[d[0]*d[1]*num_labels];
   int *sites = new int[d[0]*d[1]];
@@ -140,31 +102,23 @@ static PyObject *graph_cut(PyObject *self, PyObject *args) {
 
   unsigned int i,j,k;
 
-  printf("copying data term\n");
-  printf("%d X %d X %d\n",data_p->strides[0], data_p->strides[1], data_p->strides[2]);
-  printf("%d X %d X %d\n",data_p->dimensions[0], data_p->dimensions[1], data_p->dimensions[2]);
-
   // load up data term
   for(i=0;i<d[0]; i++)
     for(j=0;j<d[1]; j++)
       for(k=0;k<num_labels; k++)
   	data[ ( j+i*d[1]) * num_labels + k ] = 
-	  int(matref3(data_p,i,j,k)) == 255 ? 0 : INF; 
-  printf("copying segmentation sites\n");
+	  *((npy_uint8*)PyArray_GETPTR3(data_p,i,j,k)) == 255 ? 0 : INF;
 
   // load up segmentation sites
   for(i=0;i<d[0]; i++)
     for(j=0;j<d[1]; j++)
-      sites[j+(i*d[1])] = matref2(img_p,i,j);
-
-  printf("initializing labels\n");
+      sites[j+(i*d[1])] = int(*((npy_uint8*)PyArray_GETPTR2(img_p,i,j)));
 
   // initialize
   for(i=0;i<d[0]; i++)
     for(j=0;j<d[1]; j++)
-      gc->setLabel(j+(i*d[1]),matref2(seedimg_p,i,j));
-
-  printf("initializing data term\n");
+      gc->setLabel(j+(i*d[1]),
+		   int(*((npy_int16*)PyArray_GETPTR2(seedimg_p,i,j))));
 
   // set data term
   gc->setDataCost(data);
@@ -175,8 +129,6 @@ static PyObject *graph_cut(PyObject *self, PyObject *args) {
   toFn.num_labels = num_labels;
   toFn.sites = sites;
 
-  printf("initializing smoothness funciton pointer\n");
-
   // set the smooth function pointer
   gc->setSmoothCost(&smoothFn,&toFn);
   // gc->setSmoothCost(&smoothFn2);
@@ -186,28 +138,22 @@ static PyObject *graph_cut(PyObject *self, PyObject *args) {
   for(i=0;i<d[0]*d[1]; i++)
     result[i] = gc->whatLabel(i);
 
-  printf("doing graph cut\n");
-
   // do the graph cut
   gc->swap(1);
-
-  printf("retreiving results\n");
 
   // retrieve labeling
   for(i=0;i<d[0]*d[1]; i++)
     result[i] = gc->whatLabel(i);
 
-  if(gc->giveDataEnergy() > 0)
-    printf("WARNING: NONZERO DATA COST");
+  if(gc->giveDataEnergy() > 0.1)
+    printf("WARNING: NONZERO DATA COST %lld\n",gc->giveDataEnergy());
 
-  printf("creating output array\n");
-
-  output = (PyArrayObject *) PyArray_FromDims(2,d,NPY_UINT8);
+  output = (PyArrayObject *) PyArray_FromDims(2,d,NPY_INT16);
 
   // watch the ordering of y/i and x/j
   for(i=0;i<d[0]; i++)
     for(j=0;j<d[1]; j++)
-      matset2(output,i,j,result[k++]);
+      *((npy_int16*)PyArray_GETPTR2(output,i,j)) = result[k++];
 
   delete [] data;
   delete [] sites;

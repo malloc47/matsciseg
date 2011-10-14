@@ -13,13 +13,7 @@ struct ForSmoothFn {
 };
 
 PyMODINIT_FUNC initgcot();
-unsigned int matref(PyArrayObject *mat,int i, int j);
-void matset(PyArrayObject *mat,int i, int j, unsigned int val);
-unsigned int matref(PyArrayObject *mat,int i, int j, int k);
-void matset(PyArrayObject *mat,int i, int j, int k, unsigned int val);
-int valid_matrix(PyArrayObject *mat);
+int smoothFn(int s1, int s2, int l1, int l2, void *extraData);
 extern "C" {
 static PyObject *graph_cut(PyObject *self, PyObject *args);
-static PyObject *test(PyObject *self, PyObject *args);
 }
-int smoothFn(int s1, int s2, int l1, int l2, void *extraData);
