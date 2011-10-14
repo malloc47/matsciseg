@@ -34,8 +34,13 @@ def main(*args):
     seed=np.genfromtxt("seq3/labels/image0040.label",dtype='int16')
 
     data = data_term(seed,10)
+    print "Python:"
+    print data[0,0,0]
+    print data.max()
+    print data.min()
 
-    gco.graph_cut(data,np.asarray(im[:,:]),seed,np.eye(7,dtype='int16'),7)
+    # gco.graph_cut(data.astype('int16'),np.asarray(im[:,:]),seed,np.eye(7,dtype='int16'),7)
+    gco.test(data);
 
     return 0
  

@@ -20,5 +20,6 @@ void matset(PyArrayObject *mat,int i, int j, int k, unsigned int val);
 int valid_matrix(PyArrayObject *mat);
 extern "C" {
 static PyObject *graph_cut(PyObject *self, PyObject *args);
+static PyObject *test(PyObject *self, PyObject *args);
 }
 int smoothFn(int s1, int s2, int l1, int l2, void *extraData);
