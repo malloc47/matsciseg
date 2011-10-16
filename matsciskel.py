@@ -1,4 +1,4 @@
-#!/usr/bin/python2.6
+#!/usr/bin/python2.7
 import sys,os,cv,cv2
 import numpy as np
 sys.path.insert(0,os.getcwd() + '/gco');
@@ -11,21 +11,27 @@ def select_region(mat,reg):
     labels[labels==-1]=0
     return labels.astype('uint8')
 
-def data_term(seed,d):
-    if d > 0:
-        data = cv2.morphologyEx(select_region(seed,0), 
-                                cv2.MORPH_DILATE, 
-                                cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(d,d)))
-    else:
-        data = select_region(seed,0)
+def layer(seed):
+    # if d > 0:
+    #     data = cv2.morphologyEx(select_region(seed,0), 
+    #                             cv2.MORPH_DILATE, 
+    #                             cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(d,d)))
+    # else:
+    data = select_region(seed,0)
     num_labels = int(seed.max()+1)
     for l in range(1,num_labels) :
         label = select_region(seed,l)
-        if d > 0 :
-            se = cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(d,d))
-            label = cv2.morphologyEx(label, cv2.MORPH_DILATE, se)
+        # if d > 0 :
+        #     se = cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(d,d))
+        #     label = cv2.morphologyEx(label, cv2.MORPH_DILATE, se)
         data = np.dstack((data,label))
     return data
+
+# Modifies, in place, the layered image with op
+def layer_op(layered, op):
+    for i in range(layered.shape[2]) :
+        layered[:,:,i] = op(layered[:,:,i])
+
 
 def display(im):
     cv2.namedWindow("tmp",cv2.CV_WINDOW_AUTOSIZE)
@@ -33,6 +39,7 @@ def display(im):
     cv2.waitKey(0)
 
 def main(*args):
+    d = 20
     # inimg = cv.LoadImageM("seq1/img/image0091.tif")
     inimg = cv.LoadImageM("seq3/img/image0041.png")
     im = cv.CreateMat(inimg.rows, inimg.cols, cv.CV_8U)
@@ -43,7 +50,13 @@ def main(*args):
 
     num_labels = seed.max()+1
 
-    data = data_term(seed,10)
+    data = layer(seed)
+
+    layer_op(data,
+             lambda img :
+                 cv2.morphologyEx(img, 
+                                  cv2.MORPH_DILATE, 
+                                  cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(d,d))))
 
     # for i in range(0,num_labels) :
     #     print str(i)+": "+str(data[:,:,i].max())+" "+str(data[:,:,i].min())
