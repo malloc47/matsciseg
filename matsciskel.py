@@ -1,4 +1,4 @@
-#!/usr/bin/python2.7
+#!/usr/bin/python2.6
 import sys,os,cv,cv2
 import numpy as np
 sys.path.insert(0,os.getcwd() + '/gco');
@@ -20,8 +20,9 @@ def layer(unlayered):
     return data
 
 # Modifies, in place, the layered image with op
+# Can ignore the first layer (0) if desired
 def layer_op(layered, op, dofirst=True):
-    for i in  range(layered.shape[2]) if dofirst else range(1,layered.shape[2]) :
+    for i in  range(layered.shape[2]) if dofirst else range(1,layered.shape[2]):
         layered[:,:,i] = op(layered[:,:,i])
 
 
@@ -36,19 +37,6 @@ def dilate(img,d):
                             cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(d,d)))
 
 def adjacent(labels):
-    # adj = np.eye(labels.max()+1,dtype='int16')
-    # # More pythonic, but ultimately slower
-    # for i in range(0,adj.shape[0]):
-    #     for j in range(0,i):
-    #         if i==j : continue
-    #         ireg = select_region(labels,i,1)
-    #         jreg = select_region(labels,j,1)
-    #         if (np.logical_and(ireg,np.roll(jreg,1,axis=0)).any() or \
-    #                 np.logical_and(ireg,np.roll(jreg,1,axis=1)).any() or \
-    #                 np.logical_and(ireg,np.roll(jreg,-1,axis=0)).any() or \
-    #                 np.logical_and(ireg,np.roll(jreg,-1,axis=1)).any() ) :
-    #            set_adj(j,i)
-
     adj = np.zeros((labels.max()+1,labels.max()+1),dtype='int16')
     def set_adj(i,j):
         adj[i,j] = 1
@@ -105,35 +93,14 @@ def main(*args):
 
     layer_op(data, lambda img : dilate(img,d) , dofirst=False)
 
-    for i in range(0,num_labels) :
-        print str(i)+": "+str(data[:,:,i].max())+" "+str(data[:,:,i].min())
-        cv2.imwrite("test"+str(i)+".png",data[:,:,i])
+    # for i in range(0,num_labels) :
+    #     print str(i)+": "+str(data[:,:,i].max())+" "+str(data[:,:,i].min())
+    #     cv2.imwrite("test"+str(i)+".png",data[:,:,i])
 
-    adj=np.eye(num_labels,dtype='int16')
-    adj[0,:]=1
-    adj[:,0]=1
-
-    # adj=np.genfromtxt("../matscicut/adj90.label",dtype='int16')
+    adj = adjacent(seed)
 
     output = gco.graph_cut(data,np.asarray(im[:,:]),seed,adj,num_labels)
-
-    # in1 = data
-    # in2 = np.asarray(im[:,:])
-    # in3 = seed
-    # in4 = np.eye(num_labels,dtype='int16')
-    
-    # print in1.dtype
-    # print in2.dtype
-    # print in3.dtype
-    # print in4.dtype
-
-    # print in1.shape
-    # print in2.shape
-    # print in3.shape
-    # print in4.shape
-
-    # output = gco.graph_cut(in1,in2,in3,in4,7)
-
+    np.savetxt("image0041.label",output,fmt='%1d')
 
     return 0
  
