@@ -76,16 +76,26 @@ def adjacent(labels):
 
     return adj
 
+def smoothFn(s1,s2,l1,l2,adj):
+    if l1==l2 :
+        return 0
+    if not adj :
+        return 10000000
+        # print "P: "+str(s1)+" "+str(s2)+" "+str(l1)+" "+str(l2)
+    # print "P: " + str(int(1.0/(max(float(s1),float(s2))+1.0) * 255.0))
+    return int(1.0/(max(float(s1),float(s2))+1.0) * 255.0)
+    # return int(1.0/float((abs(float(s1)-float(s2)) if abs(float(s1)-float(s2)) > 9 else 9)+1)*255.0)
 
 def main(*args):
     d = 20
     # inimg = cv.LoadImageM("seq1/img/image0091.tif")
-    inimg = cv.LoadImageM("seq3/img/image0041.png")
+    inimg = cv.LoadImageM("seq1/img/stfl91alss1.tif")
+    # inimg = cv.LoadImageM("seq3/img/image0041.png")
     im = cv.CreateMat(inimg.rows, inimg.cols, cv.CV_8U)
     cv.CvtColor(inimg,im, cv.CV_RGB2GRAY)
 
-    seed=np.genfromtxt("seq3/labels/image0040.label",dtype='int16')
-    # seed=np.genfromtxt("seq1/labels/image0090.label",dtype='int16')
+    # seed=np.genfromtxt("seq3/labels/image0040.label",dtype='int16')
+    seed=np.genfromtxt("seq1/labels/image0090.label",dtype='int16')
 
     num_labels = seed.max()+1
 
@@ -99,8 +109,10 @@ def main(*args):
 
     adj = adjacent(seed)
 
-    output = gco.graph_cut(data,np.asarray(im[:,:]),seed,adj,num_labels)
-    np.savetxt("image0041.label",output,fmt='%1d')
+    output = gco.graph_cut(data,np.asarray(im[:,:]),
+                           seed,adj,num_labels)
+    # np.savetxt("image0041.label",output,fmt='%1d')
+    np.savetxt("image0091.label",output,fmt='%1d')
 
     return 0
  

@@ -9,9 +9,41 @@ PyMODINIT_FUNC initgco() {
       import_array();
 }
 
+int smoothFnCb(int s1, int s2, int l1, int l2, void *extraData) {
+	ForSmoothFn *extra = (ForSmoothFn *) extraData;
+	// int num_labels = extra->num_labels;
+	PyArrayObject *adj = extra->adj;
+	PyObject *func = extra->func;
+	int *sites = extra->sites;
+
+	if(l1 == l2) { return 0; }
+
+	if(!(*((npy_int16*)PyArray_GETPTR2(adj,l1,l2)))) { return INF; };
+	
+	PyObject *args;
+	PyObject *result;
+
+	args = Py_BuildValue("(iiiii)",sites[s1],sites[s2],l1,l2,
+			     (*((npy_int16*)PyArray_GETPTR2(adj,l1,l2))));
+	result = PyEval_CallObject(func, args);
+	Py_DECREF(args);
+
+	if (result == NULL)
+	  return NULL;
+
+	if(!PyInt_Check(result))
+	  return NULL;
+
+	int result_value = (int)PyLong_AsLong(result);
+
+	Py_DECREF(result);
+
+	return result_value;
+}
+
 int smoothFn(int s1, int s2, int l1, int l2, void *extraData) {
 	ForSmoothFn *extra = (ForSmoothFn *) extraData;
-	int num_labels = extra->num_labels;
+	// int num_labels = extra->num_labels;
 	PyArrayObject *adj = extra->adj;
 	int *sites = extra->sites;
 
@@ -19,8 +51,8 @@ int smoothFn(int s1, int s2, int l1, int l2, void *extraData) {
 
 	if(!(*((npy_int16*)PyArray_GETPTR2(adj,l1,l2)))) { return INF; };
 	
-	
 	//return int((1.0/double((abs(sites[s1]-sites[s2]) < LTHRESH ? LTHRESH : abs(sites[s1]-sites[s2]))+1)) * N);
+
 	//return int( 1/(double(sites[s1]+sites[s2])/2) * N );
 	//return int( N - int(double(sites[s1]+sites[s2])/2));
 	return int( 1/(std::max(double(sites[s1]),double(sites[s2]))+1) * N );
@@ -31,16 +63,19 @@ void GridGraph_DArraySArray(int width,int height,int num_pixels,int num_labels);
 
 static PyObject *graph_cut(PyObject *self, PyObject *args) {
   PyArrayObject *data_p, *img_p, *seedimg_p, *adj_p, *output;
+  PyObject *func;
   int num_labels;
   int d[3];
+  bool has_func = false;
   // rediculous amount of typechecking, as it makes for fewer
   // headaches later
-  if (!PyArg_ParseTuple(args, "O!O!O!O!i", 
+  if (!PyArg_ParseTuple(args, "O!O!O!O!i|O:set_callback", 
 			&PyArray_Type, &data_p,
 			&PyArray_Type, &img_p, 
 			&PyArray_Type, &seedimg_p, 
 			&PyArray_Type, &adj_p, 
-			&num_labels)) {
+			&num_labels,
+			&func)) {
     PyErr_SetString(PyExc_ValueError, "Parameters not right");
     return NULL;
   }
@@ -53,6 +88,18 @@ static PyObject *graph_cut(PyObject *self, PyObject *args) {
     PyErr_SetString(PyExc_ValueError, "No data in matrix");
     return NULL; 
   }
+
+  has_func = (NULL != func);
+
+  if(has_func) {
+    if (!PyCallable_Check(func)) {
+      PyErr_SetString(PyExc_TypeError, "No function passed");
+      return NULL;
+    }
+    // increment function reference
+    Py_XINCREF(func);
+  }
+
 
   if(data_p->nd != 3    ||
      img_p->nd != 2     ||
@@ -126,12 +173,16 @@ static PyObject *graph_cut(PyObject *self, PyObject *args) {
   // Setup data to pass to the smooth function
   ForSmoothFn toFn;
   toFn.adj = adj_p;
+  if(has_func)
+    toFn.func = func;
   toFn.num_labels = num_labels;
   toFn.sites = sites;
 
   // set the smooth function pointer
-  gc->setSmoothCost(&smoothFn,&toFn);
-  // gc->setSmoothCost(&smoothFn2);
+  if(has_func)
+    gc->setSmoothCost(&smoothFnCb,&toFn);
+  else
+    gc->setSmoothCost(&smoothFn,&toFn);
 
   // TODO: pointless
   // initialize labeling to previous slice 
@@ -156,14 +207,22 @@ static PyObject *graph_cut(PyObject *self, PyObject *args) {
   // output = (PyArrayObject *) PyArray_FromDims(2,d,NPY_INT16);
   output = (PyArrayObject *) PyArray_SimpleNew(2,d_out,NPY_INT16);
 
+  k=0;
   // watch the ordering of y/i and x/j
   for(i=0;i<d[0]; i++)
-    for(j=0;j<d[1]; j++)
-      *((npy_int16*)PyArray_GETPTR2(output,i,j)) = result[k++];
+    for(j=0;j<d[1]; j++) {
+      int r = result[k++];
+      if(r > 255 || r < 0)
+	printf("Noes!!!!!");
+      *((npy_int16*)PyArray_GETPTR2(output,i,j)) = r;
+    }
 
   delete [] data;
   delete [] sites;
   delete [] result;
+
+  if(has_func)
+    Py_XDECREF(func);
 
   return PyArray_Return(output);
 }

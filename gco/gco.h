@@ -9,6 +9,7 @@
 struct ForSmoothFn {
 	int num_labels;
 	PyArrayObject *adj;
+	PyObject *func;
 	int *sites;
 };
 
