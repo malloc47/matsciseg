@@ -3,6 +3,7 @@ import sys,os,cv,cv2
 import numpy as np
 sys.path.insert(0,os.getcwd() + '/gco');
 import gco
+from scipy import ndimage
 
 def select_region(mat,reg,maxval=255):
     labels = mat.copy()
@@ -76,26 +77,85 @@ def adjacent(labels):
 
     return adj
 
+def label_to_bmp(labels):
+    grad = np.gradient(labels)
+    seg = np.maximum(abs(grad[0]),abs(grad[1]))
+    return seg
+
+def draw_on_img(img,bmp):
+    out = img.copy()
+    out[np.nonzero(bmp>0)] = (0,0,255)
+    return out
+
+def label_max(labels):
+    sizes = []
+    # check only indices above 0
+    for l in range(1,labels.max()+1) :
+        sizes.append((labels == l).sum())
+    # increment index, as we ignored zero before
+    return sizes.index(max(sizes))+1
+
+def label_sizes(labels):
+    sizes = []
+    for l in range(0,labels.max()+1) :
+        sizes.append((labels == l).sum())
+    return sizes
+
+def label_empty(labels):
+    return [i for i,x in enumerate(label_sizes(labels)) if x == 0]
+
+def region_transform(labels):
+    unshifted = range(0,labels.max()+1)
+    shifted = range(0,labels.max()+1)
+    counter = 0
+    empty = label_empty(labels)
+    for l in unshifted :
+        if l in empty :
+            shifted[l] = -1
+        else :
+            shifted[l] = counter
+            counter = counter + 1
+    return zip(unshifted,shifted)
+
+def region_shift(regions,transform) :
+    labels = np.zeros(regions.shape,dtype=regions.dtype)
+    for t in transform : 
+        if (t[0] < 0 or t[1] < 0) : continue
+        labels[regions == t[0]] = t[1]
+    return labels
+
+def region_clean(regions):
+    # out = np.ones(regions.shape,dtype=regions.dtype) * -1
+    out = np.zeros(regions.shape,dtype=regions.dtype)
+    for l in range(regions.max()+1) :
+        layer = (regions==l)
+        if layer.any() :
+            labeled = ndimage.label(layer>0)[0]
+            # copy only the largest connected component
+            out[np.nonzero(labeled == label_max(labeled))] = l
+    return out
+
 def smoothFn(s1,s2,l1,l2,adj):
     if l1==l2 :
         return 0
     if not adj :
         return 10000000
-        # print "P: "+str(s1)+" "+str(s2)+" "+str(l1)+" "+str(l2)
-    # print "P: " + str(int(1.0/(max(float(s1),float(s2))+1.0) * 255.0))
     return int(1.0/(max(float(s1),float(s2))+1.0) * 255.0)
     # return int(1.0/float((abs(float(s1)-float(s2)) if abs(float(s1)-float(s2)) > 9 else 9)+1)*255.0)
 
 def main(*args):
-    d = 20
+    d = 10
     # inimg = cv.LoadImageM("seq1/img/image0091.tif")
-    inimg = cv.LoadImageM("seq1/img/stfl91alss1.tif")
+    im = cv.LoadImageM("seq1/img/stfl91alss1.tif")
     # inimg = cv.LoadImageM("seq3/img/image0041.png")
-    im = cv.CreateMat(inimg.rows, inimg.cols, cv.CV_8U)
-    cv.CvtColor(inimg,im, cv.CV_RGB2GRAY)
+    im_gray = cv.CreateMat(im.rows, im.cols, cv.CV_8U)
+    cv.CvtColor(im,im_gray, cv.CV_RGB2GRAY)
+    im_gray = np.asarray(im_gray[:,:])
+    im = np.asarray(im[:,:])
 
     # seed=np.genfromtxt("seq3/labels/image0040.label",dtype='int16')
-    seed=np.genfromtxt("seq1/labels/image0090.label",dtype='int16')
+    seed = np.genfromtxt("seq1/labels/image0090.label",dtype='int16')
+    seed = region_clean( region_shift(seed,region_transform(seed)) )
 
     num_labels = seed.max()+1
 
@@ -109,10 +169,15 @@ def main(*args):
 
     adj = adjacent(seed)
 
-    output = gco.graph_cut(data,np.asarray(im[:,:]),
-                           seed,adj,num_labels)
+    output = gco.graph_cut(data,im_gray,seed,adj,num_labels)
+
+    output = region_clean( region_shift(output,region_transform(output)) )
+
     # np.savetxt("image0041.label",output,fmt='%1d')
     np.savetxt("image0091.label",output,fmt='%1d')
+
+    bmp_labels = label_to_bmp(output)
+    cv2.imwrite('testoutput.png',draw_on_img(im,bmp_labels))
 
     return 0
  

@@ -63,7 +63,7 @@ void GridGraph_DArraySArray(int width,int height,int num_pixels,int num_labels);
 
 static PyObject *graph_cut(PyObject *self, PyObject *args) {
   PyArrayObject *data_p, *img_p, *seedimg_p, *adj_p, *output;
-  PyObject *func;
+  PyObject *func = NULL;
   int num_labels;
   int d[3];
   bool has_func = false;
@@ -210,12 +210,8 @@ static PyObject *graph_cut(PyObject *self, PyObject *args) {
   k=0;
   // watch the ordering of y/i and x/j
   for(i=0;i<d[0]; i++)
-    for(j=0;j<d[1]; j++) {
-      int r = result[k++];
-      if(r > 255 || r < 0)
-	printf("Noes!!!!!");
-      *((npy_int16*)PyArray_GETPTR2(output,i,j)) = r;
-    }
+    for(j=0;j<d[1]; j++)
+      *((npy_int16*)PyArray_GETPTR2(output,i,j)) = result[k++];
 
   delete [] data;
   delete [] sites;
