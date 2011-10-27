@@ -1,9 +1,10 @@
-#!/usr/bin/python2.6
+#!/usr/bin/python2.7
 import sys,os,cv,cv2
 import numpy as np
 sys.path.insert(0,os.getcwd() + '/gco');
 import gco
-from scipy import ndimage
+# from scipy import ndimage
+import scipy
 
 def select_region(mat,reg,maxval=255):
     labels = mat.copy()
@@ -36,6 +37,27 @@ def dilate(img,d):
     return cv2.morphologyEx(img, 
                             cv2.MORPH_DILATE, 
                             cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(d,d)))
+def skel(img):
+    hits = [ np.array([[0, 0, 0], [0, 1, 0], [1, 1, 1]]), 
+             np.array([[0, 0, 0], [1, 1, 0], [0, 1, 0]]) ]
+    misses = [ np.array([[1, 1, 1], [0, 0, 0], [0, 0, 0]]),
+               np.array([[0, 1, 1], [0, 0, 1], [0, 0, 0]]) ]
+
+    for i in range(6):
+        hits.append(np.transpose(hits[-2])[::-1, ...])
+        misses.append(np.transpose(misses[-2])[::-1, ...])
+
+    filters = zip(hits,misses)
+
+    while True:
+        prev = img
+        for hit, miss in filters:
+            filtered = ndimage.binary_hit_or_miss(img, hit, miss)
+            img = np.logical_and(img, np.logical_not(filtered))
+        if np.abs(prev-img).max() == 0:
+            break
+    
+    return img
 
 def adjacent(labels):
     adj = np.zeros((labels.max()+1,labels.max()+1),dtype='int16')
@@ -145,8 +167,8 @@ def smoothFn(s1,s2,l1,l2,adj):
 
 def main(*args):
     d = 10
-    # inimg = cv.LoadImageM("seq1/img/image0091.tif")
-    im = cv.LoadImageM("seq1/img/stfl91alss1.tif")
+    im = cv.LoadImageM("seq1/img/image0091.tif")
+    # im = cv.LoadImageM("seq1/img/stfl91alss1.tif")
     # inimg = cv.LoadImageM("seq3/img/image0041.png")
     im_gray = cv.CreateMat(im.rows, im.cols, cv.CV_8U)
     cv.CvtColor(im,im_gray, cv.CV_RGB2GRAY)
