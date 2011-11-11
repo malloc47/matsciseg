@@ -1,4 +1,4 @@
-#!/usr/bin/python2.7
+#!/usr/bin/env python
 import sys,os,cv,cv2
 import numpy as np
 sys.path.insert(0,os.getcwd() + '/gco');
