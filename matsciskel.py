@@ -92,10 +92,10 @@ def skel(img):
     return img
 
 def adjacent(labels):
-    adj = np.zeros((labels.max()+1,labels.max()+1),dtype='int16')
+    adj = np.zeros((labels.max()+1,labels.max()+1),dtype=bool)
     def set_adj(i,j):
-        adj[i,j] = 1
-        adj[j,i] = 1
+        adj[i,j] = True
+        adj[j,i] = True
 
     # list of quad tuples that define the i,j ranges and the i,j transforms
     ranges = [ (range(0,labels.shape[0]-1),
@@ -230,7 +230,7 @@ def main(*args):
 
     adj = adjacent(seed)
 
-    output = gco.graph_cut(convert_to_uint8(stack_matrix(data)),
+    output = gco.graph_cut(stack_matrix(data),#convert_to_uint8(stack_matrix(data)),
                            im_gray,
                            seed,
                            adj,

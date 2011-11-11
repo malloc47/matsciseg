@@ -18,13 +18,13 @@ int smoothFnCb(int s1, int s2, int l1, int l2, void *extraData) {
 
 	if(l1 == l2) { return 0; }
 
-	if(!(*((npy_int16*)PyArray_GETPTR2(adj,l1,l2)))) { return INF; };
+	if(!(*((npy_bool*)PyArray_GETPTR2(adj,l1,l2)))) { return INF; };
 	
 	PyObject *args;
 	PyObject *result;
 
 	args = Py_BuildValue("(iiiii)",sites[s1],sites[s2],l1,l2,
-			     (*((npy_int16*)PyArray_GETPTR2(adj,l1,l2))));
+			     (*((npy_bool*)PyArray_GETPTR2(adj,l1,l2))));
 	result = PyEval_CallObject(func, args);
 	Py_DECREF(args);
 
@@ -100,7 +100,6 @@ static PyObject *graph_cut(PyObject *self, PyObject *args) {
     Py_XINCREF(func);
   }
 
-
   if(data_p->nd != 3    ||
      img_p->nd != 2     ||
      seedimg_p->nd != 2 ||
@@ -111,18 +110,16 @@ static PyObject *graph_cut(PyObject *self, PyObject *args) {
   }
 
   // double-check, for no particular reason
-  if(!PyArray_ISUNSIGNED(data_p)   ||
-     !PyArray_ISUNSIGNED(img_p)    ||
-     !PyArray_ISINTEGER(seedimg_p) ||
-     !PyArray_ISINTEGER(adj_p)) {
-    PyErr_SetString(PyExc_ValueError, "Wrong intput matrix type");
+  if(!PyArray_ISUNSIGNED(img_p)    ||
+     !PyArray_ISINTEGER(seedimg_p)) {
+    PyErr_SetString(PyExc_ValueError, "Wrong intput matrix property");
     return NULL;
   }
 
-  if(data_p->descr->type_num != NPY_UINT8 ||
+  if(data_p->descr->type_num != NPY_BOOL ||
      img_p->descr->type_num != NPY_UINT8 ||
      seedimg_p->descr->type_num != NPY_INT16 ||
-     adj_p->descr->type_num != NPY_INT16) {
+     adj_p->descr->type_num != NPY_BOOL) {
     PyErr_SetString(PyExc_ValueError, "Wrong intput matrix type");
     return NULL;
   }
@@ -154,7 +151,7 @@ static PyObject *graph_cut(PyObject *self, PyObject *args) {
     for(j=0;j<d[1]; j++)
       for(k=0;k<num_labels; k++)
   	data[ ( j+i*d[1]) * num_labels + k ] = 
-	  *((npy_uint8*)PyArray_GETPTR3(data_p,i,j,k)) == 255 ? 0 : INF;
+	  *((npy_bool*)PyArray_GETPTR3(data_p,i,j,k)) == 1 ? 0 : INF;
 
   // load up segmentation sites
   for(i=0;i<d[0]; i++)
