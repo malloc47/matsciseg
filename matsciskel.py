@@ -3,8 +3,20 @@ import sys,os,cv,cv2
 import numpy as np
 sys.path.insert(0,os.getcwd() + '/gco');
 import gco
-# from scipy import ndimage
 import scipy
+from scipy import ndimage
+
+def unstack_matrix(layered):
+    unstacked = []
+    for i in  range(layered.shape[2]) :
+        unstacked.append(layered[:,:,i])
+    return unstacked
+
+def stack_matrix(l):
+    stack = l[0]
+    for i in  range(1,len(l)) :
+        stack = np.dstack((stack,l[i]))
+    return stack
 
 def select_region(mat,reg,maxval=255):
     labels = mat.copy()
@@ -13,12 +25,19 @@ def select_region(mat,reg,maxval=255):
     labels[labels==-1]=0
     return labels.astype('uint8')
 
-def layer(unlayered):
+def layer_matrix(unlayered):
     data = select_region(unlayered,0)
     num_labels = int(unlayered.max()+1)
     for l in range(1,num_labels) :
         label = select_region(unlayered,l)
         data = np.dstack((data,label))
+    return data
+
+def layer_list(unlayered):
+    data = [select_region(unlayered,0)]
+    num_labels = int(unlayered.max()+1)
+    for l in range(1,num_labels) :
+        data.append(select_region(unlayered,l))
     return data
 
 # Modifies, in place, the layered image with op
@@ -37,6 +56,7 @@ def dilate(img,d):
     return cv2.morphologyEx(img, 
                             cv2.MORPH_DILATE, 
                             cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(d,d)))
+
 def skel(img):
     hits = [ np.array([[0, 0, 0], [0, 1, 0], [1, 1, 1]]), 
              np.array([[0, 0, 0], [1, 1, 0], [0, 1, 0]]) ]
@@ -157,6 +177,15 @@ def region_clean(regions):
             out[np.nonzero(labeled == label_max(labeled))] = l
     return out
 
+def compute_gaussian(layers,img):
+    def layer_gaussian(l):
+        vals = img[np.nonzero(l)]
+        return (scipy.mean(vals),scipy.std(vals))
+    return map(layer_gaussian,layers)
+
+def fit_gaussian(v,g,d):
+    return ((v > g[0]-d*g[1]) and (v < g[0]+d*g[1]))
+
 def smoothFn(s1,s2,l1,l2,adj):
     if l1==l2 :
         return 0
@@ -181,17 +210,15 @@ def main(*args):
 
     num_labels = seed.max()+1
 
-    data = layer(seed)
+    data = layer_list(seed)
+    data2 = layer_matrix(seed)
 
-    layer_op(data, lambda img : dilate(img,d) , dofirst=False)
-
-    # for i in range(0,num_labels) :
-    #     print str(i)+": "+str(data[:,:,i].max())+" "+str(data[:,:,i].min())
-    #     cv2.imwrite("test"+str(i)+".png",data[:,:,i])
+    # layer_op(data, lambda img : dilate(img,d) , dofirst=False)
+    data = [data[0]] + map(lambda img : dilate(img,d), data[1:])
 
     adj = adjacent(seed)
 
-    output = gco.graph_cut(data,im_gray,seed,adj,num_labels)
+    output = gco.graph_cut(stack_matrix(data),im_gray,seed,adj,num_labels)
 
     output = region_clean( region_shift(output,region_transform(output)) )
 
