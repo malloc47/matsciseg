@@ -18,7 +18,17 @@ def stack_matrix(l):
         stack = np.dstack((stack,l[i]))
     return stack
 
-def select_region(mat,reg,maxval=255):
+def select_region(mat,reg):
+    labels = np.zeros(mat.shape,dtype=bool)
+    labels[mat==reg] = True
+    return labels
+
+def convert_to_uint8(mat,maxval=255):
+    newmat = np.zeros(mat.shape,dtype='uint8')
+    newmat[np.nonzero(mat)] = 255;
+    return newmat
+
+def select_region_uint8(mat,reg,maxval=255):
     labels = mat.copy()
     labels[labels!=reg]=-1
     labels[labels==reg]=maxval
@@ -53,9 +63,11 @@ def display(im):
     cv2.waitKey(0)
 
 def dilate(img,d):
-    return cv2.morphologyEx(img, 
+    # Ugly hack to convert to and from a uint8 to circumvent opencv limitations
+    return cv2.morphologyEx(convert_to_uint8(img),
                             cv2.MORPH_DILATE, 
-                            cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(d,d)))
+                            cv2.getStructuringElement(cv2.MORPH_ELLIPSE,
+                                                      (d,d))).astype(bool)
 
 def skel(img):
     hits = [ np.array([[0, 0, 0], [0, 1, 0], [1, 1, 1]]), 
@@ -218,7 +230,11 @@ def main(*args):
 
     adj = adjacent(seed)
 
-    output = gco.graph_cut(stack_matrix(data),im_gray,seed,adj,num_labels)
+    output = gco.graph_cut(convert_to_uint8(stack_matrix(data)),
+                           im_gray,
+                           seed,
+                           adj,
+                           num_labels)
 
     output = region_clean( region_shift(output,region_transform(output)) )
 
