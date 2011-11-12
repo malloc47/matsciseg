@@ -1,11 +1,11 @@
-#include "gco.h"
+#include "gcoc.h"
 
-static PyMethodDef gcoMethods[] = { 
+static PyMethodDef gcocMethods[] = { 
   {"graph_cut", graph_cut, METH_VARARGS, "Graph Cut Optimization wrapper"},
   {NULL, NULL, 0, NULL}};
 
-PyMODINIT_FUNC initgco() { 
-      (void) Py_InitModule("gco", gcoMethods);
+PyMODINIT_FUNC initgcoc() { 
+      (void) Py_InitModule("gcoc", gcocMethods);
       import_array();
 }
 
