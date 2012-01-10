@@ -23,32 +23,44 @@ def draw_on_img(img,bmp):
     out[np.nonzero(bmp>0)] = (0,0,255)
     return out
 
-def main(*args):
-    d = 10
-    im = cv.LoadImageM("seq1/img/image0091.tif")
-    # im = cv.LoadImageM("seq1/img/stfl91alss1.tif")
-    # inimg = cv.LoadImageM("seq3/img/image0041.png")
+def read_img(img_name):
+    im = cv.LoadImageM(img_name)
     im_gray = cv.CreateMat(im.rows, im.cols, cv.CV_8U)
     cv.CvtColor(im,im_gray, cv.CV_RGB2GRAY)
+    # convert to numpy arrays
     im_gray = np.asarray(im_gray[:,:])
     im = np.asarray(im[:,:])
+    return (im,im_gray)
 
-    # seed=np.genfromtxt("seq3/labels/image0040.label",dtype='int16')
-    seed = np.genfromtxt("seq1/labels/image0090.label",dtype='int16')
+def main(*args):
+    d = 10
+    if(len(args) < 6):
+        return 1
+
+    arg = {'im1'       : args[1],
+           'label'    : args[2],
+           'im2'       : args[3],
+           'label_out' : args[4],
+           'im_out'    : args[5]}
+
+    im,im_gray = read_img(arg['im2'])
+    seed=np.genfromtxt(arg['label'],dtype='int16')
 
     v = gco.Volume(im_gray,seed)
+    print("Initialized")
     v.dilate(d)
+    v.dilate_first(d/2)
+    print("Dilated")
+    v.skel()
     output = v.graph_cut()
 
     # np.savetxt("image0041.label",output,fmt='%1d')
-    np.savetxt("image0091.label",output,fmt='%1d')
+    np.savetxt(arg['label_out'],output,fmt='%1d')
 
     bmp_labels = label_to_bmp(output)
-    cv2.imwrite('testoutput.png',draw_on_img(im,bmp_labels))
+    cv2.imwrite(arg['im_out'],draw_on_img(im,bmp_labels))
 
     return 0
  
 if __name__ == '__main__':
     sys.exit(main(*sys.argv))
-
-# im = np.asarray( im[:,:] )      # convert to numpy array

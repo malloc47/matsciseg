@@ -57,6 +57,7 @@ def layer_list(unlayered):
     return data
 
 def skel(img):
+    print("Skel")
     hits = [ np.array([[0, 0, 0], [0, 1, 0], [1, 1, 1]]), 
              np.array([[0, 0, 0], [1, 1, 0], [0, 1, 0]]) ]
     misses = [ np.array([[1, 1, 1], [0, 0, 0], [0, 0, 0]]),
@@ -195,14 +196,34 @@ class Volume(object):
         # These values are created
         # when the class is instantiated.
         self.img = img.copy()
-        self.labels = region_clean( region_shift(labels,region_transform(labels)) )
+        self.labels = region_clean(region_shift(labels,region_transform(labels)))
         self.num_labels = self.labels.max()+1
         self.data = layer_list(self.labels)
         self.adj = adjacent(self.labels)
 
+    def skel(self):
+        print(len(self.data))
+        sk = [self.data[0]] + \
+            map(lambda img : skel(img), self.data[1:])
+        for i in range(1,len(sk)):
+            s = sk[i];
+            for k in range(1,len(self.data)):
+                if k == i:
+                    self.data[k] = np.logical_or(self.data[k],s)
+                else:
+                    self.data[k] = np.logical_and(self.data[k],
+                                                  np.logical_not(s))
+            
+
     def dilate(self,d):
         self.data = [self.data[0]] + \
             map(lambda img : dilate(img,d), self.data[1:])
+
+    def dilate_all(self,d):
+        self.data = map(lambda img : dilate(img,d), self.data)
+
+    def dilate_first(self,d):
+        self.data[0] = dilate(self.data[0],d)
 
     def graph_cut(self):
         output = gcoc.graph_cut(stack_matrix(self.data),
