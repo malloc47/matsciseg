@@ -58,7 +58,7 @@ def layer_list(unlayered):
 
 def skel(img):
     print("Skel")
-    hits = [ np.array([[0, 0, 0], [0, 1, 0], [1, 1, 1]]), 
+    hits = [ np.array([[0, 0, 0], [0, 1, 0], [1, 1, 1]]),
              np.array([[0, 0, 0], [1, 1, 0], [0, 1, 0]]) ]
     misses = [ np.array([[1, 1, 1], [0, 0, 0], [0, 0, 0]]),
                np.array([[0, 1, 1], [0, 0, 1], [0, 0, 0]]) ]
@@ -76,7 +76,6 @@ def skel(img):
             img = np.logical_and(img, np.logical_not(filtered))
         if np.abs(prev-img).max() == 0:
             break
-    
     return img
 
 def adjacent(labels):
@@ -151,7 +150,7 @@ def region_transform(labels):
 
 def region_shift(regions,transform) :
     labels = np.zeros(regions.shape,dtype=regions.dtype)
-    for t in transform : 
+    for t in transform :
         if (t[0] < 0 or t[1] < 0) : continue
         labels[regions == t[0]] = t[1]
     return labels
@@ -159,9 +158,18 @@ def region_shift(regions,transform) :
 def dilate(img,d):
     # Ugly hack to convert to and from a uint8 to circumvent opencv limitations
     return cv2.morphologyEx(convert_to_uint8(img),
-                            cv2.MORPH_DILATE, 
+                            cv2.MORPH_DILATE,
                             cv2.getStructuringElement(cv2.MORPH_ELLIPSE,
                                                       (d,d))).astype(bool)
+
+def erode(img,d):
+    return cv2.morphologyEx(convert_to_uint8(img),
+                            cv2.MORPH_ERODE,
+                            cv2.getStructuringElement(cv2.MORPH_ELLIPSE,
+                                                      (d,d))).astype(bool)
+
+def relative_complement(p):
+    return np.logical_and(p[0],np.logical_not(p[1]))
 
 def region_clean(regions):
     # out = np.ones(regions.shape,dtype=regions.dtype) * -1
@@ -180,8 +188,9 @@ def compute_gaussian(layers,img):
         return (scipy.mean(vals),scipy.std(vals))
     return map(layer_gaussian,layers)
 
-def fit_gaussian(v,g,d):
-    return ((v > g[0]-d*g[1]) and (v < g[0]+d*g[1]))
+def fit_gaussian(v,g0,g1,d):
+    if(np.isnan(v) or np.isnan(g0) or np.isnan(g1)): return False
+    return ((v > g0-d*g1) and (v < g0+d*g1))
 
 def smoothFn(s1,s2,l1,l2,adj):
     if l1==l2 :
@@ -189,20 +198,21 @@ def smoothFn(s1,s2,l1,l2,adj):
     if not adj :
         return 10000000
     return int(1.0/(max(float(s1),float(s2))+1.0) * 255.0)
-    # return int(1.0/float((abs(float(s1)-float(s2)) if abs(float(s1)-float(s2)) > 9 else 9)+1)*255.0)
+    # return int(1.0/float((abs(float(s1)-float(s2)) if \
+        abs(float(s1)-float(s2)) > 9 else 9)+1)*255.0)
 
 class Volume(object):
     def __init__(self, img, labels):
         # These values are created
         # when the class is instantiated.
         self.img = img.copy()
-        self.labels = region_clean(region_shift(labels,region_transform(labels)))
+        self.labels = region_clean(region_shift(labels,
+                                                region_transform(labels)))
         self.num_labels = self.labels.max()+1
         self.data = layer_list(self.labels)
         self.adj = adjacent(self.labels)
 
     def skel(self):
-        print(len(self.data))
         sk = [self.data[0]] + \
             map(lambda img : skel(img), self.data[1:])
         for i in range(1,len(sk)):
@@ -211,9 +221,21 @@ class Volume(object):
                 if k == i:
                     self.data[k] = np.logical_or(self.data[k],s)
                 else:
-                    self.data[k] = np.logical_and(self.data[k],
-                                                  np.logical_not(s))
-            
+                    self.data[k] = relative_complement(self.data[k],s)
+
+    def fit_gaussian(self,d,d2):
+        # (erosion,dilation)
+        area = map(relative_complement,
+                   zip(map(lambda img : dilate(img,d), self.data[1:]),
+                       map(lambda img : erode(img,d), self.data[1:])))
+
+        fit = np.vectorize(fit_gaussian)
+
+        combine = map(lambda (a,g):
+                      np.logical_and(a,fit(self.img,g[0],g[1],d2)),
+                      zip(area,compute_gaussian(self.data[1:],self.img)))
+        self.data = [self.data[0]] + \
+            map(lambda (d,n): np.logical_or(d,n),zip(self.data[1:],combine))
 
     def dilate(self,d):
         self.data = [self.data[0]] + \
