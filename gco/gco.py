@@ -199,7 +199,7 @@ def smoothFn(s1,s2,l1,l2,adj):
         return 10000000
     return int(1.0/(max(float(s1),float(s2))+1.0) * 255.0)
     # return int(1.0/float((abs(float(s1)-float(s2)) if \
-        abs(float(s1)-float(s2)) > 9 else 9)+1)*255.0)
+        # abs(float(s1)-float(s2)) > 9 else 9)+1)*255.0)
 
 class Volume(object):
     def __init__(self, img, labels):
@@ -231,11 +231,32 @@ class Volume(object):
 
         fit = np.vectorize(fit_gaussian)
 
+        print(compute_gaussian(self.data[1:],self.img))
+
+        # output = area[0]
+        # output[output==False] = 0
+        # output[output==True] = 255
+        # scipy.misc.imsave("seq5/output/area.png",output)
+
         combine = map(lambda (a,g):
-                      np.logical_and(a,fit(self.img,g[0],g[1],d2)),
+                      erode(dilate(np.logical_and(a,fit(self.img,g[0],g[1],d2)),5),1),
                       zip(area,compute_gaussian(self.data[1:],self.img)))
+
+        # output = combine[0]
+        # output[output==False] = 0
+        # output[output==True] = 255
+        # scipy.misc.imsave("seq5/output/combine.png",output)
+
+        # output = np.logical_or(self.data[1],combine[0])
+        # output[output==False] = 0
+        # output[output==True] = 255
+        # scipy.misc.imsave("seq5/output/combine2.png",output)
+
         self.data = [self.data[0]] + \
             map(lambda (d,n): np.logical_or(d,n),zip(self.data[1:],combine))
+        
+        # redo matrix
+        self.data[0] = dilate(np.logical_not(reduce(np.logical_or,self.data[1:])),20) #,5)
 
     def dilate(self,d):
         self.data = [self.data[0]] + \
@@ -248,6 +269,13 @@ class Volume(object):
         self.data[0] = dilate(self.data[0],d)
 
     def graph_cut(self):
+        for i in range(0,len(self.data)):
+            output = self.data[i]
+            output[output==False] = 0
+            output[output==True] = 255
+            # scipy.misc.imsave("seq5/output/data"+str(i)+".png",output)
+            scipy.misc.imsave("data"+str(i)+".png",output)
+
         output = gcoc.graph_cut(stack_matrix(self.data),
                            self.img,
                            self.labels,

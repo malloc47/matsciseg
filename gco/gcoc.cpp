@@ -1,5 +1,8 @@
 #include "gcoc.h"
 
+#define N 255
+#define LTHRESH 10
+
 static PyMethodDef gcocMethods[] = { 
   {"graph_cut", graph_cut, METH_VARARGS, "Graph Cut Optimization wrapper"},
   {NULL, NULL, 0, NULL}};
@@ -50,12 +53,16 @@ int smoothFn(int s1, int s2, int l1, int l2, void *extraData) {
 	if(l1 == l2) { return 0; }
 
 	if(!(*((npy_int16*)PyArray_GETPTR2(adj,l1,l2)))) { return INF; };
-	
-	//return int((1.0/double((abs(sites[s1]-sites[s2]) < LTHRESH ? LTHRESH : abs(sites[s1]-sites[s2]))+1)) * N);
+
+	// use this for intensity image
+	return int((1.0/double((abs(sites[s1]-sites[s2]) < LTHRESH ? LTHRESH : abs(sites[s1]-sites[s2]))+1)) * N);	
 
 	//return int( 1/(double(sites[s1]+sites[s2])/2) * N );
 	//return int( N - int(double(sites[s1]+sites[s2])/2));
-	return int( 1/(std::max(double(sites[s1]),double(sites[s2]))+1) * N );
+
+	// use this for edge image
+	// return int( 1/(std::max(double(sites[s1]),double(sites[s2]))+1) * N );
+
 	//return int( 1/(min(double(sites[s1]),double(sites[s2]))+1) * N );
 }
 

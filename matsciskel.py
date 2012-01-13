@@ -63,7 +63,8 @@ def skel_process(arg,im,im_gray,seed):
 def gauss_process(arg,im,im_gray,seed):
     v = gco.Volume(im_gray,seed)
     print("Initialized")
-    v.fit_gaussian(10,5)
+    v.dilate_first(arg['d']/10)
+    v.fit_gaussian(arg['d'],arg['d2'])
     return v.graph_cut()
 
 def main(*args):
@@ -84,6 +85,8 @@ def main(*args):
 
     if(len(args) > 7):
         arg['d'] = int(args[7]);
+    if(len(args) > 8):
+        arg['d2'] = int(args[8]);
 
     procs[proc](arg)
 
