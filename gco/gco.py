@@ -210,18 +210,20 @@ class Volume(object):
                                                 region_transform(labels)))
         self.num_labels = self.labels.max()+1
         self.data = layer_list(self.labels)
+        self.orig = np.array(self.data)
         self.adj = adjacent(self.labels)
 
     def skel(self):
-        sk = [self.data[0]] + \
-            map(lambda img : skel(img), self.data[1:])
-        for i in range(1,len(sk)):
+        # sk = [self.data[0]] + \
+        #     map(lambda img : erode(skel(img),10), self.data[1:])
+        sk = map(lambda img : erode(skel(img),1), self.orig)
+        for i in range(0,len(sk)):
             s = sk[i];
-            for k in range(1,len(self.data)):
+            for k in range(0,len(self.data)):
                 if k == i:
                     self.data[k] = np.logical_or(self.data[k],s)
                 else:
-                    self.data[k] = relative_complement(self.data[k],s)
+                    self.data[k] = relative_complement((self.data[k],s))
 
     def fit_gaussian(self,d,d2):
         # (erosion,dilation)

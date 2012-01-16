@@ -54,7 +54,7 @@ def skel_process(arg,im,im_gray,seed):
     v = gco.Volume(im_gray,seed)
     print("Initialized")
     v.dilate(arg['d'])
-    v.dilate_first(arg['d']/2)
+    v.dilate_first(arg['d'])
     print("Dilated")
     v.skel()
     return v.graph_cut()
