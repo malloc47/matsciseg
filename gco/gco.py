@@ -270,7 +270,7 @@ class Volume(object):
     def dilate_first(self,d):
         self.data[0] = dilate(self.data[0],d)
 
-    def graph_cut(self):
+    def graph_cut(self,mode=0):
         for i in range(0,len(self.data)):
             output = self.data[i]
             output[output==False] = 0
@@ -279,8 +279,9 @@ class Volume(object):
             scipy.misc.imsave("data"+str(i)+".png",output)
 
         output = gcoc.graph_cut(stack_matrix(self.data),
-                           self.img,
-                           self.labels,
-                           self.adj,
-                           self.num_labels)
+                                self.img,
+                                self.labels,
+                                self.adj,
+                                self.num_labels,
+                                mode)
         return region_clean( region_shift(output,region_transform(output)) )

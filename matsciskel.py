@@ -37,8 +37,9 @@ def imgio(fn):
         seed=np.genfromtxt(arg['label'],dtype='int16')
         output = fn(arg,im,im_gray,seed)
         np.savetxt(arg['label_out'],output,fmt='%1d')
-        bmp_labels = label_to_bmp(output)
-        cv2.imwrite(arg['im_out'],draw_on_img(im,bmp_labels))
+        # bmp_labels = label_to_bmp(output)
+        # cv2.imwrite(arg['im_out'],draw_on_img(im,bmp_labels))
+        cv2.imwrite(arg['im_out'],draw_on_img(im,label_to_bmp(output)))
     return imghandle
 
 @imgio
