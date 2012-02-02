@@ -38,17 +38,21 @@ def color_jet(img,labels,alpha=0.5):
 
 class Window():
     def lclick(self,event):
-        if(event.GetPosition()[1] < self.img.shape[0] and 
-           event.GetPosition()[0] < self.img.shape[1]):
-            # self.img[event.GetPosition()[1],event.GetPosition()[0],:] = (255,0,0)
-            self.add_label(event.GetPosition())
+        p = (event.GetPosition()[1],event.GetPosition()[0])
+        if(p[0] < self.img.shape[0] and p[1] < self.img.shape[1]):
+            self.add_label(p)
             self.redraw_img()
             # print(event.GetPosition())
+            print(self.remove_list)
+            print(self.create_list)
 
     def rclick(self,event):
-        if(event.GetPosition()[1] < self.img.shape[0] and 
-           event.GetPosition()[0] < self.img.shape[1]):
-            print(event.GetPosition())
+        p = (event.GetPosition()[1],event.GetPosition()[0])
+        if(p[0] < self.img.shape[0] and p[1] < self.img.shape[1]):
+            self.remove_label(p)
+            self.redraw_img()
+            print(self.remove_list)
+            print(self.create_list)
 
     def redraw_img(self):
         self.bmp.SetBitmap(numpy_to_bitmap(self.img))
@@ -57,18 +61,27 @@ class Window():
     def recreate_img(self):
         self.img = self.background.copy()
         for p in self.create_list:
-            self.img[p[1],p[0],:] = (255,0,0)
+            self.img[p[0],p[1],:] = (255,0,0)
+
+    def remove_label(self,p):
+        q = nearest_neighbor(p,self.create_list,5)
+        if q is not None:
+            print("Removing existing label")
+            self.create_list = filter(lambda x: x!=q , self.create_list)
+        else:
+            print("Adding new label to remove list")
+            self.remove_list.append(self.labels[p[0:2]])
+        self.recreate_img()
 
     def add_label(self,p):
         q = nearest_neighbor(p,self.create_list,5)
         if q is not None:
-            print(q)
             self.create_list = filter(lambda x: x!=q , self.create_list)
+            # self.remove_label(q)
         else:
             self.create_list.append(tuple(p)+(1,))
             # self.img[p[1],p[0],:] = (255,0,0)
         self.recreate_img()
-        print(self.create_list)
 
     def __init__(self,img,seed):
         # setup local attributes
@@ -76,7 +89,7 @@ class Window():
         self.remove_list = []
         # create main window, frame, and panel
         app = wx.PySimpleApp()
-        frame = wx.Frame(None, -1, 'Segmentation Refinement')
+        frame = wx.Frame(None, -1, 'Segmentation Refinement',size=(img.shape[1],img.shape[0]))
         panel = wx.Panel(frame)
         # setup bitmap control and callbacks
         self.labels = seed.copy()
@@ -91,6 +104,7 @@ class Window():
         # start the show
         frame.Show()
         app.MainLoop()
+        print("Done.")
 
 def test():
     im = cv.LoadImageM("seq1/img/image0091.tif")
