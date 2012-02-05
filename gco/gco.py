@@ -101,7 +101,7 @@ def adjacent(labels):
                 range(1,labels.shape[1]),
                 lambda i:i, lambda j:j-1),
 
-               (range(0,labels.shape[0]-2), # don't know why there were included
+               (range(0,labels.shape[0]-2), # don't know why these were included
                 range(0,labels.shape[1]),
                 lambda i:i+2, lambda j:j),
 
@@ -117,6 +117,9 @@ def adjacent(labels):
                 if r != l : set_adj(r,l)
 
     return adj
+
+def create_mask(labels,label_list):
+    return reduce(np.logical_or,map(lambda l:labels==l,label_list))
 
 def label_max(labels):
     sizes = []
@@ -235,24 +238,9 @@ class Volume(object):
 
         print(compute_gaussian(self.data[1:],self.img))
 
-        # output = area[0]
-        # output[output==False] = 0
-        # output[output==True] = 255
-        # scipy.misc.imsave("seq5/output/area.png",output)
-
         combine = map(lambda (a,g):
                       erode(dilate(np.logical_and(a,fit(self.img,g[0],g[1],d2)),5),1),
                       zip(area,compute_gaussian(self.data[1:],self.img)))
-
-        # output = combine[0]
-        # output[output==False] = 0
-        # output[output==True] = 255
-        # scipy.misc.imsave("seq5/output/combine.png",output)
-
-        # output = np.logical_or(self.data[1],combine[0])
-        # output[output==False] = 0
-        # output[output==True] = 255
-        # scipy.misc.imsave("seq5/output/combine2.png",output)
 
         self.data = [self.data[0]] + \
             map(lambda (d,n): np.logical_or(d,n),zip(self.data[1:],combine))
@@ -270,13 +258,41 @@ class Volume(object):
     def dilate_first(self,d):
         self.data[0] = dilate(self.data[0],d)
 
+    def get_adj(self,label_list):
+        output = []+label_list
+        for l in label_list:
+            output += [i for i,x in enumerate(self.adj[l,:]) if x]
+        return set(output)
+
+    def crop(self,label_list):
+        label_list = self.get_adj(label_list)
+        mask = create_mask(self.seed,label_list)
+        mask_win = argwhere(mask)
+        (y0, x0), (y1, x1) = mask_win.min(0), mask_win.max(0) + 1 
+        # crop out everything with the given window
+        mask_cropped = mask[y0:y1, x0:x1]
+        cropped_seed = self.seed[y0:y1, x0:x1]
+        new_img = self.img[y0:y1, x0:x1]
+        # transform seed img
+        new_seed = zeros(cropped_seed.shape).astype('int16')
+        label_transform = []
+        new_label = 1
+        new_seed[np.logical_not(mask_cropped)] = 0
+        for l in label_list:
+            label_transform.append((l,new_label))
+            new_seed[cropped_seed==l] = new_label
+            new_label += 1
+        # todo: output the label_transform somewhere and do the reverse operation
+        return Volume(new_img,new_seed)
+
     def graph_cut(self,mode=0):
-        for i in range(0,len(self.data)):
-            output = self.data[i]
-            output[output==False] = 0
-            output[output==True] = 255
-            # scipy.misc.imsave("seq5/output/data"+str(i)+".png",output)
-            scipy.misc.imsave("data"+str(i)+".png",output)
+        # just for testing (spit out data term as images)
+        # for i in range(0,len(self.data)):
+        #     output = self.data[i]
+        #     output[output==False] = 0
+        #     output[output==True] = 255
+        #     # scipy.misc.imsave("seq5/output/data"+str(i)+".png",output)
+        #     scipy.misc.imsave("data"+str(i)+".png",output)
 
         output = gcoc.graph_cut(stack_matrix(self.data),
                                 self.img,
