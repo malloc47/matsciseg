@@ -121,6 +121,11 @@ def adjacent(labels):
 def create_mask(labels,label_list):
     return reduce(np.logical_or,map(lambda l:labels==l,label_list))
 
+def fit_region(im):
+    mask_win = np.argwhere(im)
+    (y0, x0), (y1, x1) = mask_win.min(0), mask_win.max(0) + 1 
+    return (x0,y0,x1,y1)
+
 def label_max(labels):
     sizes = []
     # check only indices above 0
@@ -205,16 +210,19 @@ def smoothFn(s1,s2,l1,l2,adj):
         # abs(float(s1)-float(s2)) > 9 else 9)+1)*255.0)
 
 class Volume(object):
-    def __init__(self, img, labels):
+    def __init__(self, img, labels, shifted={}, win=(0,0)):
         # These values are created
         # when the class is instantiated.
         self.img = img.copy()
         self.labels = region_clean(region_shift(labels,
                                                 region_transform(labels)))
+        self.orig_labels = self.labels.copy()
         self.num_labels = self.labels.max()+1
         self.data = layer_list(self.labels)
         self.orig = np.array(self.data)
         self.adj = adjacent(self.labels)
+        self.shifted=shifted
+        self.win=win
 
     def skel(self):
         # sk = [self.data[0]] + \
@@ -265,25 +273,40 @@ class Volume(object):
         return set(output)
 
     def crop(self,label_list):
+        """fork off subwindow volume"""
         label_list = self.get_adj(label_list)
-        mask = create_mask(self.seed,label_list)
-        mask_win = argwhere(mask)
-        (y0, x0), (y1, x1) = mask_win.min(0), mask_win.max(0) + 1 
+        mask = create_mask(self.labels,label_list)
+        (x0,y0,x1,y1) = fit_region(mask)
         # crop out everything with the given window
         mask_cropped = mask[y0:y1, x0:x1]
-        cropped_seed = self.seed[y0:y1, x0:x1]
+        cropped_seed = self.labels[y0:y1, x0:x1]
         new_img = self.img[y0:y1, x0:x1]
         # transform seed img
-        new_seed = zeros(cropped_seed.shape).astype('int16')
-        label_transform = []
+        new_seed = np.zeros(cropped_seed.shape).astype('int16')
+        label_transform = {}
         new_label = 1
         new_seed[np.logical_not(mask_cropped)] = 0
         for l in label_list:
-            label_transform.append((l,new_label))
+            label_transform[new_label]=l
+            # label_transform.append((l,new_label))
             new_seed[cropped_seed==l] = new_label
             new_label += 1
-        # todo: output the label_transform somewhere and do the reverse operation
-        return Volume(new_img,new_seed)
+        return Volume(new_img,new_seed,label_transform,(y0,x0))
+
+    def merge(self,v):
+        """merge another subwindow volume"""
+        u = self.labels[v.win[0]:v.win[0]+v.labels.shape[0],
+                        v.win[1]:v.win[1]+v.labels.shape[1]] # view into array
+        new_label = self.labels.max()+1
+        for l in [x for x in list(np.unique(v.labels)) if x>0]:
+            if l in v.shifted:
+                # print("Shifting "+str(l)+" to "+str(v.shifted[l]))
+                u[v.labels==l]=v.shifted[l]
+            else:
+                # print("Shifting "+str(l)+" to "+str(new_label))
+                u[v.labels==l]=new_label
+                new_label+=1
+        
 
     def graph_cut(self,mode=0):
         # just for testing (spit out data term as images)
@@ -300,4 +323,7 @@ class Volume(object):
                                 self.adj,
                                 self.num_labels,
                                 mode)
-        return region_clean( region_shift(output,region_transform(output)) )
+        # todo: update volume self.labels with output
+        self.labels = region_clean(region_shift(output,
+                                                region_transform(output)))
+        return self.labels
