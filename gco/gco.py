@@ -7,12 +7,16 @@ import scipy
 from scipy import ndimage
 
 def unstack_matrix(layered):
+    """splits 3D matrix to a list of 2D matrices"""
     unstacked = []
     for i in  range(layered.shape[2]) :
         unstacked.append(layered[:,:,i])
     return unstacked
 
 def stack_matrix(l):
+    """ 
+    converts list of matrices to a single high-dimension matrix
+    """
     stack = l[0]
     for i in  range(1,len(l)) :
         stack = np.dstack((stack,l[i]))
@@ -24,24 +28,27 @@ def convert_to_uint8(mat,maxval=255):
     return newmat
 
 def select_region(mat,reg):
+    """returns binary matrix of a specific region in a label"""
     labels = np.zeros(mat.shape,dtype=bool)
     labels[mat==reg] = True
     return labels
 
 def select_region_uint8(mat,reg,maxval=255):
+    """selects region, but returns a uint8, which can be saved"""
     labels = mat.copy()
     labels[labels!=reg]=-1
     labels[labels==reg]=maxval
     labels[labels==-1]=0
     return labels.astype('uint8')
 
-# Modifies, in place, the layered image with op
-# Can ignore the first layer (0) if desired
 def layer_op(layered, op, dofirst=True):
-    for i in  range(layered.shape[2]) if dofirst else range(1,layered.shape[2]):
+    """Modifies, in place, the layered image with op; can ignore the
+    first layer (0) if desired"""
+    for i in range(layered.shape[2]) if dofirst else range(1,layered.shape[2]):
         layered[:,:,i] = op(layered[:,:,i])
 
 def layer_matrix(unlayered):
+    """convert a matrix of integer labels to a 3D binary matrix """
     data = select_region(unlayered,0)
     num_labels = int(unlayered.max()+1)
     for l in range(1,num_labels) :
@@ -50,6 +57,7 @@ def layer_matrix(unlayered):
     return data
 
 def layer_list(unlayered):
+    """convert a matrix of integer labels to a list of 2D matrices"""
     data = [select_region(unlayered,0)]
     num_labels = int(unlayered.max()+1)
     for l in range(1,num_labels) :
@@ -57,6 +65,7 @@ def layer_list(unlayered):
     return data
 
 def skel(img):
+    """skeletonize image"""
     print("Skel")
     hits = [ np.array([[0, 0, 0], [0, 1, 0], [1, 1, 1]]),
              np.array([[0, 0, 0], [1, 1, 0], [0, 1, 0]]) ]
@@ -79,6 +88,7 @@ def skel(img):
     return img
 
 def adjacent(labels):
+    """determine which labels are adjacent"""
     adj = np.zeros((labels.max()+1,labels.max()+1),dtype=bool)
     def set_adj(i,j):
         adj[i,j] = True
@@ -119,14 +129,17 @@ def adjacent(labels):
     return adj
 
 def create_mask(labels,label_list):
+    """get binary mask from a list of labels (in an integer matrix)"""
     return reduce(np.logical_or,map(lambda l:labels==l,label_list))
 
 def fit_region(im):
+    """return coordinates of box that fits around a binary region"""
     mask_win = np.argwhere(im)
     (y0, x0), (y1, x1) = mask_win.min(0), mask_win.max(0) + 1 
     return (x0,y0,x1,y1)
 
 def label_max(labels):
+    """return index of largest label"""
     sizes = []
     # check only indices above 0
     for l in range(1,labels.max()+1) :
@@ -135,15 +148,15 @@ def label_max(labels):
     return sizes.index(max(sizes))+1
 
 def label_sizes(labels):
-    sizes = []
-    for l in range(0,labels.max()+1) :
-        sizes.append((labels == l).sum())
-    return sizes
+    """return sizes of all labels in an integer matrix"""
+    return map(lambda l:(labels==l).sum(),range(0,labels.max()+1))
 
 def label_empty(labels):
+    """return labels that are empty (size==0)"""
     return [i for i,x in enumerate(label_sizes(labels)) if x == 0]
 
 def region_transform(labels):
+    """find regions that are empty and compact them down"""
     unshifted = range(0,labels.max()+1)
     shifted = range(0,labels.max()+1)
     counter = 0
@@ -151,12 +164,13 @@ def region_transform(labels):
     for l in unshifted :
         if l in empty :
             shifted[l] = -1
-        else :
+        else:
             shifted[l] = counter
             counter = counter + 1
     return zip(unshifted,shifted)
 
 def region_shift(regions,transform) :
+    """change labels based on order pairs"""
     labels = np.zeros(regions.shape,dtype=regions.dtype)
     for t in transform :
         if (t[0] < 0 or t[1] < 0) : continue
@@ -180,7 +194,6 @@ def relative_complement(p):
     return np.logical_and(p[0],np.logical_not(p[1]))
 
 def region_clean(regions):
-    # out = np.ones(regions.shape,dtype=regions.dtype) * -1
     out = np.zeros(regions.shape,dtype=regions.dtype)
     for l in range(regions.max()+1) :
         layer = (regions==l)
@@ -188,19 +201,23 @@ def region_clean(regions):
             labeled = ndimage.label(layer>0)[0]
             # copy only the largest connected component
             out[np.nonzero(labeled == label_max(labeled))] = l
+    # todo: what's happening with the zeros?
     return out
 
 def compute_gaussian(layers,img):
+    """obtain mean and std dev for all layers"""
     def layer_gaussian(l):
         vals = img[np.nonzero(l)]
         return (scipy.mean(vals),scipy.std(vals))
     return map(layer_gaussian,layers)
 
 def fit_gaussian(v,g0,g1,d):
+    """determine if v falls within d*g1(std dev) of mean g0"""
     if(np.isnan(v) or np.isnan(g0) or np.isnan(g1)): return False
     return ((v > g0-d*g1) and (v < g0+d*g1))
 
 def smoothFn(s1,s2,l1,l2,adj):
+    """smoothness function that could be passed to the minimzation"""
     if l1==l2 :
         return 0
     if not adj :
@@ -211,6 +228,7 @@ def smoothFn(s1,s2,l1,l2,adj):
 
 class Volume(object):
     def __init__(self, img, labels, shifted={}, win=(0,0)):
+        """initialize fields and compute defaults"""
         # These values are created
         # when the class is instantiated.
         self.img = img.copy()
@@ -225,6 +243,7 @@ class Volume(object):
         self.win=win
 
     def skel(self):
+        """run skeletonization and integrate to data term"""
         # sk = [self.data[0]] + \
         #     map(lambda img : erode(skel(img),10), self.data[1:])
         sk = map(lambda img : erode(skel(img),1), self.orig)
@@ -232,11 +251,17 @@ class Volume(object):
             s = sk[i];
             for k in range(0,len(self.data)):
                 if k == i:
+                    # add skeltonization to its own data term
                     self.data[k] = np.logical_or(self.data[k],s)
                 else:
+                    # remove skeletonization from all other terms
                     self.data[k] = relative_complement((self.data[k],s))
 
     def fit_gaussian(self,d,d2):
+        """
+        compute and fit gaussian on all pixels within a band radius
+        d/2 around a label, where the fit is within d2 std deviations
+        """
         # (erosion,dilation)
         area = map(relative_complement,
                    zip(map(lambda img : dilate(img,d), self.data[1:]),
@@ -257,20 +282,28 @@ class Volume(object):
         self.data[0] = dilate(np.logical_not(reduce(np.logical_or,self.data[1:])),20) #,5)
 
     def dilate(self,d):
+        """dilate all but first (background) region"""
         self.data = [self.data[0]] + \
             map(lambda img : dilate(img,d), self.data[1:])
 
     def dilate_all(self,d):
+        """dilate all regions"""
         self.data = map(lambda img : dilate(img,d), self.data)
 
     def dilate_first(self,d):
+        """dilate first (background) region only"""
         self.data[0] = dilate(self.data[0],d)
 
     def get_adj(self,label_list):
-        output = []+label_list
+        """return all labels that are adjacent to label_list labels"""
+        output = []+label_list  # include original labels as well
         for l in label_list:
             output += [i for i,x in enumerate(self.adj[l,:]) if x]
         return set(output)
+
+    def set_adj_all(self):
+        """remove all topology constraints (everything adjacent)"""
+        self.adj[:,:] = True
 
     def crop(self,label_list):
         """fork off subwindow volume"""
@@ -294,7 +327,7 @@ class Volume(object):
         return Volume(new_img,new_seed,label_transform,(y0,x0))
 
     def merge(self,v):
-        """merge another subwindow volume"""
+        """merge another subwindow volume into this volume"""
         u = self.labels[v.win[0]:v.win[0]+v.labels.shape[0],
                         v.win[1]:v.win[1]+v.labels.shape[1]] # view into array
         new_label = self.labels.max()+1
@@ -306,9 +339,9 @@ class Volume(object):
                 # print("Shifting "+str(l)+" to "+str(new_label))
                 u[v.labels==l]=new_label
                 new_label+=1
-        
 
     def graph_cut(self,mode=0):
+        """run graph cut on this volume (mode specifies V(p,q) term"""
         # just for testing (spit out data term as images)
         # for i in range(0,len(self.data)):
         #     output = self.data[i]
