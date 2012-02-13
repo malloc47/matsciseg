@@ -49,7 +49,7 @@ def global_process(arg,im,im_gray,seed):
     v.dilate_all(arg['d'])
     print("Dilated")
     v.graph_cut()
-    v.edit_labels(10)
+    v.edit_labels(100)
     # import code; code.interact(local=locals())
     return v.labels
 
