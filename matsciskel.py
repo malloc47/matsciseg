@@ -48,7 +48,10 @@ def global_process(arg,im,im_gray,seed):
     print("Initialized")
     v.dilate_all(arg['d'])
     print("Dilated")
-    return v.graph_cut()
+    v.graph_cut()
+    v.edit_labels(10)
+    # import code; code.interact(local=locals())
+    return v.labels
 
 @imgio
 def skel_process(arg,im,im_gray,seed):

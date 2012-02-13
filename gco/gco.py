@@ -5,6 +5,7 @@ sys.path.insert(0,os.getcwd())
 import gcoc
 import scipy
 from scipy import ndimage
+import gui
 
 def unstack_matrix(layered):
     """splits 3D matrix to a list of 2D matrices"""
@@ -290,6 +291,10 @@ class Volume(object):
         """dilate all regions"""
         self.data = map(lambda img : dilate(img,d), self.data)
 
+    def dilate_label(self,l,d):
+        """dilate specific regions"""
+        self.data[l] = dilate(self.data[l],d)
+
     def dilate_first(self,d):
         """dilate first (background) region only"""
         self.data[0] = dilate(self.data[0],d)
@@ -301,15 +306,73 @@ class Volume(object):
             output += [i for i,x in enumerate(self.adj[l,:]) if x]
         return set(output)
 
+    def get_adj_radius(self,p):
+        output = set()  # include original labels as well
+        for i,v in np.ndenumerate(self.labels):
+            if gui.dist(i,p[0:2]) < p[2]:
+                output.add(self.labels[i])
+        return output
+
+    def label_exclusive(self,l):
+        self.data = [ np.logical_and(np.logical_not(self.labels==l),x[1])
+                      if x[0]!=l else x[1]
+                      for x in zip(range(len(self.data)),self.data)]
+
     def set_adj_all(self):
         """remove all topology constraints (everything adjacent)"""
         self.adj[:,:] = True
 
+    def edit_labels(self,d):
+        w=gui.Window(self.img,self.labels)
+        create=w.create_list
+        remove=w.remove_list
+        for r in remove:
+            # determine best dilation to kill region--might backfire
+            (x0,y0,x1,y1) = fit_region(create_mask(self.labels,[r]))
+            self.remove_label(r,max(x1-x0,y1-y0)+5)
+        for c in create:
+            self.add_label(c,d)
+        w=gui.Window(self.img,self.labels)
+
+    def remove_label(self,l,d):
+        v = self.crop([l])
+        v.dilate_all(d)
+        v.set_adj_all()
+        v.graph_cut()
+        self.merge(v)
+
+    def add_label(self,p,d):
+        v = self.crop(list(self.get_adj_radius(p)))
+        # p = (p[0]-v.win[0],p[1]-v.win[1],p[2]/2 if p[2]>1 else p[2])
+        p = (p[0]-v.win[0],p[1]-v.win[1],p[2])
+        l = v.add_label_circle(p)
+        # w=gui.Window(v.img,v.labels)
+        v.dilate_label(l,100)
+        # v.dilate_all(d)
+        v.label_exclusive(l)
+        # v.set_adj_all()
+        v.graph_cut()
+        self.merge(v)
+
+    def add_label_circle(self,p):
+        new_label = self.labels.max()+1
+        for i,v in np.ndenumerate(self.labels):
+            if gui.dist(i,p[0:2]) < p[2]:
+                self.labels[i] = new_label
+        # reconstruct data term after adding label
+        self.num_labels = self.labels.max()+1
+        self.data = layer_list(self.labels)
+        self.adj = adjacent(self.labels)
+        return new_label
+
     def crop(self,label_list):
         """fork off subwindow volume"""
         label_list = self.get_adj(label_list)
+        print(label_list)
+        # import code; code.interact(local=locals())
         mask = create_mask(self.labels,label_list)
         (x0,y0,x1,y1) = fit_region(mask)
+        print((x0,y0,x1,y1))
         # crop out everything with the given window
         mask_cropped = mask[y0:y1, x0:x1]
         cropped_seed = self.labels[y0:y1, x0:x1]
@@ -331,10 +394,18 @@ class Volume(object):
         u = self.labels[v.win[0]:v.win[0]+v.labels.shape[0],
                         v.win[1]:v.win[1]+v.labels.shape[1]] # view into array
         new_label = self.labels.max()+1
-        for l in [x for x in list(np.unique(v.labels)) if x>0]:
+        old_labels = set(np.unique(v.labels))
+        shifted_labels = [v.shifted[x] 
+                          for x in old_labels 
+                          if x and x in v.shifted]
+        # recreate mask--might consider saving this in volume instead
+        mask = create_mask(self.labels,shifted_labels)[
+            v.win[0]:v.win[0]+v.labels.shape[0],
+            v.win[1]:v.win[1]+v.labels.shape[1]]
+        for l in [x for x in old_labels if x>0]:
             if l in v.shifted:
                 # print("Shifting "+str(l)+" to "+str(v.shifted[l]))
-                u[v.labels==l]=v.shifted[l]
+                u[np.logical_and(v.labels==l,mask)]=v.shifted[l]
             else:
                 # print("Shifting "+str(l)+" to "+str(new_label))
                 u[v.labels==l]=new_label
@@ -343,12 +414,13 @@ class Volume(object):
     def graph_cut(self,mode=0):
         """run graph cut on this volume (mode specifies V(p,q) term"""
         # just for testing (spit out data term as images)
-        # for i in range(0,len(self.data)):
-        #     output = self.data[i]
-        #     output[output==False] = 0
-        #     output[output==True] = 255
-        #     # scipy.misc.imsave("seq5/output/data"+str(i)+".png",output)
-        #     scipy.misc.imsave("data"+str(i)+".png",output)
+        if self.win != (0,0):
+            for i in range(0,len(self.data)):
+                output = self.data[i]
+                output[output==False] = 0
+                output[output==True] = 255
+            # scipy.misc.imsave("seq5/output/data"+str(i)+".png",output)
+                scipy.misc.imsave("d"+str(i)+".png",output)
 
         output = gcoc.graph_cut(stack_matrix(self.data),
                                 self.img,
@@ -356,7 +428,11 @@ class Volume(object):
                                 self.adj,
                                 self.num_labels,
                                 mode)
-        # todo: update volume self.labels with output
-        self.labels = region_clean(region_shift(output,
-                                                region_transform(output)))
+        self.__init__(self.img,
+                      region_clean(region_shift(output,
+                                                region_transform(output))),
+                      self.shifted,
+                      self.win)
+        # self.labels = region_clean(region_shift(output,
+        #                                         region_transform(output)))
         return self.labels
