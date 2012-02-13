@@ -236,7 +236,7 @@ class Volume(object):
         self.labels = region_clean(region_shift(labels,
                                                 region_transform(labels)))
         self.orig_labels = self.labels.copy()
-        self.num_labels = self.labels.max()+1
+        # self.num_labels = self.labels.max()+1
         self.data = layer_list(self.labels)
         self.orig = np.array(self.data)
         self.adj = adjacent(self.labels)
@@ -360,7 +360,7 @@ class Volume(object):
             if gui.dist(i,p[0:2]) < p[2]:
                 self.labels[i] = new_label
         # reconstruct data term after adding label
-        self.num_labels = self.labels.max()+1
+        # self.num_labels = self.labels.max()+1
         self.data = layer_list(self.labels)
         self.adj = adjacent(self.labels)
         return new_label
@@ -424,7 +424,7 @@ class Volume(object):
                                 self.img,
                                 self.labels,
                                 self.adj,
-                                self.num_labels,
+                                self.layers.max()+1, # todo: extract from data
                                 mode)
         self.__init__(self.img,
                       region_clean(region_shift(output,
