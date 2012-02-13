@@ -368,11 +368,9 @@ class Volume(object):
     def crop(self,label_list):
         """fork off subwindow volume"""
         label_list = self.get_adj(label_list)
-        print(label_list)
         # import code; code.interact(local=locals())
         mask = create_mask(self.labels,label_list)
         (x0,y0,x1,y1) = fit_region(mask)
-        print((x0,y0,x1,y1))
         # crop out everything with the given window
         mask_cropped = mask[y0:y1, x0:x1]
         cropped_seed = self.labels[y0:y1, x0:x1]
@@ -414,13 +412,13 @@ class Volume(object):
     def graph_cut(self,mode=0):
         """run graph cut on this volume (mode specifies V(p,q) term"""
         # just for testing (spit out data term as images)
-        if self.win != (0,0):
-            for i in range(0,len(self.data)):
-                output = self.data[i]
-                output[output==False] = 0
-                output[output==True] = 255
-            # scipy.misc.imsave("seq5/output/data"+str(i)+".png",output)
-                scipy.misc.imsave("d"+str(i)+".png",output)
+        # if self.win != (0,0):
+        #     for i in range(0,len(self.data)):
+        #         output = self.data[i]
+        #         output[output==False] = 0
+        #         output[output==True] = 255
+        #     # scipy.misc.imsave("seq5/output/data"+str(i)+".png",output)
+        #         scipy.misc.imsave("d"+str(i)+".png",output)
 
         output = gcoc.graph_cut(stack_matrix(self.data),
                                 self.img,
