@@ -61,8 +61,8 @@ class Window():
            p[1] < self.background.shape[1]):
             self.add_label(p)
             self.redraw_img(self.recreate_img())
-            print(self.remove_list)
-            print(self.create_list)
+            # print(self.remove_list)
+            # print(self.create_list)
 
     def rclick(self,event):
         p = (event.GetPosition()[1],event.GetPosition()[0])
@@ -70,8 +70,8 @@ class Window():
            p[1] < self.background.shape[1]):
             self.remove_label(p)
             self.redraw_img(self.recreate_img())
-            print(self.remove_list)
-            print(self.create_list)
+            # print(self.remove_list)
+            # print(self.create_list)
 
     def redraw_img(self,im):
         self.bmp.SetBitmap(numpy_to_bitmap(im))
@@ -81,7 +81,7 @@ class Window():
         for p in self.create_list:
             draw_circle(output,p)
         for p in self.remove_list:
-            print((jet_colors[randmap[p%128]],)*3)
+            # print((jet_colors[randmap[p%128]],)*3)
             output[self.labels==p,:] = (0,0,0)
         return output
 
@@ -127,7 +127,7 @@ class Window():
         # start the show
         frame.Show()
         app.MainLoop()
-        print("Done.")
+        print("Exiting GUI")
 
 def test():
     im = cv.LoadImageM("seq1/img/image0091.tif")
