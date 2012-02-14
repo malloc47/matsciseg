@@ -329,46 +329,50 @@ class Volume(object):
         """remove all topology constraints (everything adjacent)"""
         self.adj[:,:] = True
 
-    def edit_labels(self,d):
-        print("Starting GUI")
-        w=gui.Window(self.img,self.labels)
-        create=w.create_list
-        remove=w.remove_list
-        new_volumes = []
-        for r in remove:
-            # determine best dilation to kill region--might backfire
-            (x0,y0,x1,y1) = fit_region(create_mask(self.labels,[r]))
-            new_volumes.append(self.remove_label(r,max(x1-x0,y1-y0)+5))
-        for c in create:
-            new_volumes.append(self.add_label(c,d))
-        # for v in new_volumes:
-        #     self.merge(v)
+    def set_adj_labell_all(self):
+        """remove topology constraints for a single label"""
+        self.adj[l,:] = True
+        self.adj[:,l] = True
 
-        w=gui.Window(self.img,self.labels)
+    def edit_labels(self,d):
+        while True:
+            print("Starting GUI")
+            w=gui.Window(self.img,self.labels)
+            create=w.create_list
+            remove=w.remove_list
+            new_volumes = []
+            for r in remove:
+                # determine best dilation to kill region--might backfire
+                (x0,y0,x1,y1) = fit_region(create_mask(self.labels,[r]))
+                new_volumes.append(self.remove_label(r,max(x1-x0,y1-y0)+5))
+            for c in create:
+                new_volumes.append(self.add_label(c,d))
+            for v in new_volumes:
+                self.merge(v)
+            if not create and not remove:
+                break
 
     def remove_label(self,l,d):
         v = self.crop([l])
-        w=gui.Window(v.img,v.labels)
+        # w=gui.Window(v.img,v.labels)
         v.dilate_all(d)
-        # v.label_inexclusive(l)
+        v.label_inexclusive(l)
         v.set_adj_all()
         v.graph_cut_no_clean()
-        w=gui.Window(v.img,v.labels)
-        self.merge(v)
+        # w=gui.Window(v.img,v.labels)
+        # self.merge(v)
         return v
 
     def add_label(self,p,d):
         v = self.crop(list(self.get_adj_radius(p)))
-        # p = (p[0]-v.win[0],p[1]-v.win[1],p[2]/2 if p[2]>1 else p[2])
         p = (p[0]-v.win[0],p[1]-v.win[1],p[2])
         l = v.add_label_circle(p)
-        # w=gui.Window(v.img,v.labels)
         v.dilate_label(l,d)
         # v.dilate_all(d)
         v.label_exclusive(l)
-        v.set_adj_all()
+        v.set_adj_label_all(l)
         v.graph_cut_no_clean()
-        self.merge(v)
+        # self.merge(v)
         return v
 
     def add_label_circle(self,p):
