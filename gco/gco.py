@@ -329,7 +329,7 @@ class Volume(object):
         """remove all topology constraints (everything adjacent)"""
         self.adj[:,:] = True
 
-    def set_adj_labell_all(self):
+    def set_adj_label_all(self,l):
         """remove topology constraints for a single label"""
         self.adj[l,:] = True
         self.adj[:,l] = True
@@ -370,7 +370,7 @@ class Volume(object):
         v.dilate_label(l,d)
         # v.dilate_all(d)
         v.label_exclusive(l)
-        v.set_adj_label_all(l)
+        # v.set_adj_label_all(l)
         v.graph_cut_no_clean()
         # self.merge(v)
         return v
