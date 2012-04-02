@@ -368,25 +368,21 @@ class Volume(object):
 
     def remove_label(self,l,d):
         v = self.crop([l])
-        # w=gui.Window(v.img,v.labels)
         v.dilate_all(d)
         v.label_inexclusive(l)
         v.set_adj_all()
         v.graph_cut_no_clean()
-        # w=gui.Window(v.img,v.labels)
-        # self.merge(v)
         return v
 
     def add_label(self,p,d):
         v = self.crop(list(self.get_adj_radius(p)))
         p = (p[0]-v.win[0],p[1]-v.win[1],p[2])
         l = v.add_label_circle(p)
-        v.dilate_label(l,d)
-        # v.dilate_all(d)
+        v.dilate_label(l,p[2]*d)
         v.label_exclusive(l)
-        # v.set_adj_label_all(l)
+        v.output_data_term()
+        v.set_adj_label_all(l)
         v.graph_cut_no_clean()
-        # self.merge(v)
         return v
 
     def add_label_circle(self,p):
@@ -397,6 +393,11 @@ class Volume(object):
         # reconstruct data term after adding label
         self.data = layer_list(self.labels)
         self.adj = adjacent(self.labels)
+        self.__init__(self.img,
+                      self.labels,
+                      self.shifted,
+                      self.win,
+                      self.mask)
         return new_label
 
     def crop(self,label_list):
