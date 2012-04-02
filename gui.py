@@ -68,6 +68,7 @@ class Window():
         p = (event.GetPosition()[1],event.GetPosition()[0])
         if(p[0] < self.background.shape[0] and \
            p[1] < self.background.shape[1]):
+            print(self.labels[p[0:2]])
             self.remove_label(p)
             self.redraw_img(self.recreate_img())
             # print(self.remove_list)

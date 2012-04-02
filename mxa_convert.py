@@ -1,4 +1,4 @@
-#!/usr/bin/python2.7
+#!/bin/env python
 import sys,os,scipy
 import numpy as np
 import h5py
