@@ -95,7 +95,7 @@ static PyObject *graph_cut(PyObject *self, PyObject *args) {
     return NULL;
   }
 
-  printf("mode %i",mode);
+  printf("mode %i\n",mode);
 
   // check that the objects were successfully assigned
   if (NULL == data_p    ||
@@ -117,6 +117,12 @@ static PyObject *graph_cut(PyObject *self, PyObject *args) {
     Py_XINCREF(func);
   }
 
+  // CORNER CASE HERE: if data term is dimension 2, we should not fail, but instead just do nothing
+  if(data_p->nd == 2) {
+    printf("Warning: No Graph Cut work to do! Data term is 2D.\n");
+  	return PyArray_Return(seedimg_p);
+  }
+  
   if(data_p->nd != 3    ||
      img_p->nd != 2     ||
      seedimg_p->nd != 2 ||
