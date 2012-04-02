@@ -48,8 +48,21 @@ def global_process(arg,im,im_gray,seed):
     print("Initialized")
     v.dilate_all(arg['d'])
     print("Dilated")
-    v.graph_cut()
-    v.edit_labels(100)
+    v.set_adj_label_all(0);
+    print("Adjacent")
+    v.graph_cut(arg['gctype'])
+    print("Graph Cut Complete")
+    # import code; code.interact(local=locals())
+    return v.labels
+
+@imgio
+def global_interface_process(arg,im,im_gray,seed):
+    v = gco.Volume(im_gray,seed)
+    print("Initialized")
+    v.dilate_all(arg['d'])
+    print("Dilated")
+    v.graph_cut(arg['gctype'])
+    v.edit_labels(5)
     # import code; code.interact(local=locals())
     return v.labels
 
@@ -61,7 +74,7 @@ def skel_process(arg,im,im_gray,seed):
     v.dilate_first(arg['d'])
     print("Dilated")
     v.skel()
-    return v.graph_cut()
+    return v.graph_cut(arg['gctype'])
 
 @imgio
 def gauss_process(arg,im,im_gray,seed):
@@ -69,49 +82,62 @@ def gauss_process(arg,im,im_gray,seed):
     print("Initialized")
     v.dilate_first(arg['d']/10)
     v.fit_gaussian(arg['d'],arg['d2'])
-    return v.graph_cut()
+    return v.graph_cut(arg['gctype'])
 
 def main(*args):
-    if(len(args) < 7):
+    if(len(args) < 8):
         return 1
 
-    proc = args[1]
+    proc_type = args[1]
+    proc = args[2]
 
-    arg = {'im1'       : args[2],
-           'label'     : args[3],
-           'im2'       : args[4],
-           'label_out' : args[5],
-           'im_out'    : args[6]}
+    if(args[1] == "e"):
+        proc_type = 1
+    elif(args[1] == "i"):
+        proc_type = 0
+    else:
+        print("Bad argument type")
+        return 0
+
+    arg = {'gctype'    : proc_type,
+           'im1'       : args[3],
+           'label'     : args[4],
+           'im2'       : args[5],
+           'label_out' : args[6],
+           'im_out'    : args[7]}
 
     procs = {'skel'   : skel_process,
              'global' : global_process,
+             'guiglobal' : global_interface_process,
              'gauss' : gauss_process}
 
-    if(len(args) > 7):
-        arg['d'] = int(args[7]);
     if(len(args) > 8):
-        arg['d2'] = int(args[8]);
+        arg['d'] = int(args[8]);
+        print("Dilating:  "+str(arg['d']))
+    if(len(args) > 9):
+        arg['d2'] = int(args[9]);
+        print("Dilating2: "+str(arg['d2']))
 
     procs[proc](arg)
 
     return 0
 
 def tests():
-    main('./matsciskel.py','skel',
+    main('./matsciskel.py','i','skel',
           'seq3/img/image0040.png',
           'seq3/labels/image0040.label',
           'seq3/img/image0041.png',
           'test1.label',
           'test1.png',
           '10')
-    main('./matsciskel.py','global',
+    main('./matsciskel.py','e','global',
           'seq1/img/image0090.tif',
           'seq1/labels/image0090.label',
           'seq1/img/image0091.tif',
           'test2.label',
           'test2.png',
           '10')
-    main('./matsciskel.py','gauss',
+    main('./matsciskel.py','i','gauss',
           'seq3/img/image0040.png',
           'seq3/labels/image0040.label',
           'seq3/img/image0041.png',
