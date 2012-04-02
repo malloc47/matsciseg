@@ -23,6 +23,11 @@ def stack_matrix(l):
         stack = np.dstack((stack,l[i]))
     return stack
 
+def check_data_term(l):
+    """make sure every pixel has at least one label"""
+    return np.all(reduce(np.logical_or,l))
+	
+
 def convert_to_uint8(mat,maxval=255):
     newmat = np.zeros(mat.shape,dtype='uint8')
     newmat[np.nonzero(mat)] = 255;
@@ -301,6 +306,15 @@ class Volume(object):
         """dilate first (background) region only"""
         self.data[0] = dilate(self.data[0],d)
 
+    def output_data_term(self):
+        # just for testing (spit out data term as images)
+        for i in range(0,len(self.data)):
+            output = self.data[i]
+            output[output==False] = 0
+            output[output==True] = 255
+            # scipy.misc.imsave("seq5/output/data"+str(i)+".png",output)
+            scipy.misc.imsave("d"+str(i)+".png",output)
+
     def get_adj(self,label_list):
         """return all labels that are adjacent to label_list labels"""
         output = []+label_list  # include original labels as well
@@ -440,12 +454,19 @@ class Volume(object):
         """run graph cut on this volume (mode specifies V(p,q) term"""
         # just for testing (spit out data term as images)
         # if self.win != (0,0):
-        #     for i in range(0,len(self.data)):
-        #         output = self.data[i]
-        #         output[output==False] = 0
-        #         output[output==True] = 255
+        # for i in range(0,len(self.data)):
+        #     output = self.data[i]
+        #     output[output==False] = 0
+        #     output[output==True] = 255
         #     # scipy.misc.imsave("seq5/output/data"+str(i)+".png",output)
-        #         scipy.misc.imsave("d"+str(i)+".png",output)
+        #     scipy.misc.imsave("d"+str(i)+".png",output)
+
+        # w=gui.Window(self.img,self.labels)
+
+        if not check_data_term(self.data):
+            print("Not all pixels have a label")
+        else:
+            print("All pixels have a label")
 
         output = gcoc.graph_cut(stack_matrix(self.data),
                                 self.img,
