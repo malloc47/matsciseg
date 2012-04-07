@@ -2,6 +2,9 @@
 
 #define N 255
 #define LTHRESH 10
+#define MODE_I 0
+#define MODE_E 1
+#define MODE_M 2
 
 static PyMethodDef gcocMethods[] = { 
   {"graph_cut", graph_cut, METH_VARARGS, "Graph Cut Optimization wrapper"},
@@ -72,13 +75,27 @@ int smoothFnE(int s1, int s2, int l1, int l2, void *extraData) {
 	return int( 1/(std::max(double(sites[s1]),double(sites[s2]))+1) * N );
 }
 
+int smoothFnM(int s1, int s2, int l1, int l2, void *extraData) {
+	ForSmoothFn *extra = (ForSmoothFn *) extraData;
+	// int num_labels = extra->num_labels;
+	PyArrayObject *adj = extra->adj;
+	int *sites = extra->sites;
+
+	if(l1 == l2) { return 0; }
+
+	if(!(*((npy_int16*)PyArray_GETPTR2(adj,l1,l2)))) { return INF; };
+
+	// use this for minimums in image
+	return int( 1/(256-std::min(double(sites[s1]),double(sites[s2]))) * N );
+}
+
 void GridGraph_DArraySArray(int width,int height,int num_pixels,int num_labels);
 
 static PyObject *graph_cut(PyObject *self, PyObject *args) {
   PyArrayObject *data_p, *img_p, *seedimg_p, *adj_p, *output;
   PyObject *func = NULL;
   int num_labels;
-  int mode = 0;
+  int mode = MODE_I;
   int d[3];
   bool has_func = false;
   // rediculous amount of typechecking, as it makes for fewer
@@ -201,10 +218,16 @@ static PyObject *graph_cut(PyObject *self, PyObject *args) {
   // set the smooth function pointer
   if(has_func)
     gc->setSmoothCost(&smoothFnCb,&toFn);
-  else if(!mode)
+  else if(mode==MODE_I)
     gc->setSmoothCost(&smoothFnI,&toFn);
-  else
+  else if(mode==MODE_E)
     gc->setSmoothCost(&smoothFnE,&toFn);
+  else if(mode==MODE_M)
+    gc->setSmoothCost(&smoothFnM,&toFn);
+  else { 
+    PyErr_SetString(PyExc_ValueError, "Invalid mode specified");
+    return NULL;
+  }
 
   // TODO: pointless
   // initialize labeling to previous slice 

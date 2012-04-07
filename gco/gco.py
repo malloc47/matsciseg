@@ -270,6 +270,7 @@ class Volume(object):
         compute and fit gaussian on all pixels within a band radius
         d/2 around a label, where the fit is within d2 std deviations
         """
+        tolerance = 10
         # (erosion,dilation)
         area = map(relative_complement,
                    zip(map(lambda img : dilate(img,d), self.data[1:]),
@@ -285,9 +286,13 @@ class Volume(object):
 
         self.data = [self.data[0]] + \
             map(lambda (d,n): np.logical_or(d,n),zip(self.data[1:],combine))
+
+        # close holes in the data term
+        self.data = [self.data[0]] + \
+            map(lambda (l): erode(dilate(l,tolerance),tolerance),self.data[1:])
         
         # redo matrix
-        self.data[0] = dilate(np.logical_not(reduce(np.logical_or,self.data[1:])),20) #,5)
+        self.data[0] = dilate(np.logical_not(reduce(np.logical_or,self.data[1:])),d) #,5)
 
     def dilate(self,d):
         """dilate all but first (background) region"""
@@ -453,15 +458,8 @@ class Volume(object):
 
     def graph_cut(self,mode=0):
         """run graph cut on this volume (mode specifies V(p,q) term"""
-        # just for testing (spit out data term as images)
         # if self.win != (0,0):
-        # for i in range(0,len(self.data)):
-        #     output = self.data[i]
-        #     output[output==False] = 0
-        #     output[output==True] = 255
-        #     # scipy.misc.imsave("seq5/output/data"+str(i)+".png",output)
-        #     scipy.misc.imsave("d"+str(i)+".png",output)
-
+        # self.output_data_term()
         # w=gui.Window(self.img,self.labels)
 
         if not check_data_term(self.data):

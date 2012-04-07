@@ -95,6 +95,8 @@ def main(*args):
         proc_type = 1
     elif(args[1] == "i"):
         proc_type = 0
+    elif(args[1] == "m"):
+        proc_type = 2
     else:
         print("Bad argument type")
         return 0
@@ -115,7 +117,7 @@ def main(*args):
         arg['d'] = int(args[8]);
         print("Dilating:  "+str(arg['d']))
     if(len(args) > 9):
-        arg['d2'] = int(args[9]);
+        arg['d2'] = float(args[9]);
         print("Dilating2: "+str(arg['d2']))
 
     procs[proc](arg)
