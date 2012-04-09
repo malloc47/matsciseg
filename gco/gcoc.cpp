@@ -216,14 +216,22 @@ static PyObject *graph_cut(PyObject *self, PyObject *args) {
   toFn.sites = sites;
 
   // set the smooth function pointer
-  if(has_func)
+  if(has_func) {
     gc->setSmoothCost(&smoothFnCb,&toFn);
-  else if(mode==MODE_I)
+  	printf("custom function\n");
+  }
+  else if(mode==MODE_I) {
     gc->setSmoothCost(&smoothFnI,&toFn);
-  else if(mode==MODE_E)
+  	printf("intensity function\n");
+  }
+  else if(mode==MODE_E) {
     gc->setSmoothCost(&smoothFnE,&toFn);
-  else if(mode==MODE_M)
+  	printf("edge function\n");
+  }
+  else if(mode==MODE_M) {
     gc->setSmoothCost(&smoothFnM,&toFn);
+  	printf("min function\n");
+  }
   else { 
     PyErr_SetString(PyExc_ValueError, "Invalid mode specified");
     return NULL;
