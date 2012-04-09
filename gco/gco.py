@@ -199,12 +199,20 @@ def erode(img,d):
 def relative_complement(p):
     return np.logical_and(p[0],np.logical_not(p[1]))
 
+def largest_connected_component(im):
+    labels,num = ndimage.label(im)
+    if num < 1:
+        return im
+    sizes = [ ((labels==l).sum(),l) for l in range(1,num+1) ]
+    return labels==max(sizes,key=lambda x:x[0])[1]
+
 def region_clean(regions):
     out = np.zeros(regions.shape,dtype=regions.dtype)
     for l in range(regions.max()+1) :
         layer = (regions==l)
         if layer.any() :
-            labeled = ndimage.label(layer>0)[0]
+            # labeled = ndimage.label(layer>0)[0]
+            labeled = largest_connected_component(layer>0)
             # copy only the largest connected component
             out[np.nonzero(labeled == label_max(labeled))] = l
     # todo: what's happening with the zeros?
@@ -221,6 +229,11 @@ def fit_gaussian(v,g0,g1,d):
     """determine if v falls within d*g1(std dev) of mean g0"""
     if(np.isnan(v) or np.isnan(g0) or np.isnan(g1)): return False
     return ((v > g0-d*g1) and (v < g0+d*g1))
+
+def fast_fit_gaussian(v,g,d):
+    """faster function to determine if v falls within d*g1(std dev) of
+    mean g0"""
+    return np.logical_and(v>g[0]-g[1],v<g[0]+g[1])
 
 def smoothFn(s1,s2,l1,l2,adj):
     """smoothness function that could be passed to the minimzation"""
@@ -265,34 +278,44 @@ class Volume(object):
                     # remove skeletonization from all other terms
                     self.data[k] = relative_complement((self.data[k],s))
 
-    def fit_gaussian(self,d,d2):
+    def fit_gaussian(self,d,d2,d3):
         """
         compute and fit gaussian on all pixels within a band radius
         d/2 around a label, where the fit is within d2 std deviations
         """
-        tolerance = 10
+        tolerance = 2
         # (erosion,dilation)
+        print("Computing gaussian band area")
         area = map(relative_complement,
                    zip(map(lambda img : dilate(img,d), self.data[1:]),
-                       map(lambda img : erode(img,d), self.data[1:])))
+                       map(lambda img : dilate(img,d2), self.data[1:])))
 
-        fit = np.vectorize(fit_gaussian)
+        # fit = np.vectorize(fit_gaussian)
 
-        print(compute_gaussian(self.data[1:],self.img))
+        # diagnostic
+        # print(compute_gaussian(self.data[1:],self.img))
 
+        print("Gaussian fit")
         combine = map(lambda (a,g):
-                      erode(dilate(np.logical_and(a,fit(self.img,g[0],g[1],d2)),5),1),
+                      np.logical_and(a, fast_fit_gaussian(self.img,g,d3)),
+                                     # fit(self.img,g[0],g[1],d3)),
                       zip(area,compute_gaussian(self.data[1:],self.img)))
 
+        print("Combining regions")
+        self.data = [dilate(self.data[0],d2)] + \
+            map(lambda (s,n): np.logical_or(dilate(s,d2),n),
+                zip(self.data[1:],combine))
+
+        # fetch the largest component (remove unconnected straggling pixels)
         self.data = [self.data[0]] + \
-            map(lambda (d,n): np.logical_or(d,n),zip(self.data[1:],combine))
+            map(largest_connected_component,self.data[1:])
 
         # close holes in the data term
         self.data = [self.data[0]] + \
             map(lambda (l): erode(dilate(l,tolerance),tolerance),self.data[1:])
-        
+
         # redo matrix
-        self.data[0] = dilate(np.logical_not(reduce(np.logical_or,self.data[1:])),d) #,5)
+        # self.data[0] = dilate(np.logical_not(reduce(np.logical_or,self.data[1:])),d) #,5)
 
     def dilate(self,d):
         """dilate all but first (background) region"""
