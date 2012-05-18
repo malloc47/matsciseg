@@ -2,6 +2,7 @@
 import os,sys
 import numpy as np
 import scipy
+from scipy import ndimage
 
 def draw_on_img(img,bmp):
     out = img.copy()
@@ -24,7 +25,10 @@ def main(*args):
     im = scipy.misc.imread(imgin,flatten=True)
     im = np.dstack((im,im,im))
     labels = np.genfromtxt(label_path,dtype='int16')
-    scipy.misc.imsave(output,draw_on_img(im,label_to_bmp(labels)));
+    bmp = label_to_bmp(labels)
+    if(len(args) > 3):
+        bmp = scipy.ndimage.morphology.binary_dilation(bmp,iterations=int(args[4]))
+    scipy.misc.imsave(output,draw_on_img(im,bmp));
 
     return 0
 
