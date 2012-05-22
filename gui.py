@@ -131,11 +131,11 @@ class Window():
         print("Exiting GUI")
 
 def test():
-    im = cv.LoadImageM("seq1/img/image0091.tif")
+    im = cv.LoadImageM("seq1/img/image0091.png")
     im_gray = cv.CreateMat(im.rows, im.cols, cv.CV_8U)
     cv.CvtColor(im,im_gray, cv.CV_RGB2GRAY)
     # convert to numpy arrays
     im_gray = np.asarray(im_gray[:,:])
     im = np.asarray(im[:,:])
-    seed=np.genfromtxt("seq1/labels/image0091.label",dtype='int16')
+    seed=np.genfromtxt("seq1/ground/image0091.label",dtype='int16')
     w=Window(im_gray,seed)
