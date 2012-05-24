@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <title>Materials Segmentation Demo </title>
+    <title>Materials Segmentation Interactive Segmentation Demo</title>
     <script src="/js/jquery-1.7.2.js" type="text/javascript"></script>
     <style type="text/css">
     .container {
@@ -52,6 +52,9 @@
     }
     </style>
     <script type="text/javascript">
+
+    var mode = 0;
+
     function post_event_handler(method,data) {
 	log_output(method+' '+data["response"]);
     }
@@ -63,16 +66,68 @@
 	$(".rawoutput").prop({ scrollTop: $(".rawoutput").prop("scrollHeight") }, 30);	
     }
 
+    function change_mode(new_mode) {
+	mode = mode==new_mode ? 'none' : new_mode;
+	modes = {'none':{'cursor':'default'},'addition':{'cursor':'crosshair'},'removal':{'cursor':'move'}};
+	$('.mainimg').css(modes[mode]);
+	log_output('mode changed to '+mode);
+    }
+
+    function pad(number, length) {    
+	var str = '' + number;
+	while (str.length < length) {
+	    str = '0' + str;
+	}
+	return str;
+    }
+
+    function load_images() {
+	$('.bottombar ul').children().remove();
+	$.getJSON("/load/",function(data) {
+	    // $('.mainimg').attr('src','/output/'+pad(data[0],4)+'/');
+	    for (var i = 1; i < data.length; i++) {
+		$('.bottombar ul').append('<li><img class="thumb'+data[i]+'" src="/output/'+pad(data[i],4)+'/" /><p>'+data[i]+'</p></li>');
+	    }
+	    // $('.bottombar ul').children().click(function(e) {
+	    // 	var id=$(this).attr('class');
+	    // 	alert(id);
+	    // 	// $.getJSON("/change/",{'img': parseInt(id)}, function(data) {
+	    // 	//     post_event_handler(method,data);
+	    // 	//     load_images();
+	    // 	// });
+	    // });
+	});
+    }
+
       $(document).ready(function() {
-	  $('#addition,#removal,#global,#local').click(function() {
+	  $('#global,#local').click(function() {
 	      var method = $(this).attr('id');
-	      $.getJSON("/cmd",{"method": method}, function(data) {
+	      $.getJSON("/cmd/",{'method': method}, function(data) {
 		  post_event_handler(method,data);
 	      });
 	  });
-      });
 
-// http://www.electrictoolbox.com/jquery-mouse-co-ordinates-mouseover-click-within-element/
+	  $('#addition,#removal').click(function() {
+	      change_mode($(this).attr('id'));
+	  });
+
+	  $('.mainimg').click(function(e) {
+	      if(mode == 'none') return;
+	      var x = e.pageX - this.offsetLeft;
+              var y = e.pageY - this.offsetTop;
+	      $.getJSON("/cmd/",
+	      		{'method': 'imgclick',
+	      		 'mode'  : mode,
+	      		 'x'     : x,
+	      		 'y'     : y}, 
+	      		function(data) {
+	      		    post_event_handler('imgclick',data);
+	      		});
+	  });
+
+	  load_images();
+	  
+      });
 
 // (function poll(){
 //     $.ajax({ url: "server", success: function(data){

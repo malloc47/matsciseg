@@ -155,3 +155,6 @@ LOGGING = {
         },
     }
 }
+
+current_img=91
+images = range(90,101)
