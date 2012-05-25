@@ -56,8 +56,10 @@
     </style>
     <script type="text/javascript">
 
-    var mode = 0;
-    var state;
+    var mode = 'none';
+    var state = {};
+    var addition = [];
+    var removal  = [];
 
     function log_output(str) {
 	$('.rawoutput').append('<p>'+
@@ -84,6 +86,7 @@
     function getstate() {
 	$.getJSON("/state/",function(data) {
 	    state = data;
+    	    parsestate();
 	});
     }
 
@@ -120,6 +123,8 @@
 	  $('#global,#local').click(function() {
 	      var method = $(this).attr('id');
 	      state['command'] = method;
+	      state['addition'] = addition;
+	      state['removal'] = removal;
 	      syncstate();
 	  });
 
@@ -132,21 +137,15 @@
 	      var x = e.pageX - this.offsetLeft;
               var y = e.pageY - this.offsetTop;
 	      state['command'] = 'imgclick';
-	      state['mode'] = mode;
-	      state['x'] = x;
-	      state['y'] = y;
-	      syncstate();
-	      // $.getJSON("/cmd/",
-	      // 		{'command': 'imgclick',
-	      // 		 'mode'  : mode,
-	      // 		 'x'     : x,
-	      // 		 'y'     : y}, 
-	      // 		function(data) {
-	      // 		    post_event_handler('imgclick',data);
-	      // 		});
+	      // state['mode'] = mode;
+	      // state['x'] = x;
+	      // state['y'] = y;
+	      window[mode].push([x,y]);
+	      // syncstate();
+	      alert(window[mode]);
 	  });
 
-	  syncstate();
+	  getstate();
 
       });
 

@@ -3,7 +3,7 @@
 import sys,os.path
 sys.path.insert(0,os.getcwd() + '/../gco')
 sys.path.insert(0,os.getcwd() + '/..')
-print(sys.path)
+# print(sys.path)
 import matsciskel, gco
 
 
@@ -161,15 +161,17 @@ LOGGING = {
     }
 }
 
-import numpy as np
+from numpy import genfromtxt
+import pickle
 
 current_img=91
-images = range(90,101)
+images = range(90,92)
 slices = {}
-img = {}
 for i in images:
     print(str(i))
     im,im_gray = matsciskel.read_img('../seq1/img/image'+format(i,'04d')+'.png')
-    seed=np.genfromtxt('../seq1/global-20/90/image'+format(i,'04d')+'.label',dtype='int16')
+    seed = pickle.load(open(format(i,'04d')+'.pkl','rb'))
+    # seed=genfromtxt('../seq1/global-20/90/image'+format(i,'04d')+'.label',dtype='int16')
+    # pickle.dump(seed,open(format(i,'04d')+'.pkl','wb'))
     v = gco.Volume(im_gray,seed)
-    slices[i] = v    
+    slices[i] = v

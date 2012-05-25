@@ -3,7 +3,13 @@ from django.http import HttpResponse, HttpResponseBadRequest
 from django.template import Context, loader
 from django.shortcuts import render_to_response
 import simplejson as json
-from webgui.settings import current_img, images
+from webgui.settings import current_img, images, slices
+
+import scipy.ndimage.interpolation
+import scipy.misc
+from PIL import Image
+import numpy as np
+import gui
 
 def index(req):
     # t = loader.get_template('matsci.html')
@@ -13,9 +19,29 @@ def index(req):
 # def cmd(req):
 #     return render_to_response('matsci.html', {})
 
-def img(request,imgnum):
-    image_data = open("/home/malloc47/src/projects/matsci/matsciskel/webgui/img/thumb/image"+imgnum+".png", "rb").read()
-    return HttpResponse(image_data, mimetype="image/png")
+def img_thumb(request,imgnum):
+    slicenum=int(imgnum)
+    # image_data = open("/home/malloc47/src/projects/matsci/matsciskel/webgui/img/thumb/image"+imgnum+".png", "rb").read()
+    if slicenum in slices:
+        # output = scipy.ndimage.interpolation.zoom(slices[slicenum].img,0.15)
+        output = scipy.misc.imresize(slices[slicenum].img,0.15)
+        http_output = Image.fromarray(np.uint8(output))
+        response = HttpResponse(mimetype="image/png")
+        http_output.save(response, "PNG")
+        return response
+    else:
+        return HttpResponseBadRequest()
+
+def img_full(request,imgnum):
+    slicenum=int(imgnum)
+    if slicenum in slices:
+        output = gui.color_jet(gui.grey_to_rgb(slices[slicenum].img),slices[slicenum].labels)
+        http_output = Image.fromarray(np.uint8(output))
+        response = HttpResponse(mimetype="image/png")
+        http_output.save(response, "PNG")
+        return response
+    else:
+        return HttpResponseBadRequest()
 
 def cmd(request):
     if not request.is_ajax():
