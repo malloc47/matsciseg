@@ -161,9 +161,15 @@ LOGGING = {
     }
 }
 
+import numpy as np
+
 current_img=91
 images = range(90,101)
-# slices = {}
-# for i in images:
-#     im,im_gray = matsciskel.read_img('../seq1/img/image'+format(i,'04d')+'.png')
-#     # slices[i] = 
+slices = {}
+img = {}
+for i in images:
+    print(str(i))
+    im,im_gray = matsciskel.read_img('../seq1/img/image'+format(i,'04d')+'.png')
+    seed=np.genfromtxt('../seq1/global-20/90/image'+format(i,'04d')+'.label',dtype='int16')
+    v = gco.Volume(im_gray,seed)
+    slices[i] = v    
