@@ -21,14 +21,6 @@ def cmd(request):
     if not request.is_ajax():
         return HttpResponseBadRequest()
 
-    handlers = {
-        'addition' : handle_addition,
-        'removal'  : handle_removal,
-        'global'   : handle_global,
-        'local'    : handle_local,
-        'imgclick' : handle_click,
-        }
-
     if request.method == 'GET':
         data = handlers[request.GET['method']](request.GET)
         return HttpResponse(json.dumps(data),
@@ -37,23 +29,23 @@ def cmd(request):
 
 def handle_addition(params):
     print('Addition')
-    return {'response':'success'}
+    return 'success'
 
 def handle_removal(params):
     print('Removal')
-    return {'response':'success'}
+    return 'success'
 
 def handle_global(params):
     print('Global')
-    return {'response':'success'}
+    return 'success'
 
 def handle_local(params):
     print('Local')
-    return {'response':'success'}
+    return 'success'
 
 def handle_click(params):
     print('Click')
-    return {'response':'x:'+params['x']+',y:'+params['y']}
+    return 'x:'+params['x']+',y:'+params['y']
 
 def load(request):
     global current_img, images
@@ -68,4 +60,33 @@ def change_img(request):
         return HttpResponseBadRequest()
     current_img = response.GET['img']
     return HttpResponse(json.dumps({'response':'success'}),
+                        content_type='application/javascript; charset=utf8')
+
+def state(request):
+    global current_img, images
+    data = None;
+
+    if('image' in request.GET):
+        current_img = request.GET['image'];
+    if('images' in request.GET):
+        images = request.GET['images'];
+    if('command' in request.GET):
+        handlers = {
+            'addition' : handle_addition,
+            'removal'  : handle_removal,
+            'global'   : handle_global,
+            'local'    : handle_local,
+            'imgclick' : handle_click,
+            }
+        data = handlers[request.GET['command']](request.GET)
+
+    state_output = {
+        'image' : current_img,
+        'images': images,
+        }
+
+    if not data is None:
+        state_output['response'] = data;
+
+    return HttpResponse(json.dumps(state_output),
                         content_type='application/javascript; charset=utf8')

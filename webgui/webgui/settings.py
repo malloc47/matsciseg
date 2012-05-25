@@ -1,6 +1,11 @@
 # Django settings for webgui project.
 
-import os.path
+import sys,os.path
+sys.path.insert(0,os.getcwd() + '/../gco')
+sys.path.insert(0,os.getcwd() + '/..')
+print(sys.path)
+import matsciskel, gco
+
 
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
@@ -158,3 +163,7 @@ LOGGING = {
 
 current_img=91
 images = range(90,101)
+# slices = {}
+# for i in images:
+#     im,im_gray = matsciskel.read_img('../seq1/img/image'+format(i,'04d')+'.png')
+#     # slices[i] = 
