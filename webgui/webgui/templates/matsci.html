@@ -110,13 +110,12 @@
 	$('.bottombar ul li img').click(function(e) {
 	    var c=$(this).attr('class').substr(5);
 	    state['image'] = parseInt(c);
-	    // log_output(c);
 	    syncstate();
 	});
 
 	$('.mainimg').attr('src','/output/'+pad(state['image'],4)+'/');
 
-	// log_output(state['response']);
+	log_output(state['response']);
     }
 
       $(document).ready(function() {
@@ -136,7 +135,7 @@
 	      if(mode == 'none') return;
 	      var x = e.pageX - this.offsetLeft;
               var y = e.pageY - this.offsetTop;
-	      state['command'] = 'imgclick';
+	      // state['command'] = 'imgclick';
 	      // state['mode'] = mode;
 	      // state['x'] = x;
 	      // state['y'] = y;
