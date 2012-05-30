@@ -26,7 +26,6 @@ def stack_matrix(l):
 def check_data_term(l):
     """make sure every pixel has at least one label"""
     return np.all(reduce(np.logical_or,l))
-	
 
 def convert_to_uint8(mat,maxval=255):
     newmat = np.zeros(mat.shape,dtype='uint8')
@@ -263,6 +262,22 @@ class Volume(object):
         self.shifted=shifted
         self.mask=mask
 
+    def init_no_clean(self, img, labels, shifted={}, win=(0,0), mask=None):
+        """initialize fields and compute defaults"""
+        # These values are created
+        # when the class is instantiated.
+        self.img = img.copy()
+        self.labels = labels
+        self.orig_labels = self.labels.copy()
+        # self.num_labels = self.labels.max()+1
+        self.data = layer_list(self.labels)
+        self.orig = np.array(self.data)
+        self.adj = adjacent(self.labels)
+        self.shifted=shifted
+        self.win=win
+        self.shifted=shifted
+        self.mask=mask
+
     def skel(self):
         """run skeletonization and integrate to data term"""
         # sk = [self.data[0]] + \
@@ -346,6 +361,8 @@ class Volume(object):
     def get_adj(self,label_list):
         """return all labels that are adjacent to label_list labels"""
         output = []+label_list  # include original labels as well
+        if self.adj.shape[0] < max(label_list):    # trying to index new label so refresh adj
+            self.adj = adjacent(self.labels)
         for l in label_list:
             output += [i for i,x in enumerate(self.adj[l,:]) if x]
         return set(output)
@@ -394,12 +411,24 @@ class Volume(object):
             if not create and not remove:
                 break
 
+    def edit_labels(self,d,addition,removal):
+        create = [(b,a,5) for a,b in addition]
+        remove = set([self.labels[(b,a)] for a,b in removal])
+        new_volumes = []
+        for r in remove:
+            (x0,y0,x1,y1) = fit_region(create_mask(self.labels,[r]))
+            new_volumes.append(self.remove_label(r,max(x1-x0,y1-y0)+5))
+        for c in create:
+            new_volumes.append(self.add_label(c,d))
+        for v in new_volumes:
+            self.merge(v)
+
     def remove_label(self,l,d):
         v = self.crop([l])
         v.dilate_all(d)
         v.label_inexclusive(l)
         v.set_adj_all()
-        v.graph_cut_no_clean()
+        v.graph_cut_no_clean(1)
         return v
 
     def add_label(self,p,d):
@@ -408,9 +437,9 @@ class Volume(object):
         l = v.add_label_circle(p)
         v.dilate_label(l,p[2]*d)
         v.label_exclusive(l)
-        v.output_data_term()
+        # v.output_data_term()
         v.set_adj_label_all(l)
-        v.graph_cut_no_clean()
+        v.graph_cut_no_clean(1)
         return v
 
     def add_label_circle(self,p):
@@ -421,11 +450,11 @@ class Volume(object):
         # reconstruct data term after adding label
         self.data = layer_list(self.labels)
         self.adj = adjacent(self.labels)
-        self.__init__(self.img,
-                      self.labels,
-                      self.shifted,
-                      self.win,
-                      self.mask)
+        self.init_no_clean(self.img,
+                           self.labels,
+                           self.shifted,
+                           self.win,
+                           self.mask)
         return new_label
 
     def crop(self,label_list):
