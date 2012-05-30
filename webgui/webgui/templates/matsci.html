@@ -12,13 +12,13 @@
 	border-bottom:0px solid;
     }
     .navbar {
-	width:180px;
+	width:160px;
 	float:left;
 	margin:10px;
     }
     .workingarea {
 	padding:10px;
-	width:730px;
+	width:750px;
 	height:530px;
 	overflow:auto;
     }
@@ -53,6 +53,9 @@
 	margin:0px;
 	text-align:center;
     }
+    .selected {
+	border:1px solid;
+    }
     </style>
     <script type="text/javascript">
 
@@ -73,6 +76,20 @@
 	modes = {'none':{'cursor':'default'},'addition':{'cursor':'crosshair'},'removal':{'cursor':'move'}};
 	$('.mainimg').css(modes[mode]);
 	log_output('mode changed to '+mode);
+    }
+
+    function tuples_to_str(l) {
+	output = '';
+	for (var i=0; i<l.length; i++) {
+	    output += l[i][0].toString()+','+l[i][1].toString()+';';
+	}
+	// don't grab last ";"
+	if(output[output.length-1] == ';') {
+	    return output.substr(0,output.length-1);
+	}
+	else {
+	    return output;
+	}
     }
 
     function pad(number, length) {    
@@ -102,28 +119,46 @@
     }
 
     function parsestate() {
+
+	addition = [];
+	removal  = [];
+
 	// update bottom bar
 	$('.bottombar ul').children().remove();
 	for (var i = 0; i < state['images'].length; i++) {
-	    $('.bottombar ul').append('<li><img class="thumb'+state['images'][i]+'" src="/thumb/'+pad(state['images'][i],4)+'/" /><p>'+state['images'][i]+'</p></li>');
+	    $('.bottombar ul').append('<li'
+				      + (state['images'][i]==state['image'] ? ' class="selected" ' : '')				      
+				      + '><img class="thumb'
+				      + state['images'][i]
+				      // + (i==parseInt(state['image']) ? ' selected' : '')
+				      + '" src="/thumb/'
+				      + pad(state['images'][i],4)
+				      + '/" '
+				      + 'id="' + state['images'][i] + '" '
+				      + '/><p>'
+				      + state['images'][i]
+				      + '</p></li>');
 	}
 	$('.bottombar ul li img').click(function(e) {
-	    var c=$(this).attr('class').substr(5);
+	    /* var c=$(this).attr('class').substr(5); */
+	    var c=$(this).attr('id');
 	    state['image'] = parseInt(c);
 	    syncstate();
 	});
 
 	$('.mainimg').attr('src','/output/'+pad(state['image'],4)+'/');
 
-	log_output(state['response']);
+	if('response' in state) {
+	    log_output(state['response']);
+	}
     }
 
       $(document).ready(function() {
 	  $('#global,#local').click(function() {
 	      var method = $(this).attr('id');
 	      state['command'] = method;
-	      state['addition'] = addition;
-	      state['removal'] = removal;
+	      state['addition'] = tuples_to_str(addition);
+	      state['removal'] = tuples_to_str(removal);
 	      syncstate();
 	  });
 
@@ -141,7 +176,8 @@
 	      // state['y'] = y;
 	      window[mode].push([x,y]);
 	      // syncstate();
-	      alert(window[mode]);
+	      // alert(window[mode]);
+	      log_output(mode + ' at '+x+','+y);
 	  });
 
 	  getstate();

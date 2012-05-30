@@ -67,6 +67,16 @@ def handle_global(params):
 
 def handle_local(params):
     print('Local')
+    # print(str(params))
+    addition = [];
+    removal = [];
+    if 'addition' in params and params['addition']:
+        addition = [tuple(map(int,s.split(','))) 
+                    for s in params['addition'].split(';')]
+    if 'removal' in params and params['removal']:
+        removal = [tuple(map(int,s.split(','))) 
+                    for s in params['removal'].split(';')]
+    slices[int(current_img)].edit_labels(5,addition,removal)
     return 'success'
 
 def handle_click(params):
