@@ -361,18 +361,28 @@ class Volume(object):
     def get_adj(self,label_list):
         """return all labels that are adjacent to label_list labels"""
         output = []+label_list  # include original labels as well
-        if self.adj.shape[0] < max(label_list):    # trying to index new label so refresh adj
-            self.adj = adjacent(self.labels)
+        # if self.adj.shape[0] < max(label_list):    # trying to index new label so refresh adj
+        #     self.adj = adjacent(self.labels)
         for l in label_list:
             output += [i for i,x in enumerate(self.adj[l,:]) if x]
         return set(output)
 
     def get_adj_radius(self,p):
-        output = set()  # include original labels as well
+        output = set()
         for i,v in np.ndenumerate(self.labels):
             if gui.dist(i,p[0:2]) < p[2]:
                 output.add(self.labels[i])
         return output
+
+    def set_adj_new(self,adj=[]):
+        """ add new row and column to self.adj for new label"""
+        self.adj = np.hstack((np.vstack((self.adj,
+                                         np.zeros((1,self.adj.shape[1])))),
+                              np.zeros((self.adj.shape[0]+1,1))))
+        self.adj[-1,-1] = True
+        for a in adj:
+            self.adj[-1,a] = True
+            self.adj[a,-1] = True
 
     def label_exclusive(self,l):
         self.data = [ np.logical_and(np.logical_not(self.labels==l),x[1])
@@ -500,6 +510,7 @@ class Volume(object):
             else:
                 # print("Shifting "+str(l)+" to "+str(new_label))
                 u[v.labels==l]=new_label
+                self.set_adj_new(shifted_labels)
                 new_label+=1
 
         # self.__init__(self.img,
