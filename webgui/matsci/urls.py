@@ -6,4 +6,5 @@ urlpatterns = patterns('matsci.views',
     url(r'^state/$', 'state'),
     url(r'^thumb/(\d{4})/$', 'img_thumb'),
     url(r'^output/(\d{4})/$', 'img_full'),
+    url(r'^empty/(\d{4})/$', 'img_full_bare'),
 )
