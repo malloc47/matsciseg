@@ -63,10 +63,18 @@
     var state = {};
     var addition = [];
     var removal  = [];
+    var ctx;
+
+    var mainimg = new Image();
+    mainimg.onload = function(){
+	ctx.globalAlpha = 1.0;
+	ctx.drawImage(mainimg,0,0);
+    };
+    mainimg.src = "/img/image0090.png";
 
     function log_output(str) {
 	$('.rawoutput').append('<p>'+
-			       '['+new Date().toTimeString()+'] '+
+			       // '['+new Date().toTimeString()+'] '+
 			       str+'</p>');
 	$(".rawoutput").prop({ scrollTop: $(".rawoutput").prop("scrollHeight") }, 30);	
     }
@@ -74,7 +82,7 @@
     function change_mode(new_mode) {
 	mode = mode==new_mode ? 'none' : new_mode;
 	modes = {'none':{'cursor':'default'},'addition':{'cursor':'crosshair'},'removal':{'cursor':'move'}};
-	$('.mainimg').css(modes[mode]);
+	$('#mainimg').css(modes[mode]);
 	log_output('mode changed to '+mode);
     }
 
@@ -119,10 +127,8 @@
     }
 
     function parsestate() {
-
 	addition = [];
 	removal  = [];
-
 	// update bottom bar
 	$('.bottombar ul').children().remove();
 	for (var i = 0; i < state['images'].length; i++) {
@@ -140,13 +146,13 @@
 				      + '</p></li>');
 	}
 	$('.bottombar ul li img').click(function(e) {
-	    /* var c=$(this).attr('class').substr(5); */
+	    ctx.lighten();
 	    var c=$(this).attr('id');
 	    state['image'] = parseInt(c);
 	    syncstate();
 	});
 
-	$('.mainimg').attr('src','/output/'+pad(state['image'],4)+'/');
+	mainimg.src = '/output/'+pad(state['image'],4)+'/?'+new Date().getTime();
 
 	if('response' in state) {
 	    log_output(state['response']);
@@ -156,6 +162,7 @@
       $(document).ready(function() {
 	  $('#global,#local').click(function() {
 	      var method = $(this).attr('id');
+	      ctx.lighten();
 	      state['command'] = method;
 	      state['addition'] = tuples_to_str(addition);
 	      state['removal'] = tuples_to_str(removal);
@@ -166,7 +173,39 @@
 	      change_mode($(this).attr('id'));
 	  });
 
-	  $('.mainimg').click(function(e) {
+	  ctx = $("#mainimg")[0].getContext('2d');
+
+	  ctx.fillCircle = function(x, y, radius, fillColor) {
+              this.fillStyle = fillColor;
+              this.beginPath();
+              this.moveTo(x, y);
+              this.arc(x, y, radius, 0, Math.PI * 2, false);
+              this.fill();
+	  };
+
+	  ctx.fillX = function(x, y, radius, fillColor) {
+	      this.fillCircle(x,y,radius,'#000000');
+              this.strokeStyle = fillColor;
+              this.beginPath();
+              this.moveTo(x, y);
+	      this.lineTo(x+radius,y+radius);
+              this.moveTo(x, y);
+	      this.lineTo(x-radius,y-radius);
+              this.moveTo(x, y);
+	      this.lineTo(x+radius,y-radius);
+              this.moveTo(x, y);
+	      this.lineTo(x-radius,y+radius);
+              this.stroke();
+	  };
+
+	  ctx.lighten = function() {
+	      this.fillStyle = '#FFFFFF';
+	      this.fillRect(0,0,$('#mainimg').attr('width'),$('#mainimg').attr('height'));
+	      this.globalAlpha = 0.25;
+	      this.drawImage(mainimg,0,0);
+	  }
+
+	  $('#mainimg').click(function(e) {
 	      if(mode == 'none') return;
 	      var x = e.pageX - this.offsetLeft;
               var y = e.pageY - this.offsetTop;
@@ -177,6 +216,10 @@
 	      window[mode].push([x,y]);
 	      // syncstate();
 	      // alert(window[mode]);
+	      if(mode == 'addition')
+		  ctx.fillCircle(x, y, 5, '#ffffff');
+	      else if(mode == 'removal')
+		  ctx.fillX(x, y, 5, '#ffffff');
 	      log_output(mode + ' at '+x+','+y);
 	  });
 
@@ -208,7 +251,8 @@
 	</div>
       </div>
       <div class="workingarea">
-	<img class="mainimg" src="/img/image0090.png" />
+	<!-- <img class="mainimg" src="/img/image0090.png" /> -->
+	<canvas id="mainimg" width="750" height="525"></canvas>
       </div>
     </div>
     <div class="bottombar">
