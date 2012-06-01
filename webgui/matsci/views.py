@@ -3,27 +3,24 @@ from django.http import HttpResponse, HttpResponseBadRequest
 from django.template import Context, loader
 from django.shortcuts import render_to_response
 import simplejson as json
-from webgui.settings import current_img, images, slices
+from webgui.settings import current_img, slices
 
 import scipy.ndimage.interpolation
 import scipy.misc
 from PIL import Image
 import numpy as np
 import gui
+import cPickle as pickle
+import gco
 
 def index(req):
     # t = loader.get_template('matsci.html')
     # c = Context({})
     return render_to_response('matsci.html', {})
 
-# def cmd(req):
-#     return render_to_response('matsci.html', {})
-
 def img_thumb(request,imgnum):
     slicenum=int(imgnum)
-    # image_data = open("/home/malloc47/src/projects/matsci/matsciskel/webgui/img/thumb/image"+imgnum+".png", "rb").read()
     if slicenum in slices:
-        # output = scipy.ndimage.interpolation.zoom(slices[slicenum].img,0.15)
         output = scipy.misc.imresize(slices[slicenum].img,0.15)
         http_output = Image.fromarray(np.uint8(output))
         response = HttpResponse(mimetype="image/png")
@@ -54,6 +51,21 @@ def img_full_bare(request,imgnum):
     else:
         return HttpResponseBadRequest()
 
+def img_full_edge(request,imgnum):
+    import render_labels
+    slicenum=int(imgnum)
+    if slicenum in slices:
+        im = slices[slicenum].img
+        im = np.dstack((im,im,im))
+        bmp = render_labels.label_to_bmp(slices[slicenum].labels)
+        output = render_labels.draw_on_img(im,bmp)
+        http_output = Image.fromarray(np.uint8(output))
+        response = HttpResponse(mimetype="image/png")
+        http_output.save(response, "PNG")
+        return response
+    else:
+        return HttpResponseBadRequest()
+
 def cmd(request):
     if not request.is_ajax():
         return HttpResponseBadRequest()
@@ -64,43 +76,46 @@ def cmd(request):
                             content_type='application/javascript; charset=utf8')
     return HttpResponseBadRequest()
 
-def handle_addition(params):
-    print('Addition')
-    return 'success'
+# def handle_addition(params):
+#     print('Addition')
+#     return 'success'
 
-def handle_removal(params):
-    print('Removal')
-    return 'success'
-
-def handle_global(params):
-    print('Global')
-    return 'global graph cut successful'
+# def handle_removal(params):
+#     print('Removal')
+#     return 'success'
 
 def handle_copyr(params):
-    print('copyr')
+    global current_img, images, slices
+    l = sorted(slices.keys())
+    idx = l.index(current_img)
+    if idx == 0:
+        return 'error: no slice on left!'
+    old_img = slices[current_img].img;
+    slices[current_img] = gco.Volume(old_img,slices[current_img-1].labels)
     return 'copyr successful'
 
 def handle_copyl(params):
-    print('copyl')
+    global current_img, images, slices
+    l = sorted(slices.keys())
+    idx = l.index(current_img)
+    if idx == len(l)-1:
+        return 'error: no slice on right!'
+    old_img = slices[current_img].img;
+    slices[current_img] = gco.Volume(old_img,slices[current_img+1].labels)
     return 'copyl successful'
 
-def handle_revert(params):
-    print('revert')
-    return 'revert successful'
+def handle_dataset(params):
+    import matsciskel,pickle
+    global current_img, slices
+    print('opening dataset')
+    slices = pickle.load(open(params['dataset']+'.pkl','rb'))
+    current_img = min(slices.keys())
+    return 'dataset '+params['dataset']+' opened'
 
-# def handle_reload(params):
-#     import matsciskel,pickle,gco
-#     global current_img, images, slices
-#     current_img=91
-#     images = range(90,92)
-#     slices = {}
-#     for i in images:
-#         print(str(i))
-#         im,im_gray = matsciskel.read_img('../seq1/img/image'+format(i,'04d')+'.png')
-#         seed = pickle.load(open(format(i,'04d')+'.pkl','rb'))
-#         v = gco.Volume(im_gray,seed)
-#         slices[i] = v
-#     return 'reload successful'
+def handle_global(params):
+    slices[current_img].dilate_all(10)
+    slices[current_img].graph_cut(1)
+    return 'global graph cut successful'
 
 def handle_local(params):
     global current_img, images, slices
@@ -114,7 +129,7 @@ def handle_local(params):
     if 'removal' in params and params['removal']:
         removal = [tuple(map(int,s.split(','))) 
                     for s in params['removal'].split(';')]
-    slices[int(current_img)].edit_labels(5,addition,removal)
+    slices[current_img].edit_labels(5,addition,removal)
     return 'local graph cut successful'
 
 def handle_click(params):
@@ -122,37 +137,37 @@ def handle_click(params):
     return 'x:'+params['x']+',y:'+params['y']
 
 def load(request):
-    global current_img, images
-    l = [current_img]+images
+    global current_img, slices 
+    l = [current_img]+sorted(slices.keys())
     return HttpResponse(json.dumps(l),
                         content_type='application/javascript; charset=utf8')
 
 def change_img(request):
-    global current_img, images
+    global current_img, slices
     print(response.GET['img'])
-    if not response.GET['img'] in images:
+    if not response.GET['img'] in sorted(slices.keys()):
         return HttpResponseBadRequest()
-    current_img = response.GET['img']
+    current_img = int(response.GET['img'])
     return HttpResponse(json.dumps({'response':'success'}),
                         content_type='application/javascript; charset=utf8')
 
 def state(request):
-    global current_img, images, slices
+    global current_img, slices
     data = None;
     if('image' in request.GET):
-        current_img = request.GET['image'];
-    if('images' in request.GET):
-        images = request.GET['images'];
+        current_img = int(request.GET['image']);
+    # if('images' in request.GET):
+    #     images = request.GET['images'];
     if('command' in request.GET):
         handlers = {
-            'addition' : handle_addition,
-            'removal'  : handle_removal,
+            # 'addition' : handle_addition,
+            # 'removal'  : handle_removal,
             'global'   : handle_global,
             'local'    : handle_local,
             # 'imgclick' : handle_click,
             'copyr'    : handle_copyr,
             'copyl'    : handle_copyl,
-            'revert'    : handle_revert,
+            'dataset'    : handle_dataset,
             }
         data = handlers[request.GET['command']](request.GET)
 
@@ -160,7 +175,7 @@ def state(request):
 
     state_output = {
         'image' : current_img,
-        'images': images,
+        'images': sorted(slices.keys()),
         'height': slices[int(current_img)].img.shape[0],
         'width' : slices[int(current_img)].img.shape[1],
         }

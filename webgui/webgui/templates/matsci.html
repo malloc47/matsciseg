@@ -6,7 +6,7 @@
     <script src="/js/jquery-1.7.2.js" type="text/javascript"></script>
     <style type="text/css">
     .container {
-	max-width:960px;
+	max-width:1000px;
 	margin:0px auto;
 	border:1px solid;
 	border-bottom:0px solid;
@@ -22,20 +22,20 @@
     }
     .workingarea {
 	padding:10px;
-	width:680px;
-	height:680px;
+	width:710px;
+	height:600px;
 	overflow:auto;
 	float:left;
     }
     .rawoutput {
 	overflow:auto;
-	height:560px;
+	height:620px;
 	font-size:10pt;
 	float:right;
-	width:160px;
+	width:170px;
     }
     .bottombar {
-	max-width:960px;
+	max-width:1000px;
 	margin:0px auto;
 	border:1px solid;
 	overflow:auto;
@@ -68,11 +68,15 @@
     button {
 	display:block;
 	width:70px;
+	background:#CCCCCC;
     }
     .output{
 	color:#777777;
 	padding:0px;
 	margin:0px;
+    }
+    .errormsg{
+	color:#770000;
     }
     .output li {
 	list-style-type: none;
@@ -87,18 +91,32 @@
     var removal  = [];
     var ctx;
 
+    var img_paths = {'img' : 'empty',
+		     'seg' : 'output',
+		     'edg' : 'edge'};
+
+    var img_mode = 'seg';
+
     var mainimg = new Image();
     mainimg.onload = function(){
 	ctx.globalAlpha = 1.0;
 	ctx.drawImage(mainimg,0,0,state['width'],state['height'],0,0,state['width']*2,state['height']*2);
+	ctx.redraw();
 	// ctx.drawImage(mainimg,0,0);
     };
     mainimg.src = "/img/image0090.png";
 
     function log_output(str) {
-	$('.output').append('<li>'+
-			       // '['+new Date().toTimeString()+'] '+
-			       str+'</li>');
+	if(str.indexOf('error:') === 0) {
+	    $('.output').append('<li class="errormsg">'+
+				// '['+new Date().toTimeString()+'] '+
+				str+'</li>');
+	}
+	else {
+	    $('.output').append('<li>'+
+				// '['+new Date().toTimeString()+'] '+
+				str+'</li>');
+	}
 	$(".rawoutput").prop({ scrollTop: $(".rawoutput").prop("scrollHeight") }, 30);	
     }
 
@@ -154,6 +172,7 @@
 	removal  = [];
 	// update bottom bar
 	$('.bottombar ul').children().remove();
+	$('.bottombar ul').css({'width':(124*state['images'].length+20).toString()});
 	for (var i = 0; i < state['images'].length; i++) {
 	    $('.bottombar ul').append('<li'
 				      + (state['images'][i]==state['image'] ? ' class="selected" ' : '')				      
@@ -172,6 +191,7 @@
 	    ctx.lighten();
 	    var c=$(this).attr('id');
 	    state['image'] = parseInt(c);
+	    log_output("opening slice "+c);
 	    syncstate();
 	});
 
@@ -180,7 +200,7 @@
 	if($('#mainimg').attr('height') != state['height']*2)
 	    $('#mainimg').attr('height',state['height']*2);
 
-	mainimg.src = '/output/'+pad(state['image'],4)+'/?'+new Date().getTime();
+	mainimg.src = '/' + img_paths[img_mode] + '/'+pad(state['image'],4)+'/?'+new Date().getTime();
 
 	if('response' in state) {
 	    log_output(state['response']);
@@ -188,9 +208,9 @@
     }
 
       $(document).ready(function() {
-	  $('#global,#local,#copyr,#copyl,#revert,#reload').click(function() {
+	  $('.serversend').click(function() {
 	      var method = $(this).attr('id');
-	      log_output("starting "+method)
+	      log_output("starting "+method);
 	      ctx.lighten();
 	      state['command'] = method;
 	      state['addition'] = tuples_to_str(addition);
@@ -198,14 +218,37 @@
 	      syncstate();
 	  });
 
-	  $('#addition,#removal').click(function() {
+	  $('.dataset').click(function() {
+	      var dataset = $(this).attr('id');
+	      log_output("changing to "+dataset);
+	      ctx.lighten();
+	      state['command'] = 'dataset';
+	      state['dataset'] = dataset;
+	      syncstate();
+	  });
+
+	  $('.imgtype').click(function() {
+	      var m = $(this).attr('id');
+	      log_output(m+" view");
+	      ctx.lighten();
+	      img_mode = m;
+	      $('.imgtype').css({"background":"#CCCCCC"});
+	      $(this).css({"background":"#AAAACC"});
+	      mainimg.src = '/' + img_paths[img_mode] + '/'+pad(state['image'],4)+'/?'+new Date().getTime();
+	  });
+
+	  $('.interaction').click(function() {
 	      change_mode($(this).attr('id'));
+	      $('.interaction').css({"background":"#CCCCCC"});
+	      if(mode != 'none')
+		  $(this).css({"background":"#CCAAAA"});
 	  });
 
 	  $('#reset').click(function() {
 	      addition = [];
 	      removal  = [];
 	      mainimg.onload();
+	      $('.output').children().remove();
 	      log_output("reset successful")
 	  });
 
@@ -242,6 +285,15 @@
 	      ctx.drawImage(mainimg,0,0,state['width'],state['height'],0,0,state['width']*2,state['height']*2);
 	  }
 
+	  ctx.redraw = function() {
+	      for (var i=0; i<addition.length; i++) {
+		  ctx.fillCircle(addition[i][0]*2, addition[i][1]*2, 5, '#ffffff');
+	      }
+	      for (var i=0; i<removal.length; i++) {
+		  ctx.fillX(removal[i][0]*2, removal[i][1]*2, 5, '#ffffff');
+	      }
+	  }
+
 	  $('#mainimg').click(function(e) {
 	      if(mode == 'none') return;
 	      var x = e.pageX - this.offsetLeft + $('.workingarea').scrollLeft();
@@ -275,24 +327,23 @@
     <div class="container2">
       <div class="navbar">
 	<h3>Tools</h3>
-	<button type="button" id="addition">Addition</button>
-	<button type="button" id="removal">Removal</button>
+	<button type="button" id="addition" class="interaction">Addition</button>
+	<button type="button" id="removal" class="interaction">Removal</button>
         <hr />
-	<button type="button" id="rawimage">Image</button>
-	<button type="button" id="segmentation">Segment.</button>
-	<button type="button" id="edges">Edges</button>
+	<button type="button" id="img" class="imgtype">Image</button>
+	<button type="button" id="seg" class="imgtype">Segment.</button>
+	<button type="button" id="edg" class="imgtype">Edges</button>
         <hr />
-	<button type="button" id="global">Global</button>
-	<button type="button" id="local">Local</button>
+	<button type="button" id="global" class="serversend">Global</button>
+	<button type="button" id="local" class="serversend">Local</button>
         <hr />
-        <button type="button" id="copyr">&gt;&gt;Copy</button>
-        <button type="button" id="copyl">&lt;&lt;Copy</button>
+        <button type="button" id="copyr" class="serversend">&gt;&gt;Copy</button>
+        <button type="button" id="copyl" class="serversend">&lt;&lt;Copy</button>
         <hr />
 	<button type="button" id="reset">Reset</button>
-	<button type="button" id="revert">Revert</button>
-	<!-- <button type="button" id="reload">Reload</button> -->
 	<h3>Datasets</h3>
-	<button type="button" id="ti">&beta;-Ti Grains</button>
+	<button type="button" id="ti" class="dataset">&beta;-Ti Grains</button>
+	<!-- <button type="button" id="s1" class="dataset">Cropped</button> -->
 
       </div>
       <div class="workingarea">
