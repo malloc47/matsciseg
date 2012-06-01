@@ -88,19 +88,19 @@ def handle_revert(params):
     print('revert')
     return 'revert successful'
 
-def handle_reload(params):
-    import matsciskel,pickle,gco
-    global current_img, images, slices
-    current_img=91
-    images = range(90,92)
-    slices = {}
-    for i in images:
-        print(str(i))
-        im,im_gray = matsciskel.read_img('../seq1/img/image'+format(i,'04d')+'.png')
-        seed = pickle.load(open(format(i,'04d')+'.pkl','rb'))
-        v = gco.Volume(im_gray,seed)
-        slices[i] = v
-    return 'reload successful'
+# def handle_reload(params):
+#     import matsciskel,pickle,gco
+#     global current_img, images, slices
+#     current_img=91
+#     images = range(90,92)
+#     slices = {}
+#     for i in images:
+#         print(str(i))
+#         im,im_gray = matsciskel.read_img('../seq1/img/image'+format(i,'04d')+'.png')
+#         seed = pickle.load(open(format(i,'04d')+'.pkl','rb'))
+#         v = gco.Volume(im_gray,seed)
+#         slices[i] = v
+#     return 'reload successful'
 
 def handle_local(params):
     global current_img, images, slices
@@ -153,7 +153,6 @@ def state(request):
             'copyr'    : handle_copyr,
             'copyl'    : handle_copyl,
             'revert'    : handle_revert,
-            'reload'    : handle_reload,
             }
         data = handlers[request.GET['command']](request.GET)
 
