@@ -161,23 +161,25 @@ LOGGING = {
     }
 }
 
-# from numpy import genfromtxt
 import cPickle as pickle
 print('loading dataset')
-slices = pickle.load(open('ti.pkl','rb'))
+slices = pickle.load(open('ti2.pkl','rb'))
 current_img = min(slices.keys())
 print('done loading dataset')
 
-# import pickle
-
-# current_img=91
-# images = range(90,92)
-# slices = {}
-# for i in images:
-#     print(str(i))
-#     im,im_gray = matsciskel.read_img('../seq1/img/image'+format(i,'04d')+'.png')
-#     seed = pickle.load(open(format(i,'04d')+'.pkl','rb'))
-#     # seed=genfromtxt('../seq1/global-20/90/image'+format(i,'04d')+'.label',dtype='int16')
-#     # pickle.dump(seed,open(format(i,'04d')+'.pkl','wb'))
-#     v = gco.Volume(im_gray,seed)
-#     slices[i] = v
+#import cPickle as pickle
+#from numpy import genfromtxt
+#current_img=91
+#images = range(90,96)
+#slices = {}
+#for i in images:
+	#print(str(i))
+	##im,im_gray = matsciskel.read_img('../seq1/img/image'+format(i,'04d')+'.png')
+	#im,im_gray = matsciskel.read_img('../seq1/cropped3/image'+format(i,'04d')+'.png')
+	##seed = pickle.load(open(format(i,'04d')+'.pkl','rb'))
+	## seed=genfromtxt('../seq1/global-20/90/image'+format(i,'04d')+'.label',dtype='int16')
+	#seed=genfromtxt('../seq1/cropped3/image'+format(i,'04d')+'.label',dtype='int16')
+	## pickle.dump(seed,open(format(i,'04d')+'.pkl','wb'))
+	#v = gco.Volume(im_gray,seed)
+	#slices[i] = v
+#pickle.dump(slices,open('c3.pkl','wb'))
