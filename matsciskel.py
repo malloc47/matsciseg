@@ -19,7 +19,7 @@ def label_to_bmp(labels):
 
 def draw_on_img(img,bmp):
     out = img.copy()
-    out[np.nonzero(bmp>0)] = (0,0,255)
+    out[np.nonzero(bmp>0)] = (255,0,0)
     return out
 
 def read_img(img_name):
