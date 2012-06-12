@@ -6,6 +6,7 @@ import gcoc
 import scipy
 from scipy import ndimage
 import gui
+import pymorph
 
 def unstack_matrix(layered):
     """splits 3D matrix to a list of 2D matrices"""
@@ -69,6 +70,22 @@ def layer_list(unlayered):
         data.append(select_region(unlayered,l))
     return data
 
+def list_layer(layered):
+    """convert a list of 2D matrices to a matrix of integer labels"""
+    output = np.zeros(layered[0].shape).astype('int16')
+    for l in range(0,len(layered)):
+        output[layered[l]] = l
+    return output
+
+def watershed(im,labels,d=0,suppression=3):
+    if d > 0:
+        # hack: dilate edges instead of eroding structures
+        grad = np.gradient(labels)
+        edges = dilate(np.maximum(abs(grad[0]),abs(grad[1])),d)
+        labels[edges] = 0
+    im = pymorph.hmin(im,suppression)
+    return scipy.ndimage.watershed_ift(im, labels)
+    
 def skel(img):
     """skeletonize image"""
     print("Skel")
@@ -243,6 +260,12 @@ def smoothFn(s1,s2,l1,l2,adj):
     return int(1.0/(max(float(s1),float(s2))+1.0) * 255.0)
     # return int(1.0/float((abs(float(s1)-float(s2)) if \
         # abs(float(s1)-float(s2)) > 9 else 9)+1)*255.0)
+
+def find_dist_diff(im1,im2):
+    im1g = scipy.ndimage.morphology.morphological_gradient(im1,size=(3,3))
+    im2g = scipy.ndimage.morphology.morphological_gradient(im2,size=(3,3))
+    dist = scipy.ndimage.morphology.distance_transform_edt(np.logical_not(im1g))
+    return dist[im2g].max()
 
 class Volume(object):
     def __init__(self, img, labels, shifted={}, win=(0,0), mask=None):
