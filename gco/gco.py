@@ -77,11 +77,17 @@ def list_layer(layered):
         output[layered[l]] = l
     return output
 
+def labels_to_edges(labels):
+    grad = np.gradient(labels)
+    edges = np.maximum(abs(grad[0]),abs(grad[1]))
+    return edges>0
+
 def watershed(im,labels,d=0,suppression=3):
     if d > 0:
         # hack: dilate edges instead of eroding structures
-        grad = np.gradient(labels)
-        edges = dilate(np.maximum(abs(grad[0]),abs(grad[1])),d)
+        edges = dilate(labels_to_edges(labels),d)
+        # grad = np.gradient(labels)
+        # edges = dilate(np.maximum(abs(grad[0]),abs(grad[1]))>0,d)
         labels[edges] = 0
     im = pymorph.hmin(im,suppression)
     return scipy.ndimage.watershed_ift(im, labels)
@@ -261,12 +267,6 @@ def smoothFn(s1,s2,l1,l2,adj):
     # return int(1.0/float((abs(float(s1)-float(s2)) if \
         # abs(float(s1)-float(s2)) > 9 else 9)+1)*255.0)
 
-def find_dist_diff(im1,im2):
-    im1g = scipy.ndimage.morphology.morphological_gradient(im1,size=(3,3))
-    im2g = scipy.ndimage.morphology.morphological_gradient(im2,size=(3,3))
-    dist = scipy.ndimage.morphology.distance_transform_edt(np.logical_not(im1g))
-    return dist[im2g].max()
-
 class Volume(object):
     def __init__(self, img, labels, shifted={}, win=(0,0), mask=None):
         """initialize fields and compute defaults"""
@@ -372,7 +372,22 @@ class Volume(object):
         """dilate first (background) region only"""
         self.data[0] = dilate(self.data[0],d)
 
-    def output_data_term(self):
+    def dilate_auto(self,max_d,min_d=1,w_d=10,w_s=3):
+        def pre(im):
+            return scipy.ndimage.morphology.morphological_gradient(im,size=(3,3))
+        def clamp(dist):
+            return int(max(min(dist,max_d),min_d))
+        def find_max_dist(im1,im2):
+            dist = scipy.ndimage.morphology.distance_transform_edt(np.logical_not(im1))
+            return dist[im2].max()
+        edges = labels_to_edges(watershed(self.img.copy(),self.labels.copy(),w_d,w_s))
+        # for img in self.data:
+        #     print(clamp(find_max_dist(edges,pre(img))))
+        self.data = map(lambda img : 
+                        dilate(img,clamp(find_max_dist(edges,pre(img)))), 
+                        self.data)
+
+    def output_data_term2(self):
         # just for testing (spit out data term as images)
         for i in range(0,len(self.data)):
             output = self.data[i]
@@ -380,6 +395,20 @@ class Volume(object):
             output[output==True] = 255
             # scipy.misc.imsave("seq5/output/data"+str(i)+".png",output)
             scipy.misc.imsave("d"+str(i)+".png",output)
+
+    def output_data_term(self):
+        output = np.zeros_like(self.img)
+        def alpha_composite(a,b,alpha=0.5):
+            return np.add(np.multiply(a,alpha).astype('uint8'),np.multiply(b,1-alpha).astype('uint8'))
+        def combine(a,b):
+            return np.add(a,np.divide(b,4))
+        for i in range(0,len(self.data)):
+            s = self.data[i].astype('uint8')
+            s[s==False] = 0
+            s[s==True] = 255
+            output = combine(output,s)
+            # scipy.misc.imsave("seq5/output/data"+str(i)+".png",output)
+        scipy.misc.imsave("data.png",output)
 
     def get_adj(self,label_list):
         """return all labels that are adjacent to label_list labels"""
