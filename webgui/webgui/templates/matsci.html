@@ -181,7 +181,9 @@
 				      // + (i==parseInt(state['image']) ? ' selected' : '')
 				      + '" src="/thumb/'
 				      + pad(state['images'][i],4)
-				      + '/" '
+				      + '/'
+				      +'?'+new Date().getTime()
+				      +'" '
 				      + 'id="' + state['images'][i] + '" '
 				      + '/><p>'
 				      + state['images'][i]
