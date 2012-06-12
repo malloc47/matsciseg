@@ -15,18 +15,20 @@ def label_to_bmp(labels):
     return seg
 
 def main(*args):
-    if(len(args) < 3):
+    if(len(args) < 4):
         return 1
 
-    label_path = args[1];
-    imgin = args[2];
+    label_path = args[2];
+    imgin = args[1];
     output = args[3];
 
-    im = scipy.misc.imread(imgin,flatten=True)
+    im = scipy.misc.imread(imgin,flatten=True).astype('float32')
+    im = np.divide(im,im.max())
+    im = np.multiply(im,255).astype('uint8')
     im = np.dstack((im,im,im))
     labels = np.genfromtxt(label_path,dtype='int16')
     bmp = label_to_bmp(labels)
-    if(len(args) > 3):
+    if(len(args) > 4):
         bmp = scipy.ndimage.morphology.binary_dilation(bmp,iterations=int(args[4]))
     scipy.misc.imsave(output,draw_on_img(im,bmp));
 
