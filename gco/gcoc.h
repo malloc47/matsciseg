@@ -17,4 +17,5 @@ PyMODINIT_FUNC initgcot();
 int smoothFn(int s1, int s2, int l1, int l2, void *extraData);
 extern "C" {
 static PyObject *graph_cut(PyObject *self, PyObject *args);
+static PyObject *adjacent(PyObject *self, PyObject *args);
 }

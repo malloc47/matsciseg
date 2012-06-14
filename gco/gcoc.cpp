@@ -8,6 +8,7 @@
 
 static PyMethodDef gcocMethods[] = { 
   {"graph_cut", graph_cut, METH_VARARGS, "Graph Cut Optimization wrapper"},
+  {"adjacent", adjacent, METH_VARARGS, "Calculate adjacency matrix"},
   {NULL, NULL, 0, NULL}};
 
 PyMODINIT_FUNC initgcoc() { 
@@ -274,4 +275,63 @@ static PyObject *graph_cut(PyObject *self, PyObject *args) {
     Py_XDECREF(func);
 
   return PyArray_Return(output);
+}
+
+// adjacency calculation
+static PyObject *adjacent(PyObject *self, PyObject *args) {
+  PyArrayObject *seedimg_p, *adj_p;
+  PyObject *func = NULL;
+  int adj_size;
+  int d[2];
+
+  if (!PyArg_ParseTuple(args, "O!i", 
+			&PyArray_Type, &seedimg_p, 
+			&adj_size)) {
+    PyErr_SetString(PyExc_ValueError, "Parameters not right");
+    return NULL;
+  }
+
+  // check that the objects were successfully assigned
+  if (NULL == seedimg_p) {
+    PyErr_SetString(PyExc_ValueError, "No data in matrix");
+    return NULL; 
+  }
+
+  if(seedimg_p->nd != 2) {
+    printf("%d\n",seedimg_p->nd);
+    PyErr_SetString(PyExc_ValueError, "Wrong input matrix depth");
+    return NULL;
+  }
+
+  // double-check, for no particular reason
+  if(!PyArray_ISINTEGER(seedimg_p)) {
+    PyErr_SetString(PyExc_ValueError, "Wrong intput matrix property");
+    return NULL;
+  }
+
+  if(seedimg_p->descr->type_num != NPY_INT16) {
+    PyErr_SetString(PyExc_ValueError, "Wrong intput matrix type");
+    return NULL;
+  }
+
+  d[0] = seedimg_p->dimensions[0];
+  d[1] = seedimg_p->dimensions[1];
+
+  npy_intp d_out[2];
+  d_out[0] = adj_size;
+  d_out[1] = adj_size;
+
+  adj_p = (PyArrayObject *) PyArray_SimpleNew(2,d_out,NPY_BOOL);
+  PyArray_FILLWBYTE (adj_p,0);
+
+#define get_int16(obj,i,j) int(*((npy_int16*)PyArray_GETPTR2(obj,i,j)))
+#define set_bool(obj,i,j) *((npy_bool*)PyArray_GETPTR2(obj,i,j))
+
+  int i=0,j=0;
+  int size=2;
+  for(i=size+1;i<d[0]-size+1; i++) for(j=size+1;j<d[1]-size+1; j++) {
+      printf("%i\n",get_int16(seedimg_p,i,j));
+    }
+
+  return PyArray_Return(adj_p);
 }
