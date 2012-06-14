@@ -47,12 +47,24 @@ def global_process(arg,im,im_gray,seed):
     v = gco.Volume(im_gray,seed)
     print("Initialized")
     v.dilate_all(arg['d'])
+    v.output_data_term()
     print("Dilated")
-    v.set_adj_label_all(0);
-    print("Adjacent")
+    # v.set_adj_label_all(0);
+    # print("Adjacent")
     v.graph_cut(arg['gctype'])
     print("Graph Cut Complete")
     # import code; code.interact(local=locals())
+    return v.labels
+
+@imgio
+def global_auto_process(arg,im,im_gray,seed):
+    v = gco.Volume(im_gray,seed)
+    print("Initialized")
+    v.dilate_auto(arg['d'])
+    v.output_data_term()
+    print("Dilated")
+    v.graph_cut(arg['gctype'])
+    print("Graph Cut Complete")
     return v.labels
 
 @imgio
@@ -110,6 +122,7 @@ def main(*args):
 
     procs = {'skel'   : skel_process,
              'global' : global_process,
+             'auto' : global_auto_process,
              'guiglobal' : global_interface_process,
              'gauss' : gauss_process}
 
