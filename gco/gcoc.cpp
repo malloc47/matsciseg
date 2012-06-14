@@ -363,7 +363,13 @@ static PyObject *adjacent(PyObject *self, PyObject *args) {
   k = get_int16(seedimg_p,i,j-1);					\
   l = get_int16(seedimg_p,i,j+1);					\
   set_bool2(adj_p,k,l);							\
-  
+
+
+#define EDGE(i,j,start,end)			\
+  (i) = (start);				\
+  for( (j) = 0; (j) < (end) ; (j) +=1 ) {	\
+    FOUR();					\
+  }						\
 
 #define DIST 2
 
@@ -388,25 +394,10 @@ static PyObject *adjacent(PyObject *self, PyObject *args) {
 
   // handle borders
   // hack right now
-  i=0;
-  for(j=0;j<d[1];j+=2) {
-    FOUR();
-  }
-
-  i=d[0]-1;
-  for(j=0;j<d[1];j+=2) {
-    FOUR();
-  }
-
-  j=0;
-  for(i=1;i<d[0];i+=2) {
-    FOUR();
-  }
-
-  j=d[1]-1;
-  for(i=1;i<d[0];i+=2) {
-    FOUR();
-  }
+  EDGE(i,j,0,d[1])
+  EDGE(i,j,d[0]-1,d[1])
+  EDGE(j,i,0,d[0])
+  EDGE(j,i,d[0]-1,d[0])
 
   return PyArray_Return(adj_p);
 }
