@@ -277,6 +277,9 @@ static PyObject *graph_cut(PyObject *self, PyObject *args) {
   return PyArray_Return(output);
 }
 
+inline int min(int a, int b) {return a>b ? b : a;}
+inline int max(int a, int b) {return a<b ? b : a;}
+
 // adjacency calculation
 static PyObject *adjacent(PyObject *self, PyObject *args) {
   PyArrayObject *seedimg_p, *adj_p;
@@ -327,11 +330,14 @@ static PyObject *adjacent(PyObject *self, PyObject *args) {
 #define get_int16(obj,i,j) int(*((npy_int16*)PyArray_GETPTR2(obj,i,j)))
 #define set_bool(obj,i,j) *((npy_bool*)PyArray_GETPTR2(obj,i,j))
 
-  int i=0,j=0;
-  int size=2;
-  for(i=size+1;i<d[0]-size+1; i++) for(j=size+1;j<d[1]-size+1; j++) {
-      printf("%i\n",get_int16(seedimg_p,i,j));
+  int i=0,j=0,wi=0,wj=0;
+  int dist=2;
+  for(i=0;i<d[0];i++) 
+    for(j=0;j<d[1];j++) {
+      for(wi=max(0,i-dist);wi<=min(d[0],i+dist); wi++) 
+	for(wj=max(0,j-dist);wj<=min(d[1],j+dist); wj++) {
+	  printf("%i\n",get_int16(seedimg_p,i,j));
+	}
     }
-
   return PyArray_Return(adj_p);
 }
