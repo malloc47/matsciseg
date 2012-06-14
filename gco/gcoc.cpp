@@ -329,15 +329,84 @@ static PyObject *adjacent(PyObject *self, PyObject *args) {
 
 #define get_int16(obj,i,j) int(*((npy_int16*)PyArray_GETPTR2(obj,i,j)))
 #define set_bool(obj,i,j) *((npy_bool*)PyArray_GETPTR2(obj,i,j))
+#define set_bool2(obj,i,j) set_bool(obj,i,j) = 1; set_bool(obj,j,i) = 1
 
-  int i=0,j=0,wi=0,wj=0;
-  int dist=2;
-  for(i=0;i<d[0];i++) 
-    for(j=0;j<d[1];j++) {
-      for(wi=max(0,i-dist);wi<=min(d[0],i+dist); wi++) 
-	for(wj=max(0,j-dist);wj<=min(d[1],j+dist); wj++) {
-	  printf("%i\n",get_int16(seedimg_p,i,j));
-	}
+#define EIGHT() int c = get_int16(seedimg_p,i,j);			\
+  for(wi=max(0,i-DIST);wi<=min(d[0],i+DIST); wi++)			\
+    for(wj=max(0,j-DIST);wj<=min(d[1],j+DIST); wj++) {			\
+      int k = get_int16(seedimg_p,wi,wj);				\
+      set_bool2(adj_p,k,c);						\
+    }									\
+
+#define FOUR() c = get_int16(seedimg_p,i,j);				\
+  for(wi=max(0,i-DIST);wi<=min(d[0]-1,i+DIST); wi++) {			\
+    k = get_int16(seedimg_p,wi,j);					\
+    set_bool2(adj_p,c,k);						\
+  }									\
+  for(wj=max(0,j-DIST);wj<=min(d[1]-1,j+DIST); wj++) {			\
+    k = get_int16(seedimg_p,i,wj);					\
+    set_bool2(adj_p,c,k);						\
+  }									\
+
+#define FOUR_TWO() c = get_int16(seedimg_p,i,j);			\
+  for(wi=max(0,i-2);wi<=min(d[0]-1,i+2); wi++) {			\
+    k = get_int16(seedimg_p,wi,j);					\
+    set_bool2(adj_p,c,k);						\
+  }									\
+  for(wj=max(0,j-2);wj<=min(d[1]-1,j+2); wj++) {			\
+    k = get_int16(seedimg_p,i,wj);					\
+    set_bool2(adj_p,c,k);						\
+  }									\
+  k = get_int16(seedimg_p,i-1,j);					\
+  l = get_int16(seedimg_p,i+1,j);					\
+  set_bool2(adj_p,k,l);							\
+  k = get_int16(seedimg_p,i,j-1);					\
+  l = get_int16(seedimg_p,i,j+1);					\
+  set_bool2(adj_p,k,l);							\
+  
+
+#define DIST 2
+
+  int i=0,j=0,wi=0,wj=0,c,k,l;
+  // old brute-force method
+  // for(i=0;i<d[0];i++) 
+  //   for(j=0;j<d[1];j++) {
+  //     FOUR()
+  //   }
+
+  // these two loops give us the checkerboard pattern
+  // todo: generalize this
+  for(i=2;i<d[0]-2;i+=2) 
+    for(j=2;j<d[1]-2;j+=2) {
+      FOUR_TWO()
     }
+
+  for(i=1;i<d[0]-1;i+=2) 
+    for(j=1;j<d[1]-1;j+=2) {
+      FOUR_TWO()
+    }
+
+  // handle borders
+  // hack right now
+  i=0;
+  for(j=0;j<d[1];j+=2) {
+    FOUR();
+  }
+
+  i=d[0]-1;
+  for(j=0;j<d[1];j+=2) {
+    FOUR();
+  }
+
+  j=0;
+  for(i=1;i<d[0];i+=2) {
+    FOUR();
+  }
+
+  j=d[1]-1;
+  for(i=1;i<d[0];i+=2) {
+    FOUR();
+  }
+
   return PyArray_Return(adj_p);
 }
