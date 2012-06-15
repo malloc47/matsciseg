@@ -267,6 +267,32 @@ def smoothFn(s1,s2,l1,l2,adj):
     # return int(1.0/float((abs(float(s1)-float(s2)) if \
         # abs(float(s1)-float(s2)) > 9 else 9)+1)*255.0)
 
+def fit_region_z(im):
+    """similar to fit_region"""
+    mask_win = np.argwhere(im)
+    (y0,x0),(y1,x1) = mask_win.min(0),mask_win.max(0)
+    return (x0,y0,x1,y1)
+
+def small_filter(labels,label_num):
+    """cover small label region with the nearest label"""
+    mask = create_mask(labels,[label_num]);
+    (x0,y0,x1,y1) = fit_region_z(mask);
+    if (x0>0): x0 -= 1;
+    if (y0>0): y0 -= 1;
+    if (x1<labels.shape[1]-1): x1 += 1;
+    if (y1<labels.shape[0]-1): y1 += 1;
+    chk_win = mask[y0:y1+1,x0:x1+1];
+    
+    inds = scipy.ndimage.morphology.distance_transform_edt(chk_win,
+                                                           return_distances=False,
+                                                           return_indices=True);
+
+    for y in range(0,chk_win.shape[0]):
+        for x in range(0,chk_win.shape[1]):
+            labels[y+y0,x+x0] = labels[inds[0][y,x]+y0,inds[1][y,x]+x0]
+
+    return labels
+
 class Volume(object):
     def __init__(self, img, labels, shifted={}, win=(0,0), mask=None):
         """initialize fields and compute defaults"""
