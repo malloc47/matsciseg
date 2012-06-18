@@ -113,6 +113,8 @@ def handle_dataset(params):
     return 'dataset '+params['dataset']+' opened'
 
 def handle_global(params):
+    v = slices[current_img];
+    slices[current_img] = gco.Volume(v.img,v.labels)
     slices[current_img].dilate_all(10)
     slices[current_img].graph_cut(1)
     return 'global graph cut successful'
