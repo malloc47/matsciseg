@@ -23,9 +23,9 @@ var log = (function () {
     function clear(){output.children().remove();}
 
     return {
-	init		: init,
-	append		: append,	
-	clear		: clear
+	init	: init,
+	append	: append,	
+	clear	: clear
     }
 
 }());
