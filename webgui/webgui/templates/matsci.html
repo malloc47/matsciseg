@@ -83,28 +83,19 @@
 	padding-left:0px;
     }
     </style>
+    <script type="text/javascript" src="/js/work-canvas.js"></script>
     <script type="text/javascript">
 
     var mode = 'none';
     var state = {};
     var addition = [];
     var removal  = [];
-    var ctx;
 
     var img_paths = {'img' : 'empty',
 		     'seg' : 'output',
 		     'edg' : 'edge'};
 
     var img_mode = 'seg';
-
-    var mainimg = new Image();
-    mainimg.onload = function(){
-	ctx.globalAlpha = 1.0;
-	ctx.drawImage(mainimg,0,0,state['width'],state['height'],0,0,state['width']*2,state['height']*2);
-	ctx.redraw();
-	// ctx.drawImage(mainimg,0,0);
-    };
-    mainimg.src = "/img/image0090.png";
 
     function log_output(str) {
 	if(str.indexOf('error:') === 0) {
@@ -190,19 +181,18 @@
 				      + '</p></li>');
 	}
 	$('.bottombar ul li img').click(function(e) {
-	    ctx.lighten();
+	    workcanvas.loading();
 	    var c=$(this).attr('id');
 	    state['image'] = parseInt(c);
 	    log_output("opening slice "+c);
 	    syncstate();
 	});
 
-	if($('#mainimg').attr('width') != state['width']*2)
-	    $('#mainimg').attr('width',state['width']*2);
-	if($('#mainimg').attr('height') != state['height']*2)
-	    $('#mainimg').attr('height',state['height']*2);
+	workcanvas.init(state['width'],
+			state['height'],
+			$("#mainimg"));
 
-	mainimg.src = '/' + img_paths[img_mode] + '/'+pad(state['image'],4)+'/?'+new Date().getTime();
+	workcanvas.src('/' + img_paths[img_mode] + '/'+pad(state['image'],4)+'/?'+new Date().getTime())
 
 	if('response' in state) {
 	    log_output(state['response']);
@@ -213,7 +203,7 @@
 	  $('.serversend').click(function() {
 	      var method = $(this).attr('id');
 	      log_output("starting "+method);
-	      ctx.lighten();
+	      workcanvas.loading();
 	      state['command'] = method;
 	      state['addition'] = tuples_to_str(addition);
 	      state['removal'] = tuples_to_str(removal);
@@ -223,7 +213,7 @@
 	  $('.dataset').click(function() {
 	      var dataset = $(this).attr('id');
 	      log_output("changing to "+dataset);
-	      ctx.lighten();
+	      workcanvas.loading();
 	      state['command'] = 'dataset';
 	      state['dataset'] = dataset;
 	      syncstate();
@@ -232,11 +222,11 @@
 	  $('.imgtype').click(function() {
 	      var m = $(this).attr('id');
 	      log_output(m+" view");
-	      ctx.lighten();
+	      workcanvas.loading();
 	      img_mode = m;
 	      $('.imgtype').css({"background":"#CCCCCC"});
 	      $(this).css({"background":"#AAAACC"});
-	      mainimg.src = '/' + img_paths[img_mode] + '/'+pad(state['image'],4)+'/?'+new Date().getTime();
+	      workcanvas.src('/' + img_paths[img_mode] + '/'+pad(state['image'],4)+'/?'+new Date().getTime());
 	  });
 
 	  $('.interaction').click(function() {
@@ -249,52 +239,23 @@
 	  $('#reset').click(function() {
 	      addition = [];
 	      removal  = [];
-	      mainimg.onload();
+	      workcanvas.redraw();
 	      $('.output').children().remove();
 	      log_output("reset successful")
 	  });
 
-	  ctx = $("#mainimg")[0].getContext('2d');
+	  workcanvas.init(state['width'],
+			  state['height'],
+			  $("#mainimg"));
 
-	  ctx.fillCircle = function(x, y, radius, fillColor) {
-              this.fillStyle = fillColor;
-              this.beginPath();
-              this.moveTo(x, y);
-              this.arc(x, y, radius, 0, Math.PI * 2, false);
-              this.fill();
-	  };
-
-	  ctx.fillX = function(x, y, radius, fillColor) {
-	      this.fillCircle(x,y,radius,'#000000');
-              this.strokeStyle = fillColor;
-              this.beginPath();
-              this.moveTo(x, y);
-	      this.lineTo(x+radius,y+radius);
-              this.moveTo(x, y);
-	      this.lineTo(x-radius,y-radius);
-              this.moveTo(x, y);
-	      this.lineTo(x+radius,y-radius);
-              this.moveTo(x, y);
-	      this.lineTo(x-radius,y+radius);
-              this.stroke();
-	  };
-
-	  ctx.lighten = function() {
-	      this.fillStyle = '#FFFFFF';
-	      this.fillRect(0,0,$('#mainimg').attr('width'),$('#mainimg').attr('height'));
-	      this.globalAlpha = 0.25;
-	      // this.drawImage(mainimg,0,0);
-	      ctx.drawImage(mainimg,0,0,state['width'],state['height'],0,0,state['width']*2,state['height']*2);
-	  }
-
-	  ctx.redraw = function() {
+	  workcanvas.onredraw(function() {
 	      for (var i=0; i<addition.length; i++) {
-		  ctx.fillCircle(addition[i][0]*2, addition[i][1]*2, 5, '#ffffff');
+	  	  workcanvas.fillCircle(addition[i][0]*2, addition[i][1]*2, 5, '#ffffff');
 	      }
 	      for (var i=0; i<removal.length; i++) {
-		  ctx.fillX(removal[i][0]*2, removal[i][1]*2, 5, '#ffffff');
+	  	  workcanvas.fillX(removal[i][0]*2, removal[i][1]*2, 5, '#ffffff');
 	      }
-	  }
+	  });
 
 	  $('#mainimg').click(function(e) {
 	      if(mode == 'none') return;
@@ -304,9 +265,9 @@
 	      y_new = Math.floor(y/2);
 	      window[mode].push([x_new,y_new]);
 	      if(mode == 'addition')
-		  ctx.fillCircle(x, y, 5, '#ffffff');
+		  workcanvas.fillCircle(x, y, 5, '#ffffff');
 	      else if(mode == 'removal')
-		  ctx.fillX(x, y, 5, '#ffffff');
+		  workcanvas.fillX(x, y, 5, '#ffffff');
 	      log_output(mode + ' at '+x_new+','+y_new);
 	  });
 
