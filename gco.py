@@ -8,13 +8,7 @@ from scipy import ndimage
 import gui
 import pymorph
 
-def unstack_matrix(layered):
-    """splits 3D matrix to a list of 2D matrices"""
-    unstacked = []
-    for i in  range(layered.shape[2]) :
-        unstacked.append(layered[:,:,i])
-    return unstacked
-
+#begin moved
 def stack_matrix(l):
     """ 
     converts list of matrices to a single high-dimension matrix
@@ -76,6 +70,8 @@ def list_layer(layered):
     for l in range(0,len(layered)):
         output[layered[l]] = l
     return output
+
+#end moved
 
 def labels_to_edges(labels):
     grad = np.gradient(labels)
@@ -205,6 +201,7 @@ def region_shift(regions,transform) :
         labels[regions == t[0]] = t[1]
     return labels
 
+#begin moved
 def dilate(img,d):
     # Ugly hack to convert to and from a uint8 to circumvent opencv limitations
     return cv2.morphologyEx(convert_to_uint8(img),
@@ -220,6 +217,8 @@ def erode(img,d):
 
 def relative_complement(p):
     return np.logical_and(p[0],np.logical_not(p[1]))
+
+#end moved
 
 def largest_connected_component(im):
     labels,num = ndimage.label(im)
@@ -240,6 +239,8 @@ def region_clean(regions):
     # todo: what's happening with the zeros?
     return out
 
+#begin moved
+
 def compute_gaussian(layers,img):
     """obtain mean and std dev for all layers"""
     def layer_gaussian(l):
@@ -256,6 +257,8 @@ def fast_fit_gaussian(v,g,d):
     """faster function to determine if v falls within d*g1(std dev) of
     mean g0"""
     return np.logical_and(v>g[0]-g[1],v<g[0]+g[1])
+
+#end moved
 
 def smoothFn(s1,s2,l1,l2,adj):
     """smoothness function that could be passed to the minimzation"""
@@ -326,6 +329,8 @@ class Slice(object):
         self.win=win
         self.shifted=shifted
         self.mask=mask
+
+#begin moved
 
     def skel(self):
         """run skeletonization and integrate to data term"""
@@ -436,6 +441,8 @@ class Slice(object):
             # scipy.misc.imsave("seq5/output/data"+str(i)+".png",output)
         scipy.misc.imsave("data.png",output)
 
+#end moved
+
     def get_adj(self,label_list):
         """return all labels that are adjacent to label_list labels"""
         output = []+label_list  # include original labels as well
@@ -462,6 +469,8 @@ class Slice(object):
             self.adj[-1,a] = True
             self.adj[a,-1] = True
 
+#begin moved
+
     def label_exclusive(self,l):
         self.data = [ np.logical_and(np.logical_not(self.labels==l),x[1])
                       if x[0]!=l else x[1]
@@ -471,6 +480,8 @@ class Slice(object):
         self.data = [ np.logical_or(self.labels==l,x[1])
                       if x[0]!=l else x[1]
                       for x in zip(range(len(self.data)),self.data)]
+
+#end moved        
 
     def set_adj_all(self):
         """remove all topology constraints (everything adjacent)"""
