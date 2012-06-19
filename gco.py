@@ -5,7 +5,6 @@ sys.path.insert(0,os.getcwd() + '/gcoc')
 import gcoc
 import scipy
 from scipy import ndimage
-import gui
 import pymorph
 
 #begin moved
@@ -453,6 +452,7 @@ class Slice(object):
         return set(output)
 
     def get_adj_radius(self,p):
+        import gui
         output = set()
         for i,v in np.ndenumerate(self.labels):
             if gui.dist(i,p[0:2]) < p[2]:
@@ -493,6 +493,7 @@ class Slice(object):
         self.adj[:,l] = True
 
     def edit_labels(self,d):
+        import gui
         while True:
             print("Starting GUI")
             w=gui.Window(self.img,self.labels)
@@ -542,6 +543,7 @@ class Slice(object):
         return v
 
     def add_label_circle(self,p):
+        import gui
         new_label = self.labels.max()+1
         for i,v in np.ndenumerate(self.labels):
             if gui.dist(i,p[0:2]) < p[2]:
