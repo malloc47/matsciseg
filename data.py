@@ -197,6 +197,7 @@ class Data(object):
                 zip(self.regions[1:],combine))
 
         # fetch the largest component (remove unconnected straggling pixels)
+        from gco import largest_connected_component
         self.regions = [self.regions[0]] + \
             map(largest_connected_component,self.regions[1:])
 
