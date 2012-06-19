@@ -83,11 +83,11 @@
     }
     </style>
     <script src="/js/jquery-1.7.2.js" type="text/javascript"></script>
-    <script type="text/javascript" src="/js/work-canvas.js"></script>
     <script type="text/javascript" src="/js/log.js"></script>
+    <script type="text/javascript" src="/js/work-canvas.js"></script>
+    <script type="text/javascript" src="/js/tools.js"></script>
     <script type="text/javascript">
 
-    var mode = 'none';
     var state = {};
     var addition = [];
     var removal  = [];
@@ -95,15 +95,6 @@
     var img_paths = {'img' : 'empty',
 		     'seg' : 'output',
 		     'edg' : 'edge'};
-
-    var img_mode = 'seg';
-
-    function change_mode(new_mode) {
-	mode = mode==new_mode ? 'none' : new_mode;
-	modes = {'none':{'cursor':'default'},'addition':{'cursor':'crosshair'},'removal':{'cursor':'move'}};
-	$('#mainimg').css(modes[mode]);
-	log.append('mode changed to '+mode);
-    }
 
     function tuples_to_str(l) {
 	output = '';
@@ -179,7 +170,7 @@
 			state['height'],
 			$("#mainimg"));
 
-	workcanvas.src('/' + img_paths[img_mode] + '/'+pad(state['image'],4)+'/?'+new Date().getTime())
+	workcanvas.src('/' + tools.getImgPath() + '/'+pad(state['image'],4)+'/?'+new Date().getTime())
 
 	if('response' in state) {
 	    log.append(state['response']);
@@ -189,6 +180,7 @@
       $(document).ready(function() {
 
 	  log.init($('.output'),$('.rawoutput'));
+	  tools.init();
 
 	  $('.serversend').click(function() {
 	      var method = $(this).attr('id');
@@ -213,16 +205,18 @@
 	      var m = $(this).attr('id');
 	      log.append(m+" view");
 	      workcanvas.loading();
-	      img_mode = m;
+	      tools.setImgMode(m)
 	      $('.imgtype').css({"background":"#CCCCCC"});
 	      $(this).css({"background":"#AAAACC"});
-	      workcanvas.src('/' + img_paths[img_mode] + '/'+pad(state['image'],4)+'/?'+new Date().getTime());
+	      workcanvas.src('/' + tools.getImgPath() + '/'+pad(state['image'],4)+'/?'+new Date().getTime());
 	  });
 
 	  $('.interaction').click(function() {
-	      change_mode($(this).attr('id'));
+	      tools.setTool($(this).attr('id'));
+	      $('#mainimg').css(tools.cursor());
+	      log.append('mode changed to '+tools.getTool());
 	      $('.interaction').css({"background":"#CCCCCC"});
-	      if(mode != 'none')
+	      if(tools.getTool() != 'none')
 		  $(this).css({"background":"#CCAAAA"});
 	  });
 
@@ -248,17 +242,17 @@
 	  });
 
 	  $('#mainimg').click(function(e) {
-	      if(mode == 'none') return;
+	      if(tools.getTool() == 'none') return;
 	      var x = e.pageX - this.offsetLeft + $('.workingarea').scrollLeft();
               var y = e.pageY - this.offsetTop + $('.workingarea').scrollTop();
 	      x_new = Math.floor(x/2);
 	      y_new = Math.floor(y/2);
-	      window[mode].push([x_new,y_new]);
-	      if(mode == 'addition')
+	      window[tools.getTool()].push([x_new,y_new]);
+	      if(tools.getTool() == 'addition')
 		  workcanvas.fillCircle(x, y, 5, '#ffffff');
-	      else if(mode == 'removal')
+	      else if(tools.getTool() == 'removal')
 		  workcanvas.fillX(x, y, 5, '#ffffff');
-	      log.append(mode + ' at '+x_new+','+y_new);
+	      log.append(tools.getTool() + ' at '+x_new+','+y_new);
 	  });
 
 	  getstate();
