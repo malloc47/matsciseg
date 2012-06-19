@@ -89,8 +89,6 @@
     <script type="text/javascript">
 
     var state = {};
-    var addition = [];
-    var removal  = [];
 
     var img_paths = {'img' : 'empty',
 		     'seg' : 'output',
@@ -137,8 +135,7 @@
     }
 
     function parsestate() {
-	addition = [];
-	removal  = [];
+	tools.clear()
 	// update bottom bar
 	$('.bottombar ul').children().remove();
 	$('.bottombar ul').css({'width':(124*state['images'].length+20).toString()});
@@ -187,8 +184,8 @@
 	      log.append("starting "+method);
 	      workcanvas.loading();
 	      state['command'] = method;
-	      state['addition'] = tuples_to_str(addition);
-	      state['removal'] = tuples_to_str(removal);
+	      state['addition'] = tuples_to_str(tools.get('addition'));
+	      state['removal'] = tuples_to_str(tools.get('removal'));
 	      syncstate();
 	  });
 
@@ -221,8 +218,7 @@
 	  });
 
 	  $('#reset').click(function() {
-	      addition = [];
-	      removal  = [];
+	      tools.clear();
 	      workcanvas.redraw();
 	      $('.output').children().remove();
 	      log.append("reset successful")
@@ -233,6 +229,8 @@
 			  $("#mainimg"));
 
 	  workcanvas.onredraw(function() {
+	      addition = tools.get('addition');
+	      removal = tools.get('removal');
 	      for (var i=0; i<addition.length; i++) {
 	  	  workcanvas.fillCircle(addition[i][0]*2, addition[i][1]*2, 5, '#ffffff');
 	      }
@@ -247,7 +245,7 @@
               var y = e.pageY - this.offsetTop + $('.workingarea').scrollTop();
 	      x_new = Math.floor(x/2);
 	      y_new = Math.floor(y/2);
-	      window[tools.getTool()].push([x_new,y_new]);
+	      tools.push([x_new,y_new]);
 	      if(tools.getTool() == 'addition')
 		  workcanvas.fillCircle(x, y, 5, '#ffffff');
 	      else if(tools.getTool() == 'removal')
