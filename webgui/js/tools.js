@@ -76,8 +76,8 @@ var tools = (function () {
 
     return {
 	init		: init,
-	getTool	: getTool,
-	setTool	: setTool,
+	getTool		: getTool,
+	setTool		: setTool,
 	getImgMode	: getImgMode,
 	setImgMode	: setImgMode,
 	getImgPath	: getImgPath,
