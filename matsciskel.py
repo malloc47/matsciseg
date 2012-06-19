@@ -44,7 +44,7 @@ def imgio(fn):
 
 @imgio
 def global_process(arg,im,im_gray,seed):
-    v = gco.Volume(im_gray,seed)
+    v = gco.Slice(im_gray,seed)
     print("Initialized")
     v.dilate_all(arg['d'])
     v.output_data_term()
@@ -58,7 +58,7 @@ def global_process(arg,im,im_gray,seed):
 
 @imgio
 def global_auto_process(arg,im,im_gray,seed):
-    v = gco.Volume(im_gray,seed)
+    v = gco.Slice(im_gray,seed)
     print("Initialized")
     v.dilate_auto(arg['d'])
     v.output_data_term()
@@ -69,7 +69,7 @@ def global_auto_process(arg,im,im_gray,seed):
 
 @imgio
 def global_interface_process(arg,im,im_gray,seed):
-    v = gco.Volume(im_gray,seed)
+    v = gco.Slice(im_gray,seed)
     print("Initialized")
     v.dilate_all(arg['d'])
     print("Dilated")
@@ -80,7 +80,7 @@ def global_interface_process(arg,im,im_gray,seed):
 
 @imgio
 def skel_process(arg,im,im_gray,seed):
-    v = gco.Volume(im_gray,seed)
+    v = gco.Slice(im_gray,seed)
     print("Initialized")
     v.dilate(arg['d'])
     v.dilate_first(arg['d'])
@@ -90,7 +90,7 @@ def skel_process(arg,im,im_gray,seed):
 
 @imgio
 def gauss_process(arg,im,im_gray,seed):
-    v = gco.Volume(im_gray,seed)
+    v = gco.Slice(im_gray,seed)
     print("Initialized")
     # v.dilate_first(arg['d']/10)
     v.fit_gaussian(arg['d'],arg['d2'],arg['d3'])

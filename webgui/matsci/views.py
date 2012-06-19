@@ -91,7 +91,7 @@ def handle_copyr(params):
     if idx == 0:
         return 'error: no slice on left!'
     old_img = slices[current_img].img;
-    slices[current_img] = gco.Volume(old_img,slices[current_img-1].labels)
+    slices[current_img] = gco.Slice(old_img,slices[current_img-1].labels)
     return 'copyr successful'
 
 def handle_copyl(params):
@@ -101,7 +101,7 @@ def handle_copyl(params):
     if idx == len(l)-1:
         return 'error: no slice on right!'
     old_img = slices[current_img].img;
-    slices[current_img] = gco.Volume(old_img,slices[current_img+1].labels)
+    slices[current_img] = gco.Slice(old_img,slices[current_img+1].labels)
     return 'copyl successful'
 
 def handle_dataset(params):
@@ -114,7 +114,7 @@ def handle_dataset(params):
 
 def handle_global(params):
     v = slices[current_img];
-    slices[current_img] = gco.Volume(v.img,v.labels)
+    slices[current_img] = gco.Slice(v.img,v.labels)
     slices[current_img].dilate_all(10)
     slices[current_img].graph_cut(1)
     return 'global graph cut successful'

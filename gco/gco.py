@@ -293,7 +293,7 @@ def small_filter(labels,label_num):
 
     return labels
 
-class Volume(object):
+class Slice(object):
     def __init__(self, img, labels, shifted={}, win=(0,0), mask=None):
         """initialize fields and compute defaults"""
         # These values are created
@@ -566,7 +566,7 @@ class Volume(object):
             # label_transform.append((l,new_label))
             new_seed[cropped_seed==l] = new_label
             new_label += 1
-        return Volume(new_img,new_seed,label_transform,(y0,x0),mask_cropped)
+        return Slice(new_img,new_seed,label_transform,(y0,x0),mask_cropped)
 
     def merge(self,v):
         """merge another subwindow volume into this volume"""
