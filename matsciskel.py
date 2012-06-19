@@ -44,8 +44,8 @@ def imgio(fn):
 def global_process(arg,im,im_gray,seed):
     v = gco.Slice(im_gray,seed)
     print("Initialized")
-    v.dilate_all(arg['d'])
-    v.output_data_term()
+    v.data.dilate_all(arg['d'])
+    v.data.output_data_term()
     print("Dilated")
     # v.set_adj_label_all(0);
     # print("Adjacent")
@@ -58,9 +58,8 @@ def global_process(arg,im,im_gray,seed):
 def global_auto_process(arg,im,im_gray,seed):
     v = gco.Slice(im_gray,seed)
     print("Initialized")
-    v.dilate_auto(arg['d'])
-    # v.dilate_auto(v.img,v.labels,arg['d'])
-    v.output_data_term()
+    v.data.dilate_auto(v.img,v.labels,arg['d'])
+    v.data.output_data_term()
     print("Dilated")
     v.graph_cut(arg['gctype'])
     print("Graph Cut Complete")
@@ -70,10 +69,10 @@ def global_auto_process(arg,im,im_gray,seed):
 def global_interface_process(arg,im,im_gray,seed):
     v = gco.Slice(im_gray,seed)
     print("Initialized")
-    v.dilate_all(arg['d'])
+    v.data.dilate_all(arg['d'])
     print("Dilated")
     v.graph_cut(arg['gctype'])
-    v.edit_labels(5)
+    v.edit_labels_gui(5)
     # import code; code.interact(local=locals())
     return v.labels
 
@@ -81,11 +80,10 @@ def global_interface_process(arg,im,im_gray,seed):
 def skel_process(arg,im,im_gray,seed):
     v = gco.Slice(im_gray,seed)
     print("Initialized")
-    v.dilate(arg['d'])
-    v.dilate_first(arg['d'])
+    v.data.dilate(arg['d'])
+    v.data.dilate_first(arg['d'])
     print("Dilated")
-    v.skel()
-    # v.skel(v.orig)
+    v.data.skel(v.orig)
     return v.graph_cut(arg['gctype'])
 
 @imgio
@@ -93,8 +91,7 @@ def gauss_process(arg,im,im_gray,seed):
     v = gco.Slice(im_gray,seed)
     print("Initialized")
     # v.dilate_first(arg['d']/10)
-    v.fit_gaussian(arg['d'],arg['d2'],arg['d3'])
-    # v.fit_gaussian(v.img,arg['d'],arg['d2'],arg['d3'])
+    v.data.fit_gaussian(v.img,arg['d'],arg['d2'],arg['d3'])
     return v.graph_cut(arg['gctype'])
 
 def main(*args):
@@ -150,9 +147,9 @@ def tests():
           'test1.png',
           '10')
     main('./matsciskel.py','e','global',
-          'seq1/img/image0090.tif',
-          'seq1/labels/image0090.label',
-          'seq1/img/image0091.tif',
+          'seq1/img/image0090.png',
+          'seq1/ground/image0090.label',
+          'seq1/img/image0091.png',
           'test2.label',
           'test2.png',
           '10')

@@ -115,7 +115,7 @@ def handle_dataset(params):
 def handle_global(params):
     v = slices[current_img];
     slices[current_img] = gco.Slice(v.img,v.labels)
-    slices[current_img].dilate_all(10)
+    slices[current_img].data.dilate_all(10)
     slices[current_img].graph_cut(1)
     return 'global graph cut successful'
 
