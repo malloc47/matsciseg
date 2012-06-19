@@ -70,8 +70,6 @@ def list_layer(layered):
         output[layered[l]] = l
     return output
 
-#end moved
-
 def labels_to_edges(labels):
     grad = np.gradient(labels)
     edges = np.maximum(abs(grad[0]),abs(grad[1]))
@@ -109,6 +107,8 @@ def skel(img):
         if np.abs(prev-img).max() == 0:
             break
     return img
+
+#end moved
 
 def adjacent(labels):
     """determine which labels are adjacent"""
@@ -306,7 +306,8 @@ class Slice(object):
         self.orig_labels = self.labels.copy()
         # self.num_labels = self.labels.max()+1
         self.data = layer_list(self.labels)
-        self.orig = np.array(self.data)
+        # self.orig = np.array(self.data)
+        self.orig = self.data.copy()
         self.adj = adjacent(self.labels)
         self.shifted=shifted
         self.win=win
@@ -322,7 +323,8 @@ class Slice(object):
         self.orig_labels = self.labels.copy()
         # self.num_labels = self.labels.max()+1
         self.data = layer_list(self.labels)
-        self.orig = np.array(self.data)
+        # self.orig = np.array(self.data)
+        self.orig = self.data.copy()
         self.adj = adjacent(self.labels)
         self.shifted=shifted
         self.win=win
@@ -527,6 +529,7 @@ class Slice(object):
         v = self.crop([l])
         v.dilate_all(d)
         v.label_inexclusive(l)
+        # v.label_inexclusive(self.labels,l)
         v.set_adj_all()
         v.graph_cut_no_clean(1)
         return v
@@ -537,6 +540,7 @@ class Slice(object):
         l = v.add_label_circle(p)
         v.dilate_label(l,p[2]*d)
         v.label_exclusive(l)
+        # v.label_exclusive(self.labels,l)
         # v.output_data_term()
         v.set_adj_label_all(l)
         v.graph_cut_no_clean(1)

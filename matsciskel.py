@@ -59,6 +59,7 @@ def global_auto_process(arg,im,im_gray,seed):
     v = gco.Slice(im_gray,seed)
     print("Initialized")
     v.dilate_auto(arg['d'])
+    # v.dilate_auto(v.img,v.labels,arg['d'])
     v.output_data_term()
     print("Dilated")
     v.graph_cut(arg['gctype'])
@@ -84,6 +85,7 @@ def skel_process(arg,im,im_gray,seed):
     v.dilate_first(arg['d'])
     print("Dilated")
     v.skel()
+    # v.skel(v.orig)
     return v.graph_cut(arg['gctype'])
 
 @imgio
@@ -92,6 +94,7 @@ def gauss_process(arg,im,im_gray,seed):
     print("Initialized")
     # v.dilate_first(arg['d']/10)
     v.fit_gaussian(arg['d'],arg['d2'],arg['d3'])
+    # v.fit_gaussian(v.img,arg['d'],arg['d2'],arg['d3'])
     return v.graph_cut(arg['gctype'])
 
 def main(*args):
