@@ -1,6 +1,8 @@
 #data module
+import cv,cv2
 import numpy as np
 import scipy
+from scipy import ndimage
 
 def unstack_matrix(layered):
     """splits 3D matrix to a list of 2D matrices"""
@@ -78,6 +80,7 @@ def labels_to_edges(labels):
     return edges>0
 
 def watershed(im,labels,d=0,suppression=3):
+    import pymorph
     if d > 0:
         # hack: dilate edges instead of eroding structures
         edges = dilate(labels_to_edges(labels),d)
@@ -85,7 +88,7 @@ def watershed(im,labels,d=0,suppression=3):
         # edges = dilate(np.maximum(abs(grad[0]),abs(grad[1]))>0,d)
         labels[edges] = 0
     im = pymorph.hmin(im,suppression)
-    return scipy.ndimage.watershed_ift(im, labels)
+    return ndimage.watershed_ift(im, labels)
     
 def skel(img):
     """skeletonize image"""
@@ -223,11 +226,11 @@ class Data(object):
 
     def dilate_auto(self,im,labels,max_d,min_d=1,w_d=10,w_s=3):
         def pre(im):
-            return scipy.ndimage.morphology.morphological_gradient(im,size=(3,3))
+            return ndimage.morphology.morphological_gradient(im,size=(3,3))
         def clamp(dist):
             return int(max(min(dist,max_d),min_d))
         def find_max_dist(im1,im2):
-            dist = scipy.ndimage.morphology.distance_transform_edt(np.logical_not(im1))
+            dist = ndimage.morphology.distance_transform_edt(np.logical_not(im1))
             return dist[im2].max()
         edges = labels_to_edges(watershed(im.copy(),labels.copy(),w_d,w_s))
         # for img in self.regions:
@@ -245,8 +248,8 @@ class Data(object):
             # scipy.misc.imsave("seq5/output/data"+str(i)+".png",output)
             scipy.misc.imsave("d"+str(i)+".png",output)
 
-    def output_data_term(self,img):
-        output = np.zeros_like(img)
+    def output_data_term(self):
+        output = np.zeros(self.regions[0].shape,dtype='uint8')
         def alpha_composite(a,b,alpha=0.5):
             return np.add(np.multiply(a,alpha).astype('uint8'),np.multiply(b,1-alpha).astype('uint8'))
         def combine(a,b):
@@ -268,3 +271,6 @@ class Data(object):
         self.regions = [ np.logical_or(labels==l,x[1])
                       if x[0]!=l else x[1]
                       for x in zip(range(len(self.regions)),self.regions)]
+
+    def matrix(self):
+        return stack_matrix(self.regions)
