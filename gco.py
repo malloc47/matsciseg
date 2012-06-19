@@ -1,7 +1,7 @@
 # gco module
 import sys,os,cv,cv2
 import numpy as np
-sys.path.insert(0,os.getcwd())
+sys.path.insert(0,os.getcwd() + '/gcoc')
 import gcoc
 import scipy
 from scipy import ndimage

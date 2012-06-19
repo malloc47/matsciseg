@@ -1,0 +1,6 @@
+*.pyc
+*.png
+*.label
+*~
+*.old
+*.so

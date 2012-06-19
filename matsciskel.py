@@ -1,9 +1,7 @@
 #!/usr/bin/env python
 import sys,os,cv,cv2
 import numpy as np
-sys.path.insert(0,os.getcwd() + '/gco')
-sys.path.insert(0,os.getcwd())
-import gcoc,gco
+import gco
 import scipy
 from scipy import ndimage
 
