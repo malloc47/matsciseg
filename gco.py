@@ -5,7 +5,9 @@ sys.path.insert(0,os.getcwd() + '/gcoc')
 import gcoc
 import scipy
 from scipy import ndimage
+from copy import deepcopy
 import pymorph
+import data
 
 #begin moved
 def stack_matrix(l):
@@ -307,7 +309,7 @@ class Slice(object):
         # self.num_labels = self.labels.max()+1
         self.data = layer_list(self.labels)
         # self.orig = np.array(self.data)
-        self.orig = self.data.copy()
+        self.orig = deepcopy(self.data)
         self.adj = adjacent(self.labels)
         self.shifted=shifted
         self.win=win
@@ -324,7 +326,7 @@ class Slice(object):
         # self.num_labels = self.labels.max()+1
         self.data = layer_list(self.labels)
         # self.orig = np.array(self.data)
-        self.orig = self.data.copy()
+        self.orig = deepcopy(self.data)
         self.adj = adjacent(self.labels)
         self.shifted=shifted
         self.win=win
