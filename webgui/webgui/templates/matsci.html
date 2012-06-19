@@ -94,20 +94,6 @@
 		     'seg' : 'output',
 		     'edg' : 'edge'};
 
-    function tuples_to_str(l) {
-	output = '';
-	for (var i=0; i<l.length; i++) {
-	    output += l[i][0].toString()+','+l[i][1].toString()+';';
-	}
-	// don't grab last ";"
-	if(output[output.length-1] == ';') {
-	    return output.substr(0,output.length-1);
-	}
-	else {
-	    return output;
-	}
-    }
-
     function pad(number, length) {    
 	var str = '' + number;
 	while (str.length < length) {
@@ -184,8 +170,8 @@
 	      log.append("starting "+method);
 	      workcanvas.loading();
 	      state['command'] = method;
-	      state['addition'] = tuples_to_str(tools.get('addition'));
-	      state['removal'] = tuples_to_str(tools.get('removal'));
+	      state['addition'] = tools.getStr('addition');
+	      state['removal'] = tools.getStr('removal');
 	      syncstate();
 	  });
 

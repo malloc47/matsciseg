@@ -55,6 +55,25 @@ var tools = (function () {
 	return data[type];
     };
 
+    function tuplesToStr(l) {
+	output = '';
+	for (var i=0; i<l.length; i++) {
+	    output += l[i][0].toString()+','+l[i][1].toString()+';';
+	}
+	// don't grab last ";"
+	if(output[output.length-1] == ';') {
+	    return output.substr(0,output.length-1);
+	}
+	else {
+	    return output;
+	}
+    }
+
+    function getStr(type) {
+	if(!type) type = toolMode;
+	return tuplesToStr(data[type]);
+    };
+
     return {
 	init		: init,
 	getTool	: getTool,
@@ -65,6 +84,7 @@ var tools = (function () {
 	cursor		: cursor,
 	push		: push,
 	clear		: clear,
-	get		: get
+	get		: get,
+	getStr		: getStr,
     }
 }());
