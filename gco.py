@@ -186,12 +186,12 @@ class Slice(object):
                                 self.adj.v,
                                 self.labels.max()+1, # todo: extract from data
                                 mode)
-        self.__init__(self.img,
-                      output,
-                      self.shifted,
-                      self.win)
-        # self.labels = region_clean(region_shift(output,
-        #                                         region_transform(output)))
+        # fully reinitialize self (recompute adj, data, etc.)
+        self.__init__(self.img, 
+                      output, 
+                      self.shifted, 
+                      self.win, 
+                      self.mask)
         return self.labels.v
 
     def graph_cut_no_clean(self,mode=0):
