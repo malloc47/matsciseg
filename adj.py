@@ -2,6 +2,7 @@
 import numpy as np
 import scipy
 from scipy import ndimage
+import gcoc
 
 def adjacent(labels):
     """determine which labels are adjacent"""
@@ -44,9 +45,30 @@ def adjacent(labels):
 
     return adj
 
+def circle(p,shape):
+    output = np.zeros(shape,dtype='bool')
+    r = p[2]
+    cx, cy = p[0:2]
+    y, x = np.ogrid[-r:r+1, -r:r+1]
+    index = x**2 + y**2 <= r**2
+    # handle border cases
+    crop = ((cx-r)-max(cx-r,0), 
+            min(cx+r+1,output.shape[0])-(cx+r+1),
+            (cy-r)-max(cy-r,0),
+            min(cy+r+1,output.shape[1])-(cy+r+1))
+    output[cx-r-crop[0]:cx+r+crop[1]+1, cy-r-crop[2]:cy+r+crop[3]+1][
+        index[abs(crop[0]):index.shape[0]-abs(crop[1]),
+              abs(crop[2]):index.shape[1]-abs(crop[3])]] = True
+    return output
+
+# def circle_mask(r,shape,p):
+#     y,x = np.ogrid[-shape[0]:shape[0], -shape[1]:shape[1]]
+#     return (x-(p[0]-shape[0]*2))**2+(y-(p[1]-shape[1]*2))**2 <= r**2
+
 class Adj(object):
     def __init__(self,labels):
-        self.v = adjacent(labels.v)
+        self.v = gcoc.adjacent(labels.v,labels.max()+1)
+        # self.v = adjacent(labels.v)
     
     def get_adj(self,label_list):
         """return all labels that are adjacent to label_list labels"""
@@ -57,14 +79,11 @@ class Adj(object):
             output += [i for i,x in enumerate(self.v[l,:]) if x]
         return set(output)
 
-    # update
+    # doesn't really belong in adj, per-se
     def get_adj_radius(self,p,labels):
-        import gui
-        output = set()
-        for i,v in np.ndenumerate(labels):
-            if gui.dist(i,p[0:2]) < p[2]:
-                output.add(labels[i])
-        return output
+        """get all regions covered by circle"""
+        return set(np.unique(labels[
+                    circle(p,labels.shape)]))
 
     def set_adj_new(self,adj=[]):
         """ add new row and column to self.v for new label"""

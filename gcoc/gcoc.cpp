@@ -274,6 +274,14 @@ static PyObject *graph_cut(PyObject *self, PyObject *args) {
   if(has_func)
     Py_XDECREF(func);
 
+
+  // Py_XDECREF(data_p);
+  // Py_XDECREF(img_p);
+  // Py_XDECREF(seedimg_p);
+  // Py_XDECREF(adj_p);
+
+  Py_INCREF(output);
+
   return PyArray_Return(output);
 }
 
@@ -375,14 +383,14 @@ static PyObject *adjacent(PyObject *self, PyObject *args) {
 
   int i=0,j=0,wi=0,wj=0,c,k,l;
   // old brute-force method
-  // for(i=0;i<d[0];i++) 
-  //   for(j=0;j<d[1];j++) {
-  //     FOUR()
-  //   }
+  for(i=0;i<d[0];i++) 
+    for(j=0;j<d[1];j++) {
+      FOUR()
+    }
 
   // these two loops give us the checkerboard pattern
   // todo: generalize this
-  for(i=2;i<d[0]-2;i+=2) 
+  /*  for(i=2;i<d[0]-2;i+=2) 
     for(j=2;j<d[1]-2;j+=2) {
       FOUR_TWO()
     }
@@ -398,6 +406,9 @@ static PyObject *adjacent(PyObject *self, PyObject *args) {
   EDGE(i,j,d[0]-1,d[1])
   EDGE(j,i,0,d[0])
   EDGE(j,i,d[0]-1,d[0])
+  */
+  // Py_XDECREF(seedimg_p);
+  Py_INCREF(adj_p);
 
   return PyArray_Return(adj_p);
 }

@@ -94,6 +94,9 @@ class Slice(object):
         v.graph_cut(1)
         return v
 
+    # from profilehooks import profile
+
+    # @profile
     def add_label(self,p,d):
         v = self.crop(list(self.adj.get_adj_radius(p,self.labels.v)))
         p = (p[0]-v.win[0],p[1]-v.win[1],p[2])
@@ -108,9 +111,7 @@ class Slice(object):
     def add_label_circle(self,p):
         import gui
         new_label = self.labels.max()+1
-        for i,v in np.ndenumerate(self.labels.v):
-            if gui.dist(i,p[0:2]) < p[2]:
-                self.labels.v[i] = new_label
+        self.labels.v[adj.circle(p,self.labels.v.shape)] = new_label
         # reconstruct data term after adding label
         # todo: do we really need to do these two lines?
         self.data = data.Data(self.labels.v)
@@ -160,8 +161,13 @@ class Slice(object):
             else:
                 # print("Shifting "+str(l)+" to "+str(new_label))
                 u[v.labels.v==l]=new_label
-                self.adj.set_adj_new(shifted_labels)
+                # self.adj.set_adj_new(shifted_labels)
                 new_label+=1
+                self.__init__(self.img, 
+                      self.labels.v, 
+                      self.shifted, 
+                      self.win, 
+                      self.mask)
 
         # self.__init__(self.img,
         #               region_clean(region_shift(self.labels,
@@ -179,6 +185,10 @@ class Slice(object):
             print("Not all pixels have a label")
         else:
             print("All pixels have a label")
+
+        print("region size: " + str(self.img.shape))
+        print("min: " + str(self.labels.v.min()))
+        print("max: " + str(self.labels.v.max()))
 
         output = gcoc.graph_cut(self.data.matrix(),
                                 self.img,

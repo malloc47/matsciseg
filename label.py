@@ -59,8 +59,30 @@ def largest_connected_component(im):
     sizes = [ ((labels==l).sum(),l) for l in range(1,num+1) ]
     return labels==max(sizes,key=lambda x:x[0])[1]
 
+def small_filter(labels,label_num):
+    """cover small label region with the nearest label"""
+    mask = create_mask(labels,[label_num]);
+    if not mask.any():
+        return labels
+    (x0,y0,x1,y1) = fit_region_z(mask);
+    if (x0>0): x0 -= 1;
+    if (y0>0): y0 -= 1;
+    if (x1<labels.shape[1]-1): x1 += 1;
+    if (y1<labels.shape[0]-1): y1 += 1;
+    chk_win = mask[y0:y1+1,x0:x1+1];
+
+    inds = scipy.ndimage.morphology.distance_transform_edt(chk_win,
+                                                           return_distances=False,
+                                                           return_indices=True);
+
+    for y in range(0,chk_win.shape[0]):
+        for x in range(0,chk_win.shape[1]):
+            labels[y+y0,x+x0] = labels[inds[0][y,x]+y0,inds[1][y,x]+x0]
+
+    return labels
+
 def region_clean(regions):
-    out = np.zeros(regions.shape,dtype=regions.dtype)
+    out = np.ones(regions.shape,dtype=regions.dtype)*-1
     for l in range(regions.max()+1) :
         layer = (regions==l)
         if layer.any() :
@@ -68,8 +90,9 @@ def region_clean(regions):
             labeled = largest_connected_component(layer>0)
             # copy only the largest connected component
             out[np.nonzero(labeled == label_max(labeled))] = l
-    # todo: what's happening with the zeros?
-    return out
+    return small_filter(out,-1)
+    # todo: what's happening with the -1s?
+    # return out
 
 def fit_region_z(im):
     """similar to fit_region"""
@@ -85,26 +108,6 @@ class Label(object):
     def create_mask(self,label_list):
         """get binary mask from a list of labels (in an integer matrix)"""
         return reduce(np.logical_or,map(lambda l:self.v==l,label_list))
-
-    def small_filter(self,label_num):
-        """cover small label region with the nearest label"""
-        mask = self.v.create_mask([label_num]);
-        (x0,y0,x1,y1) = fit_region_z(mask);
-        if (x0>0): x0 -= 1;
-        if (y0>0): y0 -= 1;
-        if (x1<self.v.shape[1]-1): x1 += 1;
-        if (y1<self.v.shape[0]-1): y1 += 1;
-        chk_win = mask[y0:y1+1,x0:x1+1];
-
-        inds = scipy.ndimage.morphology.distance_transform_edt(chk_win,
-                                                               return_distances=False,
-                                                               return_indices=True);
-
-        for y in range(0,chk_win.shape[0]):
-            for x in range(0,chk_win.shape[1]):
-                self.v[y+y0,x+x0] = self.v[inds[0][y,x]+y0,inds[1][y,x]+x0]
-
-        return self.v
 
     def max(self):
         return self.v.max()
