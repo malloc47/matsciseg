@@ -52,7 +52,7 @@ def global_process(arg,im,im_gray,seed):
     v.graph_cut(arg['gctype'])
     print("Graph Cut Complete")
     # import code; code.interact(local=locals())
-    return v.labels
+    return v.labels.v
 
 @imgio
 def global_auto_process(arg,im,im_gray,seed):
@@ -63,7 +63,7 @@ def global_auto_process(arg,im,im_gray,seed):
     print("Dilated")
     v.graph_cut(arg['gctype'])
     print("Graph Cut Complete")
-    return v.labels
+    return v.labels.v
 
 @imgio
 def global_interface_process(arg,im,im_gray,seed):
@@ -74,7 +74,7 @@ def global_interface_process(arg,im,im_gray,seed):
     v.graph_cut(arg['gctype'])
     v.edit_labels_gui(5)
     # import code; code.interact(local=locals())
-    return v.labels
+    return v.labels.v
 
 @imgio
 def skel_process(arg,im,im_gray,seed):
