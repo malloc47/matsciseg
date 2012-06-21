@@ -180,10 +180,10 @@ class Slice(object):
         # self.output_data_term()
         # w=gui.Window(self.img,self.labels)
 
-        if not data.check_data_term(self.data.regions):
-            print("Not all pixels have a label")
-        else:
-            print("All pixels have a label")
+        # if not data.check_data_term(self.data.regions):
+        #     print("Not all pixels have a label")
+        # else:
+        #     print("All pixels have a label")
 
         print("region size: " + str(self.img.shape))
         # print("min: " + str(self.labels.v.min()))
