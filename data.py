@@ -147,8 +147,9 @@ def fast_fit_gaussian(v,g,d):
     return np.logical_and(v>g[0]-g[1],v<g[0]+g[1])
 
 class Data(object):
-    def __init__(self,labels):
-        self.regions = layer_list(labels)
+    def __init__(self,labels=None):
+        if not labels is None:
+            self.regions = layer_list(labels)
 
     def skel(self,d=None,erode_size=1):
         """run skeletonization and integrate to data term"""
@@ -275,3 +276,9 @@ class Data(object):
 
     def matrix(self):
         return stack_matrix(self.regions)
+
+    def copy(self):
+        from copy import deepcopy
+        cp = Data()
+        cp.regions = deepcopy(self.regions)
+        return cp

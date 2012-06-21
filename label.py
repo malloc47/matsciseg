@@ -101,9 +101,10 @@ def fit_region_z(im):
     return (x0,y0,x1,y1)
 
 class Label(object):
-    def __init__(self,labels):
-        self.v = region_clean(region_shift(labels,
-                                           region_transform(labels)))
+    def __init__(self,labels=None):
+        if not labels is None:
+            self.v = region_clean(region_shift(labels,
+                                               region_transform(labels)))
     
     def create_mask(self,label_list):
         """get binary mask from a list of labels (in an integer matrix)"""

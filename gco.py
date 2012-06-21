@@ -19,41 +19,30 @@ def smoothFn(s1,s2,l1,l2,adj):
         # abs(float(s1)-float(s2)) > 9 else 9)+1)*255.0)
 
 class Slice(object):
-    def __init__(self, img, labels, shifted={}, win=(0,0), mask=None):
+    def __init__(self, img, labels, shifted={}, 
+                 win=(0,0), mask=None, lightweight=False,
+                 nodata=False):
         """initialize fields and compute defaults"""
         # These values are created
         # when the class is instantiated.
         self.img = img.copy()
-        self.labels = label.Label(labels)
+        if lightweight:
+            self.labels = label.Label()
+            self.labels.v = labels
+        else:
+            self.labels = label.Label(labels)
         # self.orig_labels = self.labels.copy()
         # self.num_labels = self.labels.max()+1
-        self.data = data.Data(self.labels.v)
-        # self.orig = np.array(self.data)
-        self.orig = data.Data(self.labels.v) # potential slowdown
+        if nodata:
+            self.data = None
+        else:
+            self.data = data.Data(self.labels.v)
+            self.orig = self.data.copy() # potential slowdown
         self.adj = adj.Adj(self.labels) # adjacent(self.labels)
         self.shifted=shifted
         self.win=win
         self.shifted=shifted
         self.mask=mask
-
-    def init_no_clean(self, img, labels, shifted={}, win=(0,0), mask=None):
-        """initialize fields and compute defaults"""
-        # These values are created
-        # when the class is instantiated.
-        self.img = img.copy()
-        # self.labels = labels
-        self.labels = label.Label(labels)
-        # self.orig_labels = self.labels.copy()
-        # self.num_labels = self.labels.max()+1
-        self.data = data.Data(self.labels.v)
-        # self.orig = np.array(self.data)
-        self.orig = data.Data(self.labels.v) # potential slowdown
-        self.adj = adj.Adj(self.labels)
-        self.shifted=shifted
-        self.win=win
-        self.shifted=shifted
-        self.mask=mask
-
 
     def edit_labels_gui(self,d):
         import gui
@@ -62,21 +51,20 @@ class Slice(object):
             w=gui.Window(self.img,self.labels.v)
             create=w.create_list
             remove=w.remove_list
-            new_volumes = []
-            for r in remove:
-                # determine best dilation to kill region--might backfire
-                (x0,y0,x1,y1) = label.fit_region(self.labels.create_mask([r]))
-                new_volumes.append(self.remove_label(r,max(x1-x0,y1-y0)+5))
-            for c in create:
-                new_volumes.append(self.add_label(c,d))
-            for v in new_volumes:
-                self.merge(v)
+            self.process_annotations(create,remove,d)
             if not create and not remove:
                 break
 
     def edit_labels(self,d,addition,removal):
         create = [(b,a,5) for a,b in addition]
         remove = set([self.labels[(b,a)] for a,b in removal])
+        self.process_annotations(create,remove,d)
+
+    from profilehooks import profile
+    # from profilehooks import timecall
+
+    # @profile(immediate=True)
+    def process_annotations(self,create,remove,d):
         new_volumes = []
         for r in remove:
             (x0,y0,x1,y1) = label.fit_region(self.labels.create_mask([r]))
@@ -85,18 +73,24 @@ class Slice(object):
             new_volumes.append(self.add_label(c,d))
         for v in new_volumes:
             self.merge(v)
+        self.__init__(self.img
+                      , self.labels.v
+                      , self.shifted
+                      , self.win
+                      , self.mask
+                      , lightweight=True
+                      , nodata=True)
 
+    @profile(immediate=True)
     def remove_label(self,l,d):
         v = self.crop([l])
         v.data.dilate_all(d)
         v.data.label_inexclusive(v.labels.v,l)
         v.adj.set_adj_all()
-        v.graph_cut(1)
+        v.graph_cut(1,lite=True)
         return v
 
-    # from profilehooks import profile
-
-    # @profile
+    @profile(immediate=True)
     def add_label(self,p,d):
         v = self.crop(list(self.adj.get_adj_radius(p,self.labels.v)))
         p = (p[0]-v.win[0],p[1]-v.win[1],p[2])
@@ -105,7 +99,7 @@ class Slice(object):
         v.data.label_exclusive(v.labels.v,l)
         # v.output_data_term()
         v.adj.set_adj_label_all(l)
-        v.graph_cut(1)
+        v.graph_cut(1,lite=True)
         return v
 
     def add_label_circle(self,p):
@@ -139,7 +133,12 @@ class Slice(object):
             # label_transform.append((l,new_label))
             new_seed[cropped_seed==l] = new_label
             new_label += 1
-        return Slice(new_img,new_seed,label_transform,(y0,x0),mask_cropped)
+        return Slice(new_img
+                     , new_seed
+                     , label_transform
+                     , (y0,x0)
+                     , mask_cropped
+                     , lightweight=True)
 
     def merge(self,v):
         """merge another subwindow volume into this volume"""
@@ -163,19 +162,8 @@ class Slice(object):
                 u[v.labels.v==l]=new_label
                 # self.adj.set_adj_new(shifted_labels)
                 new_label+=1
-                self.__init__(self.img, 
-                      self.labels.v, 
-                      self.shifted, 
-                      self.win, 
-                      self.mask)
 
-        # self.__init__(self.img,
-        #               region_clean(region_shift(self.labels,
-        #                                         region_transform(self.labels))),
-        #               self.shifted,
-        #               self.win)
-
-    def graph_cut(self,mode=0):
+    def graph_cut(self,mode=0,lite=False):
         """run graph cut on this volume (mode specifies V(p,q) term"""
         # if self.win != (0,0):
         # self.output_data_term()
@@ -197,20 +185,11 @@ class Slice(object):
                                 self.labels.max()+1, # todo: extract from data
                                 mode)
         # fully reinitialize self (recompute adj, data, etc.)
-        self.__init__(self.img, 
-                      output, 
-                      self.shifted, 
-                      self.win, 
-                      self.mask)
+        self.__init__(self.img
+                      , output
+                      , self.shifted
+                      , self.win
+                      , self.mask
+                      , lightweight=lite
+                      , nodata=lite)
         return self.labels.v
-
-    def graph_cut_no_clean(self,mode=0):
-        """run graph cut on this volume (mode specifies V(p,q) term"""
-        output = gcoc.graph_cut(self.data.matrix(),
-                                self.img,
-                                self.labels.v,
-                                self.adj.v,
-                                self.labels.max()+1, # todo: extract from data
-                                mode)
-        # self.labels = output.copy()
-        return output
