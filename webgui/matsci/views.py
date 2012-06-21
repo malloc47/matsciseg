@@ -32,7 +32,7 @@ def img_thumb(request,imgnum):
 def img_full(request,imgnum):
     slicenum=int(imgnum)
     if slicenum in slices:
-        output = gui.color_jet(gui.grey_to_rgb(slices[slicenum].img),slices[slicenum].labels)
+        output = gui.color_jet(gui.grey_to_rgb(slices[slicenum].img),slices[slicenum].labels.v)
         http_output = Image.fromarray(np.uint8(output))
         response = HttpResponse(mimetype="image/png")
         http_output.save(response, "PNG")
