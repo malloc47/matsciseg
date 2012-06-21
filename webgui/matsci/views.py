@@ -57,7 +57,7 @@ def img_full_edge(request,imgnum):
     if slicenum in slices:
         im = slices[slicenum].img
         im = np.dstack((im,im,im))
-        bmp = render_labels.label_to_bmp(slices[slicenum].labels)
+        bmp = render_labels.label_to_bmp(slices[slicenum].labels.v)
         output = render_labels.draw_on_img(im,bmp)
         http_output = Image.fromarray(np.uint8(output))
         response = HttpResponse(mimetype="image/png")
@@ -91,7 +91,7 @@ def handle_copyr(params):
     if idx == 0:
         return 'error: no slice on left!'
     old_img = slices[current_img].img;
-    slices[current_img] = gco.Slice(old_img,slices[current_img-1].labels)
+    slices[current_img] = gco.Slice(old_img,slices[current_img-1].labels.v)
     return 'copyr successful'
 
 def handle_copyl(params):
@@ -101,7 +101,7 @@ def handle_copyl(params):
     if idx == len(l)-1:
         return 'error: no slice on right!'
     old_img = slices[current_img].img;
-    slices[current_img] = gco.Slice(old_img,slices[current_img+1].labels)
+    slices[current_img] = gco.Slice(old_img,slices[current_img+1].labels.v)
     return 'copyl successful'
 
 def handle_dataset(params):

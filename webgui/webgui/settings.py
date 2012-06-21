@@ -1,7 +1,7 @@
 # Django settings for webgui project.
 
 import sys,os.path
-sys.path.insert(0,os.getcwd() + '/../gco')
+sys.path.insert(0,os.getcwd() + '/../gcoc')
 sys.path.insert(0,os.getcwd() + '/..')
 # print(sys.path)
 import matsciskel, gco
