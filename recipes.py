@@ -33,6 +33,12 @@ def globalgui_cmd(arg,im,im_gray,seed):
     # import code; code.interact(local=locals())
     return v.labels.v
 
+def gui_cmd(arg,im,im_gray,seed):
+    v = gco.Slice(im_gray,seed)
+    print("Initialized")
+    v.edit_labels_gui(5)
+    return v.labels.v
+
 def skel_cmd(arg,im,im_gray,seed):
     v = gco.Slice(im_gray,seed)
     print("Initialized")
