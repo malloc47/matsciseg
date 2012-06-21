@@ -59,7 +59,7 @@ class Slice(object):
 
     def edit_labels(self,d,addition,removal):
         create = [(b,a,5) for a,b in addition]
-        remove = set([self.labels[(b,a)] for a,b in removal])
+        remove = set([self.labels.v[(b,a)] for a,b in removal])
         self.process_annotations(create,remove,d)
 
     def process_annotations(self,create,remove,d):
