@@ -4,6 +4,7 @@ import numpy as np
 import gco
 import scipy
 from scipy import ndimage
+import recipes
 
 def display(im):
     cv2.namedWindow("tmp",cv2.CV_WINDOW_AUTOSIZE)
@@ -30,6 +31,7 @@ def read_img(img_name):
     return (im,im_gray)
 
 def imgio(fn):
+    """use to decorate recipes with io ops"""
     def imghandle(arg):
         im,im_gray = read_img(arg['im2'])
         seed=np.genfromtxt(arg['label'],dtype='int16')
@@ -40,59 +42,17 @@ def imgio(fn):
         cv2.imwrite(arg['im_out'],draw_on_img(im,label_to_bmp(output)))
     return imghandle
 
-@imgio
-def global_process(arg,im,im_gray,seed):
-    v = gco.Slice(im_gray,seed)
-    print("Initialized")
-    v.data.dilate_all(arg['d'])
-    v.data.output_data_term()
-    print("Dilated")
-    # v.set_adj_label_all(0);
-    # print("Adjacent")
-    v.graph_cut(arg['gctype'])
-    print("Graph Cut Complete")
-    # import code; code.interact(local=locals())
-    return v.labels.v
-
-@imgio
-def global_auto_process(arg,im,im_gray,seed):
-    v = gco.Slice(im_gray,seed)
-    print("Initialized")
-    v.data.dilate_auto(v.img,v.labels,arg['d'])
-    v.data.output_data_term()
-    print("Dilated")
-    v.graph_cut(arg['gctype'])
-    print("Graph Cut Complete")
-    return v.labels.v
-
-@imgio
-def global_interface_process(arg,im,im_gray,seed):
-    v = gco.Slice(im_gray,seed)
-    print("Initialized")
-    v.data.dilate_all(arg['d'])
-    print("Dilated")
-    v.graph_cut(arg['gctype'])
-    v.edit_labels_gui(5)
-    # import code; code.interact(local=locals())
-    return v.labels.v
-
-@imgio
-def skel_process(arg,im,im_gray,seed):
-    v = gco.Slice(im_gray,seed)
-    print("Initialized")
-    v.data.dilate(arg['d'])
-    v.data.dilate_first(arg['d'])
-    print("Dilated")
-    v.data.skel(v.orig)
-    return v.graph_cut(arg['gctype'])
-
-@imgio
-def gauss_process(arg,im,im_gray,seed):
-    v = gco.Slice(im_gray,seed)
-    print("Initialized")
-    # v.dilate_first(arg['d']/10)
-    v.data.fit_gaussian(v.img,arg['d'],arg['d2'],arg['d3'])
-    return v.graph_cut(arg['gctype'])
+def get_recipes():
+    """pull in functions from the recipes module, ignoring builtins,
+    and strip off the _cmd to get a string equivalent, and then build
+    dict of functions"""
+    return {k : getattr(recipes, k+'_cmd') for k in 
+            [ s[:-4] for s in 
+              filter(lambda s: 
+                     not (s.startswith('_') or 
+                          s.endswith('_')) 
+                     and s.endswith('_cmd'), 
+                     dir(recipes))]}
 
 def main(*args):
     if(len(args) < 8):
@@ -118,11 +78,7 @@ def main(*args):
            'label_out' : args[6],
            'im_out'    : args[7]}
 
-    procs = {'skel'   : skel_process,
-             'global' : global_process,
-             'auto' : global_auto_process,
-             'guiglobal' : global_interface_process,
-             'gauss' : gauss_process}
+    procs = get_recipes()
 
     if(len(args) > 8):
         arg['d'] = int(args[8]);
@@ -134,7 +90,7 @@ def main(*args):
         arg['d3'] = float(args[10]);
         print("Dilating3: "+str(arg['d3']))
 
-    procs[proc](arg)
+    imgio(procs[proc])(arg)
 
     return 0
 
