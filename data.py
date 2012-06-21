@@ -264,6 +264,9 @@ class Data(object):
             # scipy.misc.imsave("seq5/output/data"+str(i)+".png",output)
         scipy.misc.imsave("data.png",output)
 
+    def label_erase(self,l):
+        self.regions[l] = np.zeros_like(self.regions[l])
+
     def label_exclusive(self,labels,l):
         self.regions = [ np.logical_and(np.logical_not(labels==l),x[1])
                       if x[0]!=l else x[1]
@@ -273,6 +276,12 @@ class Data(object):
         self.regions = [ np.logical_or(labels==l,x[1])
                       if x[0]!=l else x[1]
                       for x in zip(range(len(self.regions)),self.regions)]
+
+    def or_all(self,reg,skip=[]):
+        print(str(range(len(self.regions))))
+        self.regions = [ np.logical_or(reg,x[1])
+                         if not x[0] in skip else x[1]
+                         for x in zip(range(len(self.regions)),self.regions)]
 
     def matrix(self):
         return stack_matrix(self.regions)
