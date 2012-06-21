@@ -84,7 +84,7 @@ class Slice(object):
         the candidate region"""
         v = self.crop([l])
         v.data.dilate_all(d)
-        v.data.label_inexclusive(v.labels.v,l)
+        v.data.label_inexclusive(v.labels.v==l)
         v.adj.set_adj_all()
         v.graph_cut(1,lite=True)
         return v
@@ -109,7 +109,8 @@ class Slice(object):
         p = (p[0]-v.win[0],p[1]-v.win[1],p[2])
         l = v.add_label_circle(p)
         v.data.dilate_label(l,p[2]*d)
-        v.data.label_exclusive(v.labels.v,l)
+        v.data.label_exclusive(v.labels.v==l,l)
+        v.data.label_exclusive(v.labels.v==0,0)
         v.adj.set_adj_label_all(l)
         v.graph_cut(1,lite=True)
         return v

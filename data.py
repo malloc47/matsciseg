@@ -267,13 +267,13 @@ class Data(object):
     def label_erase(self,l):
         self.regions[l] = np.zeros_like(self.regions[l])
 
-    def label_exclusive(self,labels,l):
-        self.regions = [ np.logical_and(np.logical_not(labels==l),x[1])
+    def label_exclusive(self,reg,l):
+        self.regions = [ np.logical_and(np.logical_not(reg),x[1])
                       if x[0]!=l else x[1]
                       for x in zip(range(len(self.regions)),self.regions)]
 
-    def label_inexclusive(self,labels,l):
-        self.regions = [ np.logical_or(labels==l,x[1])
+    def label_inexclusive(self,reg):
+        self.regions = [ np.logical_or(reg,x[1])
                       if x[0]!=l else x[1]
                       for x in zip(range(len(self.regions)),self.regions)]
 
