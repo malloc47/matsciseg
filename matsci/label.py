@@ -61,23 +61,22 @@ def largest_connected_component(im):
 
 def small_filter(labels,label_num):
     """cover small label region with the nearest label"""
-    mask = create_mask(labels,[label_num]);
-    if not mask.any():
-        return labels
-    (x0,y0,x1,y1) = fit_region_z(mask);
-    if (x0>0): x0 -= 1;
-    if (y0>0): y0 -= 1;
-    if (x1<labels.shape[1]-1): x1 += 1;
-    if (y1<labels.shape[0]-1): y1 += 1;
-    chk_win = mask[y0:y1+1,x0:x1+1];
+    mask     = create_mask(labels,[label_num]);
+    mask_err = np.argwhere(mask);
 
-    inds = scipy.ndimage.morphology.distance_transform_edt(chk_win,
+    (x0,y0) = (0,0);
+    (y1,x1) = mask.shape;
+    x1 -= 1;
+    y1 -= 1;
+
+    inds = scipy.ndimage.morphology.distance_transform_edt(mask,
                                                            return_distances=False,
                                                            return_indices=True);
 
-    for y in range(0,chk_win.shape[0]):
-        for x in range(0,chk_win.shape[1]):
-            labels[y+y0,x+x0] = labels[inds[0][y,x]+y0,inds[1][y,x]+x0]
+    for err in mask_err:
+        y = err[0];
+        x = err[1];
+        labels[y,x] = labels[inds[0][y,x],inds[1][y,x]];
 
     return labels
 

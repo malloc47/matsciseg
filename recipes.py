@@ -54,3 +54,9 @@ def gauss_cmd(arg,im,im_gray,seed):
     # v.dilate_first(arg['d']/10)
     v.data.fit_gaussian(v.img,arg['d'],arg['d2'],arg['d3'])
     return v.graph_cut(arg['gctype'])
+
+def filtergui_cmd(arg,im,im_gray,seed):
+    """opens gui without doing a cleaning first"""
+    v = matsci.gco.Slice(im_gray,seed,lightweight=True)
+    v.edit_labels_gui(5)
+    return v.graph_cut(arg['gctype'])
