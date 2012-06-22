@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 import sys,os
-sys.path.insert(0,os.getcwd() + '/gco')
-sys.path.insert(0,os.getcwd())
-from gco import watershed
+from matsci.gco import watershed
 from numpy import genfromtxt, savetxt
 from scipy.misc import imread
 

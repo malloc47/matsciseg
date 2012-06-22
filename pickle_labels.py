@@ -3,7 +3,7 @@ import sys,os
 import cPickle as pickle
 from numpy import genfromtxt
 import matsciskel
-import gco
+import matsci.gco
 
 def main(*args):
     if(len(args) < 5):
@@ -18,7 +18,7 @@ def main(*args):
         print('Pickling slice ' + str(n))
         im,im_gray = matsciskel.read_img(imgin)
         seed=genfromtxt(label_path,dtype='int16')
-        v = gco.Slice(im_gray,seed)
+        v = matsci.gco.Slice(im_gray,seed)
         slices[n] = v
 
     pickle.dump(slices,open(args[1],'wb'))

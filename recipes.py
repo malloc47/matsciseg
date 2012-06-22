@@ -1,7 +1,7 @@
-import gco
+import matsci.gco
 
 def global_cmd(arg,im,im_gray,seed):
-    v = gco.Slice(im_gray,seed)
+    v = matsci.gco.Slice(im_gray,seed)
     print("Initialized")
     v.data.dilate_all(arg['d'])
     v.data.output_data_term()
@@ -14,7 +14,7 @@ def global_cmd(arg,im,im_gray,seed):
     return v.labels.v
 
 def auto_cmd(arg,im,im_gray,seed):
-    v = gco.Slice(im_gray,seed)
+    v = matsci.gco.Slice(im_gray,seed)
     print("Initialized")
     v.data.dilate_auto(v.img,v.labels,arg['d'])
     v.data.output_data_term()
@@ -24,7 +24,7 @@ def auto_cmd(arg,im,im_gray,seed):
     return v.labels.v
 
 def globalgui_cmd(arg,im,im_gray,seed):
-    v = gco.Slice(im_gray,seed)
+    v = matsci.gco.Slice(im_gray,seed)
     print("Initialized")
     v.data.dilate_all(arg['d'])
     print("Dilated")
@@ -34,13 +34,13 @@ def globalgui_cmd(arg,im,im_gray,seed):
     return v.labels.v
 
 def gui_cmd(arg,im,im_gray,seed):
-    v = gco.Slice(im_gray,seed)
+    v = matsci.gco.Slice(im_gray,seed)
     print("Initialized")
     v.edit_labels_gui(5)
     return v.labels.v
 
 def skel_cmd(arg,im,im_gray,seed):
-    v = gco.Slice(im_gray,seed)
+    v = matsci.gco.Slice(im_gray,seed)
     print("Initialized")
     v.data.dilate(arg['d'])
     v.data.dilate_first(arg['d'])
@@ -49,7 +49,7 @@ def skel_cmd(arg,im,im_gray,seed):
     return v.graph_cut(arg['gctype'])
 
 def gauss_cmd(arg,im,im_gray,seed):
-    v = gco.Slice(im_gray,seed)
+    v = matsci.gco.Slice(im_gray,seed)
     print("Initialized")
     # v.dilate_first(arg['d']/10)
     v.data.fit_gaussian(v.img,arg['d'],arg['d2'],arg['d3'])
