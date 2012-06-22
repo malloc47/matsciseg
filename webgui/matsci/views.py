@@ -105,7 +105,7 @@ def handle_copyl(params):
     return 'copyl successful'
 
 def handle_dataset(params):
-    import matsciskel,pickle
+    import pickle
     global current_img, slices
     print('opening dataset')
     slices = pickle.load(open(params['dataset']+'.pkl','rb'))

@@ -1,10 +1,10 @@
 # Django settings for webgui project.
 
 import sys,os.path
-sys.path.insert(0,os.getcwd() + '/../gcoc')
-sys.path.insert(0,os.getcwd() + '/..')
-# print(sys.path)
-import matsciskel, gco
+#sys.path.insert(0,os.getcwd() + '/..')
+sys.path.insert(0,os.getcwd() + '/../matsci')
+sys.path.append(os.getcwd() + '/..')
+import gco
 
 
 DEBUG = True
@@ -180,6 +180,6 @@ print('done loading dataset')
 	## seed=genfromtxt('../seq1/global-20/90/image'+format(i,'04d')+'.label',dtype='int16')
 	#seed=genfromtxt('../seq1/cropped3/image'+format(i,'04d')+'.label',dtype='int16')
 	## pickle.dump(seed,open(format(i,'04d')+'.pkl','wb'))
-	#v = gco.Volume(im_gray,seed)
+	#v = matsci.gco.Volume(im_gray,seed)
 	#slices[i] = v
 #pickle.dump(slices,open('c3.pkl','wb'))
