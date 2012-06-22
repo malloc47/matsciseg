@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 import sys,os,cv,cv2
 import numpy as np
-import gco
 import scipy
 from scipy import ndimage
 import recipes

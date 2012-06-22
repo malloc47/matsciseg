@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 import os,sys
-sys.path.insert(0,os.getcwd() + '/gco')
 import numpy as np
 import scipy
 from scipy import ndimage
-from gco import region_transform, region_clean, region_shift
+from matsci.gco import region_transform, region_clean, region_shift
 
 def main(*args):
 
