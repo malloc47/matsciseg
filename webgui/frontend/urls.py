@@ -1,6 +1,6 @@
 from django.conf.urls.defaults import patterns, url
 
-urlpatterns = patterns('matsci.views',
+urlpatterns = patterns('frontend.views',
     url(r'^$', 'index'),
     url(r'^cmd/$', 'cmd'),
     url(r'^state/$', 'state'),

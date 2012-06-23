@@ -1,10 +1,9 @@
 # Django settings for webgui project.
 
 import sys,os.path
-#sys.path.insert(0,os.getcwd() + '/..')
-sys.path.insert(0,os.getcwd() + '/../matsci')
-sys.path.append(os.getcwd() + '/..')
-import gco
+sys.path.insert(0,os.getcwd() + '/..')
+print(str(sys.path))
+import matsci.gco
 
 
 DEBUG = True
@@ -163,7 +162,7 @@ LOGGING = {
 
 import cPickle as pickle
 print('loading dataset')
-slices = pickle.load(open('ti2.pkl','rb'))
+slices = pickle.load(open('c2a.pkl','rb'))
 current_img = min(slices.keys())
 print('done loading dataset')
 

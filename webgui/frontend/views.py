@@ -9,9 +9,9 @@ import scipy.ndimage.interpolation
 import scipy.misc
 from PIL import Image
 import numpy as np
-import gui
+import matsci.gui
 import cPickle as pickle
-import gco
+import matsci.gco
 
 def index(req):
     # t = loader.get_template('matsci.html')
@@ -32,7 +32,7 @@ def img_thumb(request,imgnum):
 def img_full(request,imgnum):
     slicenum=int(imgnum)
     if slicenum in slices:
-        output = gui.color_jet(gui.grey_to_rgb(slices[slicenum].img),slices[slicenum].labels.v)
+        output = matsci.gui.color_jet(matsci.gui.grey_to_rgb(slices[slicenum].img),slices[slicenum].labels.v)
         http_output = Image.fromarray(np.uint8(output))
         response = HttpResponse(mimetype="image/png")
         http_output.save(response, "PNG")
@@ -91,7 +91,7 @@ def handle_copyr(params):
     if idx == 0:
         return 'error: no slice on left!'
     old_img = slices[current_img].img;
-    slices[current_img] = gco.Slice(old_img,slices[current_img-1].labels.v)
+    slices[current_img] = matsci.gco.Slice(old_img,slices[current_img-1].labels.v)
     return 'copyr successful'
 
 def handle_copyl(params):
@@ -101,7 +101,7 @@ def handle_copyl(params):
     if idx == len(l)-1:
         return 'error: no slice on right!'
     old_img = slices[current_img].img;
-    slices[current_img] = gco.Slice(old_img,slices[current_img+1].labels.v)
+    slices[current_img] = matsci.gco.Slice(old_img,slices[current_img+1].labels.v)
     return 'copyl successful'
 
 def handle_dataset(params):
@@ -114,7 +114,7 @@ def handle_dataset(params):
 
 def handle_global(params):
     v = slices[current_img];
-    slices[current_img] = gco.Slice(v.img,v.labels.v)
+    slices[current_img] = matsci.gco.Slice(v.img,v.labels.v)
     slices[current_img].data.dilate_all(10)
     slices[current_img].graph_cut(1)
     return 'global graph cut successful'
