@@ -53,9 +53,51 @@ var state = (function ($,log,workcanvas,tools) {
 
     $(document).ready(function() {
 
+	// http://stackoverflow.com/questions/4098054/vertically-displayed-jquery-buttonset
+	(function( $ ){
+	    //plugin buttonset vertical
+	    $.fn.buttonsetv = function() {
+		$(':radio, :checkbox', this).wrap('<div style="margin: 1px"/>');
+		$(this).buttonset();
+		$('label:first', this).removeClass('ui-corner-left').addClass('ui-corner-top');
+		$('label:last', this).removeClass('ui-corner-right').addClass('ui-corner-bottom');
+		mw = 0; // max witdh
+		$('label', this).each(function(index){
+		    w = $(this).width();
+		    if (w > mw) mw = w; 
+		})
+		    $('label', this).each(function(index){
+			$(this).width(mw);
+		    })
+			};
+	})( $ );
+
 	log.init($('.output'),$('.rawoutput'));
 	tools.init();
 	sliceSelector.init($('.bottombar ul'));
+
+	$('.slider').slider({
+	    value:5,
+	    min: 1,
+	    max: 100,
+	    step: 1,
+	    slide: function( event, ui ) {
+		var name = $(this).attr('id');
+		$('#'+name+'-value').val( ui.value + "px" );
+		tools.setProp(name,ui.value);
+	    }
+	});
+
+	$('.slider').mouseup(function() {
+	    var name = $(this).attr('id');
+	    alert(tools.getProp(name));
+	});
+
+	$('.slider-text').val('5px');
+
+	$('.button').button();
+	$('#interactionset').buttonsetv();
+	$('#imgtypeset').buttonsetv();
 
 	$('.serversend').click(function() {
 	    var method = $(this).attr('id');
@@ -80,7 +122,8 @@ var state = (function ($,log,workcanvas,tools) {
 	    var m = $(this).attr('id');
 	    log.append(m+" view");
 	    workcanvas.loading();
-	    tools.setImgMode(m)
+	    // tools.setImgMode(m)
+	    tools.setProp('imgMode',m);
 	    $('.imgtype').css({"background":"#CCCCCC"});
 	    $(this).css({"background":"#AAAACC"});
 	    workcanvas.src('/' + tools.getImgPath() + '/'+pad(state['image'],4)+'/?'+new Date().getTime());
@@ -91,8 +134,12 @@ var state = (function ($,log,workcanvas,tools) {
 	    $('#mainimg').css(tools.cursor());
 	    log.append('mode changed to '+tools.getTool());
 	    $('.interaction').css({"background":"#CCCCCC"});
-	    if(tools.getTool() != 'none')
-		$(this).css({"background":"#CCAAAA"});
+	    if(tools.getTool() == 'none') {
+		$('#interactionset input').removeAttr('checked');
+		$('#interactionset input').button('refresh');
+		// $('.interaction').prop('checked', false);
+	    }
+		// $(this).css({"background":"#CCAAAA"});
 	});
 
 	$('#reset').click(function() {
