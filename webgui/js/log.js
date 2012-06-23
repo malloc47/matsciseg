@@ -6,7 +6,7 @@ var log = (function () {
     function init(o,ob){
 	output = o;
 	output_box = ob;
-    }
+    };
 
     function append(str){
 	if(str.indexOf('error:') === 0)
@@ -18,9 +18,9 @@ var log = (function () {
 				// '['+new Date().toTimeString()+'] '+
 				str+'</li>');
 	output_box.prop({ scrollTop: output_box.prop("scrollHeight") }, 30);
-    }
+    };
 
-    function clear(){output.children().remove();}
+    function clear(){output.children().remove();};
 
     return {
 	init	: init,
