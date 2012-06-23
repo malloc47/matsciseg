@@ -50,24 +50,25 @@ class Slice(object):
         while True:
             print("Starting GUI")
             w=gui.Window(self.img,self.labels.v)
-            create=w.create_list
+            create = [(a,b,c,d) for a,b,c in w.create_list]
             remove=w.remove_list
-            self.process_annotations(create,remove,d)
+            self.process_annotations(create,remove)
             if not create and not remove:
                 break
 
-    def edit_labels(self,d,addition,removal):
-        create = [(b,a,5) for a,b in addition]
-        remove = set([self.labels.v[(b,a)] for a,b in removal])
-        self.process_annotations(create,remove,d)
+    def edit_labels(self,addition=[],removal=[],line=[]):
+        removal = set([self.labels.v[(a,b)] for a,b in removal])
+        self.process_annotations(addition,removal,line)
 
-    def process_annotations(self,create,remove,d):
+    def process_annotations(self,create=[],remove=[],line=[]):
         new_volumes = []
         for r in remove:
             (x0,y0,x1,y1) = label.fit_region(self.labels.create_mask([r]))
             new_volumes.append(self.remove_label(r,max(x1-x0,y1-y0)+5))
         for c in create:
-            new_volumes.append(self.add_label(c,d))
+            new_volumes.append(self.add_label(c))
+        for l in line:
+            pass
         for v in new_volumes:
             self.merge(v)
         self.__init__(self.img
@@ -103,11 +104,11 @@ class Slice(object):
         v.graph_cut(1,lite=True)
         return v
 
-    def add_label(self,p,d):
+    def add_label(self,p):
         v = self.crop(list(self.adj.get_adj_radius(p,self.labels.v)))
-        p = (p[0]-v.win[0],p[1]-v.win[1],p[2])
+        p = (p[0]-v.win[0],p[1]-v.win[1],p[2],p[3])
         l = v.add_label_circle(p)
-        v.data.dilate_label(l,p[2]*d)
+        v.data.dilate_label(l,p[2]*p[3])
         v.data.label_exclusive(v.labels.v==l,l)
         v.data.label_exclusive(v.labels.v==0,0)
         v.adj.set_adj_label_all(l)

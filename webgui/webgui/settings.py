@@ -2,7 +2,6 @@
 
 import sys,os.path
 sys.path.insert(0,os.getcwd() + '/..')
-print(str(sys.path))
 import matsci.gco
 
 

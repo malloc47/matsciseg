@@ -23,4 +23,5 @@ if webgui.settings.DEBUG:
     urlpatterns += patterns('',
         (r'^img/(?P<path>.*)$', 'django.views.static.serve', {'document_root': 'img'}),
         (r'^js/(?P<path>.*)$', 'django.views.static.serve', {'document_root': 'js'}),
+        (r'^css/(?P<path>.*)$', 'django.views.static.serve', {'document_root': 'css'}),
     )

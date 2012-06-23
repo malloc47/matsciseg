@@ -119,19 +119,28 @@ def handle_global(params):
     slices[current_img].graph_cut(1)
     return 'global graph cut successful'
 
+def convert_string(s):
+    return [tuple(map(int,i.split(','))) 
+            for i in s.split(';')]
+
 def handle_local(params):
     global current_img, images, slices
     print('Local')
     # print(str(params))
     addition = [];
     removal = [];
+    line = [];
     if 'addition' in params and params['addition']:
-        addition = [tuple(map(int,s.split(','))) 
-                    for s in params['addition'].split(';')]
+        addition = convert_string(params['addition'])
     if 'removal' in params and params['removal']:
-        removal = [tuple(map(int,s.split(','))) 
-                    for s in params['removal'].split(';')]
-    slices[current_img].edit_labels(5,addition,removal)
+        removal = convert_string(params['removal'])
+    if 'line' in params and params['line']:
+        line = convert_string(params['line'])
+    # x,y to i,j
+    addition = [(b,a,5,5) for a,b in addition]
+    removal = [(b,a) for a,b in removal]
+    line = [(b,a,d,c,5,5) for a,b,c,d in line]
+    slices[current_img].edit_labels(addition,removal,line)
     return 'local graph cut successful'
 
 def handle_click(params):
