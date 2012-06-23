@@ -30,32 +30,15 @@ var state = (function ($,log,workcanvas,tools) {
 
     function parsestate() {
 	tools.clear()
-	// update bottom bar
-	$('.bottombar ul').children().remove();
-	$('.bottombar ul').css({'width':(124*state['images'].length+20).toString()});
-	for (var i = 0; i < state['images'].length; i++) {
-	    $('.bottombar ul').append('<li'
-				      + (state['images'][i]==state['image'] ? ' class="selected" ' : '')				      
-				      + '><img class="thumb'
-				      + state['images'][i]
-				      // + (i==parseInt(state['image']) ? ' selected' : '')
-				      + '" src="/thumb/'
-				      + pad(state['images'][i],4)
-				      + '/'
-				      +'?'+new Date().getTime()
-				      +'" '
-				      + 'id="' + state['images'][i] + '" '
-				      + '/><p>'
-				      + state['images'][i]
-				      + '</p></li>');
-	}
-	$('.bottombar ul li img').click(function(e) {
-	    workcanvas.loading();
-	    var c=$(this).attr('id');
-	    state['image'] = parseInt(c);
-	    log.append("opening slice "+c);
-	    syncstate();
-	});
+	sliceSelector.clear();
+	sliceSelector.add(state['images'],state['image'],state['width']*0.15,
+			  function(e) {
+			      workcanvas.loading();
+			      var c=$(this).attr('id');
+			      state['image'] = parseInt(c);
+			      log.append("opening slice "+c);
+			      syncstate();
+			  });
 
 	workcanvas.init(state['width'],
 			state['height'],
@@ -72,6 +55,7 @@ var state = (function ($,log,workcanvas,tools) {
 
 	log.init($('.output'),$('.rawoutput'));
 	tools.init();
+	sliceSelector.init($('.bottombar ul'));
 
 	$('.serversend').click(function() {
 	    var method = $(this).attr('id');
@@ -137,18 +121,21 @@ var state = (function ($,log,workcanvas,tools) {
 	    if(tools.getTool() == 'none') return;
 	    var x = e.pageX - this.offsetLeft + $('.workingarea').scrollLeft();
             var y = e.pageY - this.offsetTop + $('.workingarea').scrollTop();
-	    x_new = Math.floor(x/2);
-	    y_new = Math.floor(y/2);
-	    tools.push([x_new,y_new]);
+	    x = Math.floor(x/workcanvas.getZoom());
+	    y = Math.floor(y/workcanvas.getZoom());
+	    tools.push([x,y]);
 	    if(tools.getTool() == 'addition')
 		workcanvas.fillCircle(x, y, 5, '#ffffff');
 	    else if(tools.getTool() == 'removal')
 		workcanvas.fillX(x, y, 5, '#ffffff');
-	    log.append(tools.getTool() + ' at '+x_new+','+y_new);
+	    else if(tools.getTool() == 'line') {
+		prev = tools.get('line');
+		prev = prev[prev.length-1].slice(0) // copy array
+		workcanvas.fillLine(prev, 5, '#ffffff');
+	    }
+	    log.append(tools.getTool() + ' at '+x+','+y);
 	});
-
 	getstate();
-
     }); 
 
     return {}

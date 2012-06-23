@@ -4,7 +4,8 @@ var tools = (function () {
     var imgMode;
 
     var data = {'addition' : [],
-		'removal'  : []}
+		'removal'  : [],
+		'line'     : []}
 
     var imgPaths = {'img' : 'empty',
 		     'seg' : 'output',
@@ -12,16 +13,19 @@ var tools = (function () {
 
     var cursorMode = {'none':{'cursor':'default'},
 		      'addition':{'cursor':'crosshair'},
-		      'removal':{'cursor':'move'}};
+		      'removal':{'cursor':'move'},
+		      'line':{'cursor':'crosshair'}};
 
     var currentCursor;
+    
+    var zoom;
 
     function init() {
 	toolMode = 'none';
 	imgMode = 'seg';
 	currentCursor = 'default';
-	addition = [];
-	removal = [];
+	zoom = 2;
+	for (var key in data) {data[key] = [];}
     };
 
     function getTool() {return toolMode;};
@@ -32,7 +36,6 @@ var tools = (function () {
     };
 
     function getImgMode() {return imgMode;};
-
     function setImgMode(newImgMode) {imgMode = newImgMode;};
 
     function getImgPath() {return imgPaths[imgMode];};
@@ -41,6 +44,16 @@ var tools = (function () {
 
     function push(val,type) {
 	if(!type) type = toolMode;
+	// handle the line case, where we want 4 points per line, but
+	// add them two at a time
+	if(type == 'line' && data['line'].length > 0) {
+	    if(data['line'][data['line'].length-1].length == 2) {
+		for (var i = 0; i < val.length; i++) {
+		    data['line'][data['line'].length-1].push(val[i]);
+		}
+		return;
+	    }
+	}
 	data[type].push(val);
     };
 
@@ -67,7 +80,7 @@ var tools = (function () {
 	else {
 	    return output;
 	}
-    }
+    };
 
     function getStr(type) {
 	if(!type) type = toolMode;
