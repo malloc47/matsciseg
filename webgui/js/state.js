@@ -137,6 +137,13 @@ var state = (function ($,log,workcanvas,tools) {
 
 	$('.serversend').click(function() {
 	    var method = $(this).attr('id');
+	    if(method == 'local' && 
+	       !(tools.getStr('addition').length > 0 ||
+		 tools.getStr('removal').length > 0 ||
+		 tools.getStr('line').length > 0)) {
+		log.append("error: no annotations");
+		return;
+	    }
 	    log.append("starting "+method);
 	    workcanvas.loading();
 	    state['command'] = method;
