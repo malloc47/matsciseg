@@ -26,7 +26,7 @@ var workcanvas = (function () {
 	if(canvas.attr('height') != height*zoom)
 	    canvas.attr('height',height*zoom);
 	mainimg = new Image();
-	mainimg.src = "/img/image0090.png"; // static img default
+	// mainimg.src = "/img/image0090.png"; // static img default
 	mainimg.onload = imgLoad;
 
     };

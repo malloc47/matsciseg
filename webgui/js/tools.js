@@ -116,7 +116,12 @@ var tools = (function () {
     function tuplesToStr(l) {
 	output = '';
 	for (var i=0; i<l.length; i++) {
-	    output += l[i][0].toString()+','+l[i][1].toString()+';';
+	    for (var j=0; j<l[i].length; j++) {
+		output += l[i][j].toString()+',';
+	    }
+	    // switch comma to semicolon
+	    output = output.slice(0,-1)+";";
+	    // output += l[i][0].toString()+','+l[i][1].toString()+';';
 	}
 	// don't grab last ";"
 	if(output[output.length-1] == ';') {

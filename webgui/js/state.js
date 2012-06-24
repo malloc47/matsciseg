@@ -142,6 +142,7 @@ var state = (function ($,log,workcanvas,tools) {
 	    state['command'] = method;
 	    state['addition'] = tools.getStr('addition');
 	    state['removal'] = tools.getStr('removal');
+	    state['line'] = tools.getStr('line');
 	    state['size'] = tools.getProp('size');
 	    state['dilation'] = tools.getProp('dilation');
 	    syncstate();
@@ -272,30 +273,11 @@ var state = (function ($,log,workcanvas,tools) {
 				 return function(){
 				     $(val).click();
 				     if(tools.getTool() == 'none'){
+					 // haven't figured out why this is needed...
 					 $('#interactionset input').removeAttr('checked').button('refresh');
 				     }
 				 };}(hotkeys[key])));
 	}
-
-	
-
-
-
-	// $(document).bind('keydown', 'l', function(){
-	//     // tools.changeTool('line',
-	//     // 		     $('#mainimg'),
-	//     // 		     $('#interactionset input'),
-	//     // 		     $('#line'));
-	//     $('#line').click();
-	// });
-
-	// $(document).bind('keydown', 'd', function(){
-	//     // tools.changeTool('removal',
-	//     // 		     $('#mainimg'),
-	//     // 		     $('#interactionset input'),
-	//     // 		     $('#removal'));
-	//     $('#removal').click();
-	// });
 
 	getstate();
     }); 
