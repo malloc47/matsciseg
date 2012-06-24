@@ -108,8 +108,10 @@ class Slice(object):
         v = self.crop(list(self.adj.get_adj_radius(p,self.labels.v)))
         p = (p[0]-v.win[0],p[1]-v.win[1],p[2],p[3])
         l = v.add_label_circle(p)
-        v.data.dilate_label(l,p[2]*p[3])
         v.data.label_exclusive(v.labels.v==l,l)
+        # v.data.dilate_label(l,p[3])
+        # directly set data term instead of dilating--matches gui
+        v.data.regions[l] = adj.circle((p[0],p[1],p[2]+p[3]),v.labels.v.shape)
         v.data.label_exclusive(v.labels.v==0,0)
         v.adj.set_adj_label_all(l)
         v.graph_cut(1)
