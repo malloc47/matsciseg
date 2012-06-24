@@ -51,15 +51,18 @@ var workcanvas = (function () {
         ctx.fillStyle = fillColor;
         ctx.beginPath();
         ctx.moveTo(x*zoom, y*zoom);
-        ctx.arc(x*zoom, y*zoom, radius, 0, Math.PI * 2, false);
+        ctx.arc(x*zoom, y*zoom, radius*zoom, 0, Math.PI * 2, false);
         ctx.fill();
     };
 
     function fillLine(val, radius, fillColor) {
-	fillCircle(val[0],val[1], radius, fillColor)
-	if(val.length == 2) {return;}
-	fillCircle(val[2],val[3], radius, fillColor)
+	if(val.length == 2) {
+	    fillCircle(val[0],val[1], radius, fillColor)
+	    return;
+	}
 	ctx.strokeStyle = fillColor;
+	ctx.lineWidth = radius*zoom*2; // convert radius to width
+	ctx.lineCap = 'round';
         ctx.beginPath();
         ctx.moveTo(val[0]*zoom,val[1]*zoom);
 	ctx.lineTo(val[2]*zoom,val[3]*zoom);
@@ -69,15 +72,17 @@ var workcanvas = (function () {
     function fillX(x, y, radius, fillColor) {
 	fillCircle(x,y,radius,'#000000');
         ctx.strokeStyle = fillColor;
+	ctx.lineWidth = 1;
+	ctx.lineCap = 'square';
         ctx.beginPath();
         ctx.moveTo(x*zoom, y*zoom);
-	ctx.lineTo(x*zoom+radius,y*zoom+radius);
+	ctx.lineTo(x*zoom+radius*zoom,y*zoom+radius*zoom);
         ctx.moveTo(x*zoom, y*zoom);
-	ctx.lineTo(x*zoom-radius,y*zoom-radius);
+	ctx.lineTo(x*zoom-radius*zoom,y*zoom-radius*zoom);
         ctx.moveTo(x*zoom, y*zoom);
-	ctx.lineTo(x*zoom+radius,y*zoom-radius);
+	ctx.lineTo(x*zoom+radius*zoom,y*zoom-radius*zoom);
         ctx.moveTo(x*zoom, y*zoom);
-	ctx.lineTo(x*zoom-radius,y*zoom+radius);
+	ctx.lineTo(x*zoom-radius*zoom,y*zoom+radius*zoom);
         ctx.stroke();
     };
 

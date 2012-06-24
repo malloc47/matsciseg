@@ -115,7 +115,7 @@ def handle_dataset(params):
 def handle_global(params):
     v = slices[current_img];
     slices[current_img] = matsci.gco.Slice(v.img,v.labels.v)
-    slices[current_img].data.dilate_all(10)
+    slices[current_img].data.dilate_all(int(params['dilation']))
     slices[current_img].graph_cut(1)
     return 'global graph cut successful'
 
@@ -136,10 +136,12 @@ def handle_local(params):
         removal = convert_string(params['removal'])
     if 'line' in params and params['line']:
         line = convert_string(params['line'])
+    size = int(params['size'])
+    dilation = int(params['dilation'])
     # x,y to i,j
-    addition = [(b,a,5,5) for a,b in addition]
+    addition = [(b,a,size,dilation) for a,b in addition]
     removal = [(b,a) for a,b in removal]
-    line = [(b,a,d,c,5,5) for a,b,c,d in line]
+    line = [(b,a,d,c,size,dilation) for a,b,c,d in line]
     slices[current_img].edit_labels(addition,removal,line)
     return 'local graph cut successful'
 
@@ -171,11 +173,8 @@ def state(request):
     #     images = request.GET['images'];
     if('command' in request.GET):
         handlers = {
-            # 'addition' : handle_addition,
-            # 'removal'  : handle_removal,
             'global'   : handle_global,
             'local'    : handle_local,
-            # 'imgclick' : handle_click,
             'copyr'    : handle_copyr,
             'copyl'    : handle_copyl,
             'dataset'    : handle_dataset,

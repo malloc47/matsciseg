@@ -18,20 +18,14 @@ var tools = (function () {
 
     var currentCursor;
 
-    // var dilation;
-    // var size;
-
     var props = {'imgMode'	: 'seg',
-		 'dilation'	: 5,
+		 'dilation'	: 15,
 		 'size'		: 5};
     
     function init() {
 	toolMode = 'none';
 	currentCursor = 'default';
 	for (var key in data) {data[key] = [];}
-	// imgMode = 'seg';
-	// size = 5;
-	// dilation = 5;
     };
 
     function getTool() {return toolMode;};
@@ -75,8 +69,34 @@ var tools = (function () {
 	return data[type];
     };
 
-    function removeClosest() {
-	
+    function dist(a,b) {
+	return Math.sqrt(Math.pow(a[0]-b[0],2)+Math.pow(a[1]-b[1],2));
+    }
+
+    function removeClosest(p) {
+	type = '';
+	idx = -1;
+	prevDist = 0;
+	// brute-force nearest-neighbor
+	for (var key in data) {
+	    for (var i=0; i<data[key].length; i++) {
+		// this will break if we add dilation/size to tuples
+		for (var j=0; j<data[key][i].length; j+=2) {
+		    x = data[key][i][j];
+		    y = data[key][i][j+1];
+		    if(idx < 0 || dist(p,[x,y])<prevDist) {
+			type = key;
+			idx = i;
+			prevDist = dist(p,[x,y]);
+		    }
+		}
+	    }
+	}
+	if(type in data && idx >= 0) {
+	    data[type].splice(idx,1)
+	    return true;
+	}
+	return false;
     }
 
     function tuplesToStr(l) {
@@ -110,5 +130,6 @@ var tools = (function () {
 	clear		: clear,
 	get		: get,
 	getStr		: getStr,
+	remove		: removeClosest,
     }
 }());
