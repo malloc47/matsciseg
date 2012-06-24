@@ -9,7 +9,7 @@
 }
 
 .navbar {
-    width:70px;
+    width:80px;
     float:left;
     margin-left: -100%;
     height: 620px;
@@ -17,7 +17,7 @@
 
 .workingarea {
     margin-right:180px;
-    margin-left:80px;
+    margin-left:90px;
     padding:10px;
     height:620px;
     overflow:auto;
@@ -76,9 +76,9 @@ h3 {
     font-size: 8pt;
 }
 
-button {
+button, input, label {
     display:block;
-    width:70px;
+    width:80px;
 }
 
 .output{

@@ -115,6 +115,20 @@ var state = (function ($,log,workcanvas,tools) {
 	$('#zoom-value').val('2X');
 	
 	$('.button').button();
+	// set icons
+	$('#addition').button({icons: {primary: "ui-icon-plus"}});
+	$('#removal').button({icons: {primary: "ui-icon-close"}});
+	$('#line').button({icons: {primary: "ui-icon-minus"}});
+	$('#img').button({icons: {primary: "ui-icon-image"}});
+	$('#seg').button({icons: {primary: "ui-icon-video"}});
+	$('#edg').button({icons: {primary: "ui-icon-script"}});
+	$('#global').button({icons: {primary: "ui-icon-refresh"}});
+	$('#local').button({icons: {primary: "ui-icon-arrowreturn-1-e"}});
+	$('#copyr').button({icons: {primary: "ui-icon-triangle-1-e"}});
+	$('#copyl').button({icons: {primary: "ui-icon-triangle-1-w"}});
+	$('#reset').button({icons: {primary: "ui-icon-cancel"}});
+	$('.dataset').button({icons: {primary: "ui-icon-document"}});
+
 	$('#interactionset').buttonsetv();
 	$('#imgtypeset').buttonsetv();
 	$('#outputtabs').tabs();
@@ -219,35 +233,11 @@ var state = (function ($,log,workcanvas,tools) {
 	    dilation = tools.getProp('dilation');
 	    tools.push([x,y]);
 	    workcanvas.redraw();	    
-/*	    if(tools.getTool() == 'addition') {
-		// workcanvas.fillCircle(x, y, size, '#ffffff');
-	  	workcanvas.fillCircle(x, y, size+dilation, 'rgba(255,255,255,0.5)');
-	  	workcanvas.fillCircle(x, y, size, 'rgba(255,255,255,1.0)');
-	    }
-	    else if(tools.getTool() == 'removal') {
-		workcanvas.fillX(x, y, size, '#ffffff');
-	    }
-	    else if(tools.getTool() == 'line') {
-		prev = tools.get('line');
-		prev = prev[prev.length-1].slice(0) // copy array
-		// workcanvas.fillLine(prev, size, '#ffffff');
-		workcanvas.fillLine(prev, size+dilation, 'rgba(255,255,255,0.5)');
-		workcanvas.fillLine(prev, size, 'rgba(255,255,255,1.0)');
-	    }
-*/
 	    log.append(tools.getTool() + ' at '+x+','+y);
 	});
 	getstate();
     }); 
 
     return {}
-
-// (function poll(){
-//     $.ajax({ url: "server", success: function(data){
-//         //Update your dashboard gauge
-//         salesGauge.setValue(data.value);
-
-//     }, dataType: "json", complete: poll, timeout: 30000 });
-// })();
 
 }($,log,workcanvas,tools));
