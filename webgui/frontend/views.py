@@ -141,7 +141,8 @@ def handle_local(params):
     # x,y to i,j
     addition = [(b,a,size,dilation) for a,b in addition]
     removal = [(b,a) for a,b in removal]
-    line = [(b,a,d,c,size,dilation) for a,b,c,d in line]
+    line = [(b,a,d,c,size,dilation) for a,b,c,d in 
+            [l for l in line if len(l)==4]]
     slices[current_img].edit_labels(addition,removal,line)
     return 'local graph cut successful'
 

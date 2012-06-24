@@ -12,7 +12,7 @@ def unstack_matrix(layered):
     return unstacked
 
 def stack_matrix(l):
-    """ 
+    """
     converts list of matrices to a single high-dimension matrix
     """
     stack = l[0]
@@ -73,7 +73,6 @@ def list_layer(layered):
         output[layered[l]] = l
     return output
 
-
 def labels_to_edges(labels):
     grad = np.gradient(labels)
     edges = np.maximum(abs(grad[0]),abs(grad[1]))
@@ -89,7 +88,7 @@ def watershed(im,labels,d=0,suppression=3):
         labels[edges] = 0
     im = pymorph.hmin(im,suppression)
     return ndimage.watershed_ift(im, labels)
-    
+
 def skel(img):
     """skeletonize image"""
     print("Skel")
@@ -112,6 +111,46 @@ def skel(img):
         if np.abs(prev-img).max() == 0:
             break
     return img
+
+def line(p,shape,r):
+    return ndimage.morphology.distance_transform_edt(
+        np.logical_not(
+            bresenham((p[1],p[0],p[3],p[2]),shape))) < r
+
+def bresenham(p,shape):
+    """typical implementation of Bresenham's algorithm, augmented to
+    work with numpy arrays"""
+    """modified from: http://roguebasin.roguelikedevelopment.org/index.php/Bresenham%27s_Line_Algorithm """
+    x1,y1,x2,y2 = p[:4]
+    a = np.zeros(shape,dtype='bool')
+    issteep = abs(y2-y1) > abs(x2-x1)
+    if issteep:
+        x1, y1 = y1, x1
+        x2, y2 = y2, x2
+    if x1 > x2:
+        x1, x2 = x2, x1
+        y1, y2 = y2, y1
+    deltax = x2 - x1
+    deltay = abs(y2-y1)
+    error = int(deltax / 2)
+    y = y1
+    ystep = None
+    if y1 < y2:
+        ystep = 1
+    else:
+        ystep = -1
+    for x in range(x1, x2):
+        if issteep:
+            a[x,y] = True
+            # points.append((y, x))
+        else:
+            a[y,x] = True
+            # points.append((x, y))
+        error -= deltay
+        if error < 0:
+            y += ystep
+            error += deltax
+    return a
 
 def dilate(img,d):
     # Ugly hack to convert to and from a uint8 to circumvent opencv limitations
@@ -204,7 +243,8 @@ class Data(object):
 
         # close holes in the data term
         self.regions = [self.regions[0]] + \
-            map(lambda (l): erode(dilate(l,tolerance),tolerance),self.regions[1:])
+            map(lambda (l): erode(dilate(l,tolerance),tolerance),
+                self.regions[1:])
 
         # redo matrix
         # self.regions[0] = dilate(np.logical_not(reduce(np.logical_or,self.regions[1:])),d) #,5)
@@ -237,8 +277,8 @@ class Data(object):
         edges = labels_to_edges(watershed(im.copy(),labels.copy(),w_d,w_s))
         # for img in self.regions:
         #     print(clamp(find_max_dist(edges,pre(img))))
-        self.regions = map(lambda img : 
-                        dilate(img,clamp(find_max_dist(edges,pre(img)))), 
+        self.regions = map(lambda img :
+                        dilate(img,clamp(find_max_dist(edges,pre(img)))),
                         self.regions)
 
     def output_data_term2(self):
@@ -253,7 +293,8 @@ class Data(object):
     def output_data_term(self):
         output = np.zeros(self.regions[0].shape,dtype='uint8')
         def alpha_composite(a,b,alpha=0.5):
-            return np.add(np.multiply(a,alpha).astype('uint8'),np.multiply(b,1-alpha).astype('uint8'))
+            return np.add(np.multiply(a,alpha).astype('uint8'),
+                          np.multiply(b,1-alpha).astype('uint8'))
         def combine(a,b):
             return np.add(a,np.divide(b,4))
         for i in range(0,len(self.regions)):

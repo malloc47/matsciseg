@@ -66,9 +66,9 @@ class Slice(object):
             (x0,y0,x1,y1) = label.fit_region(self.labels.create_mask([r]))
             new_volumes.append(self.remove_label(r,max(x1-x0,y1-y0)+5))
         for c in create:
-            new_volumes.append(self.add_label(c))
+            new_volumes.append(self.add_label_circle(c))
         for l in line:
-            pass
+            new_volumes.append(self.add_label_line(l))
         for v in new_volumes:
             self.merge(v)
         self.__init__(self.img
@@ -104,10 +104,10 @@ class Slice(object):
         v.graph_cut(1)
         return v
 
-    def add_label(self,p):
+    def add_label_circle(self,p):
         v = self.crop(list(self.adj.get_adj_radius(p,self.labels.v)))
         p = (p[0]-v.win[0],p[1]-v.win[1],p[2],p[3])
-        l = v.add_label_circle(p)
+        l = v.new_label_circle(p)
         v.data.label_exclusive(v.labels.v==l,l)
         # v.data.dilate_label(l,p[3])
         # directly set data term instead of dilating--matches gui
@@ -117,11 +117,31 @@ class Slice(object):
         v.graph_cut(1)
         return v
 
-    def add_label_circle(self,p):
+    def add_label_line(self,p):
+        line_img = data.line(p,self.labels.v.shape,p[4])
+        v = self.crop(list(np.unique(self.labels.v[line_img])))
+        p = (p[0]-v.win[0],p[1]-v.win[1],p[2]-v.win[0],p[3]-v.win[1],p[4],p[5])
+        l = v.new_label_line(p)
+        v.data.label_exclusive(v.labels.v==l,l)
+        v.data.regions[l] = data.line(p,v.labels.v.shape,p[4]+p[5])
+        v.data.label_exclusive(v.labels.v==0,0)
+        v.data.output_data_term2()
+        v.adj.set_adj_label_all(l)
+        v.graph_cut(1)
+        return v
+
+    def new_label_circle(self,p):
         new_label = self.labels.max()+1
         self.labels.v[adj.circle(p,self.labels.v.shape)] = new_label
         # reconstruct data term after adding label
         # todo: constructing these before this is useless work
+        self.data = data.Data(self.labels.v)
+        self.adj = adj.Adj(self.labels)
+        return new_label
+
+    def new_label_line(self,p):
+        new_label = self.labels.max()+1
+        self.labels.v[data.line(p,self.labels.v.shape,p[4])] = new_label
         self.data = data.Data(self.labels.v)
         self.adj = adj.Adj(self.labels)
         return new_label

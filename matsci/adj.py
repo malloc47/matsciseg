@@ -45,9 +45,10 @@ def adjacent(labels):
 
     return adj
 
-def circle(p,shape):
+def circle(p,shape,r=None):
     output = np.zeros(shape,dtype='bool')
-    r = p[2]
+    if(r is None):
+        r = p[2]
     cx, cy = p[0:2]
     y, x = np.ogrid[-r:r+1, -r:r+1]
     index = x**2 + y**2 <= r**2
