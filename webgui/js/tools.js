@@ -35,6 +35,15 @@ var tools = (function () {
 	currentCursor = cursorMode[toolMode];
     };
 
+    function changeTool(newToolMode,cursorel,buttonset) {
+	setTool(newToolMode);
+	cursorel.css(cursor());
+	if(getTool() == 'none') {
+	    buttonset.removeAttr('checked');
+	    buttonset.button('refresh');
+	}
+    }
+
     function getProp(prop) {return props[prop];};
 
     function setProp(prop,newProp) {props[prop] = newProp;};
@@ -122,6 +131,7 @@ var tools = (function () {
 	init		: init,
 	getTool		: getTool,
 	setTool		: setTool,
+	changeTool	: changeTool,
 	getProp		: getProp,
 	setProp		: setProp,
 	getImgPath	: getImgPath,

@@ -94,14 +94,17 @@ var state = (function ($,log,workcanvas,tools) {
 	    slide: sliderCallback
 	});
 
+	zoomCallback = (function( event, ui ) {
+	    var name = $(this).attr('id');
+	    $('#'+name+'-value').val( ui.value + "X" );
+	    workcanvas.setZoom(ui.value);
+	    workcanvas.redraw();
+	});
+
 	$('.slider-zoom').slider({
 	    value:2, min: 0.25, max: 5, step: 0.25,
-	    slide: function( event, ui ) {
-		var name = $(this).attr('id');
-		$('#'+name+'-value').val( ui.value + "X" );
-		workcanvas.setZoom(ui.value);
-		workcanvas.redraw();
-	    }
+	    slide: zoomCallback,
+	    change: zoomCallback
 	});
 
 	// $('.slider').mouseup(function() {
@@ -109,7 +112,6 @@ var state = (function ($,log,workcanvas,tools) {
 	//     alert(tools.getProp(name));
 	// });
 
-	// $('.slider-text').val('5px');
 	$('#dilation-value').val($('#dilation').slider('value')+'px');
 	$('#size-value').val($('#size').slider('value')+'px');
 	$('#zoom-value').val('2X');
@@ -159,22 +161,13 @@ var state = (function ($,log,workcanvas,tools) {
 	    log.append(m+" view");
 	    workcanvas.loading();
 	    tools.setProp('imgMode',m);
-	    $('.imgtype').css({"background":"#CCCCCC"});
 	    $(this).css({"background":"#AAAACC"});
 	    workcanvas.src('/' + tools.getImgPath() + '/'+pad(state['image'],4)+'/?'+new Date().getTime());
 	});
 
 	$('.interaction').click(function() {
-	    tools.setTool($(this).attr('id'));
-	    $('#mainimg').css(tools.cursor());
+	    tools.changeTool($(this).attr('id'),$('#mainimg'),$('#interactionset input'));
 	    log.append('mode changed to '+tools.getTool());
-	    $('.interaction').css({"background":"#CCCCCC"});
-	    if(tools.getTool() == 'none') {
-		$('#interactionset input').removeAttr('checked');
-		$('#interactionset input').button('refresh');
-		// $('.interaction').prop('checked', false);
-	    }
-		// $(this).css({"background":"#CCAAAA"});
 	});
 
 	$('#reset').click(function() {
@@ -216,6 +209,12 @@ var state = (function ($,log,workcanvas,tools) {
 	    if(tools.remove([x,y])) {
 		log.append("removing annotation");
 	    }
+	    else if(tools.getTool() != 'none'){
+		tools.changeTool('none',
+				 $('#mainimg'),
+				 $('#interactionset input'));
+		log.append('mode changed to none');
+	    }
 	    else {
 		log.append("error: no annotation");
 	    }
@@ -235,6 +234,20 @@ var state = (function ($,log,workcanvas,tools) {
 	    workcanvas.redraw();	    
 	    log.append(tools.getTool() + ' at '+x+','+y);
 	});
+
+	$('#mainimg').bind('mousewheel', function(event, delta) {
+            var dir = delta > 0 ? 'Up' : 'Down',
+                vel = Math.abs(delta);
+            $(this).text(dir + ' at a velocity of ' + vel);
+	    curZoom = workcanvas.getZoom();
+	    newZoom = delta > 0 ? curZoom + 0.25 : curZoom - 0.25;
+	    if (newZoom >= 0.25 && newZoom <= 5) {
+		workcanvas.setZoom(newZoom);
+		$('#zoom').slider('value',newZoom);
+	    }
+            return false;
+        });
+
 	getstate();
     }); 
 
