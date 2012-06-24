@@ -103,7 +103,7 @@ button, input, label {
 
 .slider {
     float:left;
-    width: 200px;
+    width: 100px;
     margin:10px;
 }
 
@@ -126,5 +126,6 @@ button, input, label {
     font-family: Verdana; sans-serif;
     text-align:left;
     float:left;
-    margin:6px;
+    margin:8px;
+    font-size: 10pt;
 }
