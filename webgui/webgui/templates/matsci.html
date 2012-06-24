@@ -4,125 +4,7 @@
     <meta charset="utf-8">
     <title>Materials Segmentation Interactive Segmentation Demo</title>
     <link type="text/css" href="/css/jquery-ui-1.8.21.custom.css" rel="stylesheet" />
-    <style type="text/css">
-
-    .container {
-	width:100%;
-	margin:0px auto;
-    }
-
-    .containermiddle {
-        float: left;
-        width: 100%;
-    }
-
-    .navbar {
-	width:70px;
-	float:left;
-        margin-left: -100%;
-	height: 500px;
-    }
-    .workingarea {
-	margin-right:180px;
-	margin-left:80px;
-	padding:10px;
-	height:720px;
-	overflow:auto;
-    }
-    .rawoutput {
-	font-size:10pt;
-	float: left;
-	width: 170px;
-	margin-left: -170px;
-	height: 720px;
-    }
-    .overflow-wrap {
-	overflow:auto;
-	height: 680px;
-    }
-    .bottombar {
-	float: left;
-	width: 100%;
-
-	overflow:auto;
-	overflow-y: hidden;
-	overflow-x: auto;
-    }
-    .bottombar ul {
-	padding:10px;
-	margin:0px;
-    }
-    .bottombar li {
-	float:left;
-	list-style-type: none;
-	padding-left:0px;
-    }
-    .bottombar img {
-	padding-left:5px;
-	padding-right:5px;
-    }
-    .bottombar p {
-	margin:0px;
-	text-align:center;
-    }
-    .selected {
-	border:1px solid;
-    }
-    h3 {
-	text-align:center;
-    }
-    button {
-	display:block;
-	width:70px;
-    }
-    .output{
-	color:#777777;
-	padding:0px;
-	margin:0px;
-    }
-
-    .errormsg{
-	color:#770000;
-    }
-
-    .output li {
-	list-style-type: none;
-	padding-left:0px;
-    }
-
-    .sliders {
-	float: left;
-	width: 100%;
-    }
-
-    .slider {
-	float:left;
-	width: 200px;
-	margin:10px;
-    }
-
-    .slider-zoom {
-	float:left;
-	width: 100px;
-	margin:10px;
-    }
-
-    .slider-text {
-	float:left;
-	margin:10px;
-	width:50px;
-	border:0; 
-	color:#f6931f; 
-	font-weight:bold;
-    }
-
-    .slider-label {
-	text-align:left;
-	float:left;
-	margin:10px;
-    }
-
-    </style>
+    <link type="text/css" href="/css/style.css" rel="stylesheet" />
     <script src="/js/jquery-1.7.2.js" type="text/javascript"></script>
     <script src="/js/jquery-ui-1.8.21.custom.min.js" type="text/javascript"></script>
     <script type="text/javascript" src="/js/dragscrollable.js"></script>
@@ -131,7 +13,7 @@
     <script type="text/javascript" src="/js/tools.js"></script>
     <script type="text/javascript" src="/js/slice-selector.js"></script>
     <script type="text/javascript" src="/js/state.js"></script>
-</head>
+  </head>
   <body>
     <div class="container">
       <div class="containermiddle">
@@ -142,7 +24,6 @@
       </div>
       <div class="navbar">
 	<h3>Tools</h3>
-
 	<div id="interactionset">
 	  <input type="radio" id="addition" name="interaction" class="interaction" />
 	  <label for="addition">Addition</label>
@@ -151,10 +32,7 @@
 	  <input type="radio" id="removal" name="interaction" class="interaction" />
 	  <label for="removal">Removal</label>
 	</div>
-	
-
         <hr />
-
 	<div id="imgtypeset">
 	  <input type="radio" id="img" name="imgtype" class="imgtype" />
 	  <label for="img">Image</label>
@@ -165,6 +43,7 @@
 	</div>
 
         <hr />
+
 	<button type="button" id="global" class="serversend button">Global</button>
 	<button type="button" id="local" class="serversend button">Local</button>
         <hr />
