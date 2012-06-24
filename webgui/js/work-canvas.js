@@ -4,9 +4,13 @@ var workcanvas = (function () {
     var canvas;
     var mainimg;
     var width, height;
-    var zoom;
+    var zoom = 2;
 
     function imgLoad() {
+	if(canvas.attr('width') != width*zoom)
+	    canvas.attr('width',width*zoom);
+	if(canvas.attr('height') != height*zoom)
+	    canvas.attr('height',height*zoom);
 	ctx.globalAlpha = 1.0;
 	drawImg(mainimg);
 	ctx.redraw();
@@ -24,7 +28,7 @@ var workcanvas = (function () {
 	mainimg = new Image();
 	mainimg.src = "/img/image0090.png"; // static img default
 	mainimg.onload = imgLoad;
-	zoom = 2;
+
     };
 
     function getZoom() {return zoom;};

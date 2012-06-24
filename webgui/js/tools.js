@@ -45,15 +45,6 @@ var tools = (function () {
 
     function setProp(prop,newProp) {props[prop] = newProp;};
 
-    // function getImgMode() {return imgMode;};
-    // function setImgMode(newImgMode) {imgMode = newImgMode;};
-
-    // function getSize() {return size;};
-    // function setSize(newSize) {size = newSize;};
-
-    // function getDilation() {return dilation;};
-    // function setDilation(newDilation) {dilation = newDilation;};
-
     function getImgPath() {return imgPaths[props['imgMode']];};
 
     function cursor() {return currentCursor;};
@@ -84,6 +75,10 @@ var tools = (function () {
 	return data[type];
     };
 
+    function removeClosest() {
+	
+    }
+
     function tuplesToStr(l) {
 	output = '';
 	for (var i=0; i<l.length; i++) {
@@ -107,12 +102,6 @@ var tools = (function () {
 	init		: init,
 	getTool		: getTool,
 	setTool		: setTool,
-	// getImgMode	: getImgMode,
-	// setImgMode	: setImgMode,
-	// getSize		: getSize,
-	// setSize 	: setSize,
-	// getDilation	: getDilation,
-	// setDilation 	: setDilation,
 	getProp		: getProp,
 	setProp		: setProp,
 	getImgPath	: getImgPath,
