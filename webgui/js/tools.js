@@ -42,6 +42,11 @@ var tools = (function () {
 	    buttonset.removeAttr('checked');
 	    buttonset.button('refresh');
 	}
+	// else if(arguments.length > 3) {
+	//     buttonset.removeAttr('checked');
+	//     update.prop("checked", true);
+	//     buttonset.button('refresh');
+	// }
     }
 
     function getProp(prop) {return props[prop];};

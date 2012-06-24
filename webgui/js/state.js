@@ -166,7 +166,9 @@ var state = (function ($,log,workcanvas,tools) {
 	});
 
 	$('.interaction').click(function() {
-	    tools.changeTool($(this).attr('id'),$('#mainimg'),$('#interactionset input'));
+	    tools.changeTool($(this).attr('id'),
+			     $('#mainimg'),
+			     $('#interactionset input'));
 	    log.append('mode changed to '+tools.getTool());
 	});
 
@@ -206,14 +208,14 @@ var state = (function ($,log,workcanvas,tools) {
             var y = e.pageY - this.offsetTop + $('.workingarea').scrollTop();
 	    x = Math.floor(x/workcanvas.getZoom());
 	    y = Math.floor(y/workcanvas.getZoom());
-	    if(tools.remove([x,y])) {
-		log.append("removing annotation");
-	    }
-	    else if(tools.getTool() != 'none'){
+	    if(tools.getTool() != 'none') {
 		tools.changeTool('none',
 				 $('#mainimg'),
 				 $('#interactionset input'));
 		log.append('mode changed to none');
+	    }
+	    else if(tools.remove([x,y])) {
+		log.append("removing annotation");
 	    }
 	    else {
 		log.append("error: no annotation");
@@ -247,6 +249,53 @@ var state = (function ($,log,workcanvas,tools) {
 	    }
             return false;
         });
+
+	// hotkeys
+
+	// button aliases
+	hotkeys = {'a' : '#addition',
+		   'n' : '#line',
+		   'd' : '#removal',
+		   'r' : '#reset',
+		   'i' : '#img',
+		   's' : '#seg',
+		   'e' : '#edg',
+		   'l' : '#local',
+		   'g' : '#global',
+		   '.' : '#copyl',
+		   ',' : '#copyr',
+		  }
+
+	for (var key in hotkeys) {
+	    $(document).bind('keypress', key, 
+			     (function (val){
+				 return function(){
+				     $(val).click();
+				     if(tools.getTool() == 'none'){
+					 $('#interactionset input').removeAttr('checked').button('refresh');
+				     }
+				 };}(hotkeys[key])));
+	}
+
+	
+
+
+
+	// $(document).bind('keydown', 'l', function(){
+	//     // tools.changeTool('line',
+	//     // 		     $('#mainimg'),
+	//     // 		     $('#interactionset input'),
+	//     // 		     $('#line'));
+	//     $('#line').click();
+	// });
+
+	// $(document).bind('keydown', 'd', function(){
+	//     // tools.changeTool('removal',
+	//     // 		     $('#mainimg'),
+	//     // 		     $('#interactionset input'),
+	//     // 		     $('#removal'));
+	//     $('#removal').click();
+	// });
 
 	getstate();
     }); 
