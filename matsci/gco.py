@@ -101,7 +101,7 @@ class Slice(object):
         new_l = (key for key,value in v.shifted.items() if value==l).next()
         v.data.label_erase(new_l)
         v.adj.set_adj_all()
-        v.graph_cut(1,lite=True)
+        v.graph_cut(1)
         return v
 
     def add_label(self,p):
@@ -112,11 +112,10 @@ class Slice(object):
         v.data.label_exclusive(v.labels.v==l,l)
         v.data.label_exclusive(v.labels.v==0,0)
         v.adj.set_adj_label_all(l)
-        v.graph_cut(1,lite=True)
+        v.graph_cut(1)
         return v
 
     def add_label_circle(self,p):
-        import gui
         new_label = self.labels.max()+1
         self.labels.v[adj.circle(p,self.labels.v.shape)] = new_label
         # reconstruct data term after adding label
