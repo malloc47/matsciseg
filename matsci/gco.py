@@ -125,7 +125,6 @@ class Slice(object):
         v.data.label_exclusive(v.labels.v==l,l)
         v.data.regions[l] = data.line(p,v.labels.v.shape,p[4]+p[5])
         v.data.label_exclusive(v.labels.v==0,0)
-        v.data.output_data_term2()
         v.adj.set_adj_label_all(l)
         v.graph_cut(1)
         return v
