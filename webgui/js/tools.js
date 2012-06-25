@@ -31,22 +31,14 @@ var tools = (function () {
     function getTool() {return toolMode;};
 
     function setTool(newToolMode) {
-	toolMode = toolMode==newToolMode ? 'none' : newToolMode;
+	// toolMode = toolMode==newToolMode ? 'none' : newToolMode;
+	toolMode = newToolMode;
 	currentCursor = cursorMode[toolMode];
     };
 
     function changeTool(newToolMode,cursorel,buttonset) {
 	setTool(newToolMode);
 	cursorel.css(cursor());
-	if(getTool() == 'none') {
-	    buttonset.removeAttr('checked');
-	    buttonset.button('refresh');
-	}
-	// else if(arguments.length > 3) {
-	//     buttonset.removeAttr('checked');
-	//     update.prop("checked", true);
-	//     buttonset.button('refresh');
-	// }
     }
 
     function getProp(prop) {return props[prop];};

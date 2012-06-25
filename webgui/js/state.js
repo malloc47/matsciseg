@@ -86,12 +86,14 @@ var state = (function ($,log,workcanvas,tools) {
 
 	$('#size').slider({
 	    value:5, min: 1, max: 50, step: 1,
-	    slide: sliderCallback
+	    slide: sliderCallback,
+	    change: sliderCallback,
 	});
 
 	$('#dilation').slider({
 	    value:15, min: 1, max: 50, step: 1,
-	    slide: sliderCallback
+	    slide: sliderCallback,
+	    change: sliderCallback,
 	});
 
 	zoomCallback = (function( event, ui ) {
@@ -107,17 +109,15 @@ var state = (function ($,log,workcanvas,tools) {
 	    change: zoomCallback
 	});
 
-	// $('.slider').mouseup(function() {
-	//     var name = $(this).attr('id');
-	//     alert(tools.getProp(name));
-	// });
-
 	$('#dilation-value').val($('#dilation').slider('value')+'px');
 	$('#size-value').val($('#size').slider('value')+'px');
 	$('#zoom-value').val('2X');
+
+	$('#accordion').accordion({fillSpace: true});
 	
 	$('.button').button();
 	// set icons
+	$('#none').button({icons: {primary: "ui-icon-arrow-4"}});
 	$('#addition').button({icons: {primary: "ui-icon-plus"}});
 	$('#removal').button({icons: {primary: "ui-icon-close"}});
 	$('#line').button({icons: {primary: "ui-icon-minus"}});
@@ -158,6 +158,7 @@ var state = (function ($,log,workcanvas,tools) {
 	$('.dataset').click(function() {
 	    var dataset = $(this).attr('id');
 	    log.append("changing to "+dataset);
+	    $("#accordion").accordion("activate", 0);
 	    workcanvas.loading();
 	    state['command'] = 'dataset';
 	    state['dataset'] = dataset;
@@ -216,13 +217,7 @@ var state = (function ($,log,workcanvas,tools) {
             var y = e.pageY - this.offsetTop + $('.workingarea').scrollTop();
 	    x = Math.floor(x/workcanvas.getZoom());
 	    y = Math.floor(y/workcanvas.getZoom());
-	    if(tools.getTool() != 'none') {
-		tools.changeTool('none',
-				 $('#mainimg'),
-				 $('#interactionset input'));
-		log.append('mode changed to none');
-	    }
-	    else if(tools.remove([x,y])) {
+	    if(tools.remove([x,y])) {
 		log.append("removing annotation");
 	    }
 	    else {
@@ -261,7 +256,8 @@ var state = (function ($,log,workcanvas,tools) {
 	// hotkeys
 
 	// button aliases
-	hotkeys = {'a' : '#addition',
+	hotkeys = {'m' : '#none',
+		   'a' : '#addition',
 		   'n' : '#line',
 		   'd' : '#removal',
 		   'r' : '#reset',
@@ -279,13 +275,48 @@ var state = (function ($,log,workcanvas,tools) {
 			     (function (val){
 				 return function(){
 				     $(val).click();
-				     if(tools.getTool() == 'none'){
-					 // haven't figured out why this is needed...
-					 $('#interactionset input').removeAttr('checked').button('refresh');
-				     }
 				 };}(hotkeys[key])));
 	}
 
+	$(document).bind('keypress', 'x', 
+			 function(){
+			     curSize = tools.getProp('size');
+			     if(curSize < 50) {
+				 tools.setProp('size',curSize+1);
+				 $('#size').slider('value',curSize+1);
+				 workcanvas.redraw();
+			     }
+			 });
+
+	$(document).bind('keypress', 'z', 
+			 function(){
+			     curSize = tools.getProp('size');
+			     if(curSize > 1) {
+				 tools.setProp('size',curSize-1);
+				 $('#size').slider('value',curSize-1);
+				 workcanvas.redraw();
+			     }
+			 });
+
+	$(document).bind('keypress', 'v', 
+			 function(){
+			     curDilation = tools.getProp('dilation');
+			     if(curDilation < 50) {
+				 tools.setProp('dilation',curDilation+1);
+				 $('#dilation').slider('value',curDilation+1);
+				 workcanvas.redraw();
+			     }
+			 });
+
+	$(document).bind('keypress', 'c', 
+			 function(){
+			     curDilation = tools.getProp('dilation');
+			     if(curDilation > 1) {
+				 tools.setProp('dilation',curDilation-1);
+				 $('#dilation').slider('value',curDilation-1);
+				 workcanvas.redraw();
+			     }
+			 });
 	getstate();
     }); 
 

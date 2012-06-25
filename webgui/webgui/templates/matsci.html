@@ -25,43 +25,56 @@
 	</div>
       </div>
       <div class="navbar">
-	<h3>Tools</h3>
-	<div id="interactionset">
-	  <input type="radio" id="addition" name="interaction" class="interaction" />
-	  <label for="addition">Add</label>
-	  <input type="radio" id="line" name="interaction" class="interaction" />
-	  <label for="line">Line</label>
-	  <input type="radio" id="removal" name="interaction" class="interaction" />
-	  <label for="removal">Remove</label>
-	</div>
-        <hr />
-	<div id="imgtypeset">
-	  <input type="radio" id="img" name="imgtype" class="imgtype" />
-	  <label for="img">Image</label>
-	  <input type="radio" id="seg" name="imgtype" checked="checked" class="imgtype" />
-	  <label for="seg">Segment</label>
-	  <input type="radio" id="edg" name="imgtype" class="imgtype" />
-	  <label for="edg">Edges</label>
+	<div id="accordion">
+	  <h3><a href="#">Tools</a></h3>
+	  <div>
+	    <!-- <h3>Tools</h3> -->
+	    <div id="interactionset">
+	      <input type="radio" id="none" name="interaction" checked="checked" class="interaction" />
+	      <label for="none">Pan</label>
+	      <input type="radio" id="addition" name="interaction" class="interaction" />
+	      <label for="addition">Add</label>
+	      <input type="radio" id="line" name="interaction" class="interaction" />
+	      <label for="line">Line</label>
+	      <input type="radio" id="removal" name="interaction" class="interaction" />
+	      <label for="removal">Remove</label>
+	    </div>
+            <hr />
+	    <div id="imgtypeset">
+	      <input type="radio" id="img" name="imgtype" class="imgtype" />
+	      <label for="img">Image</label>
+	      <input type="radio" id="seg" name="imgtype" checked="checked" class="imgtype" />
+	      <label for="seg">Segment</label>
+	      <input type="radio" id="edg" name="imgtype" class="imgtype" />
+	      <label for="edg">Edges</label>
+	    </div>
+
+            <hr />
+
+	    <button type="button" id="global" class="serversend button">Global</button>
+	    <button type="button" id="local" class="serversend button">Local</button>
+            <hr />
+            <button type="button" id="copyr" class="serversend button">Copy</button>
+            <button type="button" id="copyl" class="serversend button">Copy</button>
+            <hr />
+	    <button type="button" id="reset" class="button">Reset</button>
+	  </div>
+	  <h3><a href="#">Datasets</a></h3>
+	  <div>
+	    <!-- <h3>Datasets</h3> -->
+	    <button type="button" id="ti" class="dataset button">Ti-26 All</button>
+	    <button type="button" id="ti2" class="dataset button">Ti-26 2</button>
+	    <button type="button" id="ti4" class="dataset button">Ti-26 4</button>
+	    <button type="button" id="c1a" class="dataset button">C1 Full</button>
+	    <button type="button" id="c1b" class="dataset button">C1 Half</button>
+	    <button type="button" id="c2a" class="dataset button">C2</button>
+	    <button type="button" id="c3" class="dataset button">C3</button>
+	    <!-- <button type="button" id="s1" class="dataset button">Cropped</button> -->
+	  </div>
 	</div>
 
-        <hr />
 
-	<button type="button" id="global" class="serversend button">Global</button>
-	<button type="button" id="local" class="serversend button">Local</button>
-        <hr />
-        <button type="button" id="copyr" class="serversend button">Copy</button>
-        <button type="button" id="copyl" class="serversend button">Copy</button>
-        <hr />
-	<button type="button" id="reset" class="button">Reset</button>
-	<h3>Datasets</h3>
-	<button type="button" id="ti" class="dataset button">Ti-26 All</button>
-	<button type="button" id="ti2" class="dataset button">Ti-26 2</button>
-	<button type="button" id="ti4" class="dataset button">Ti-26 4</button>
-	<button type="button" id="c1a" class="dataset button">C1 Full</button>
-	<button type="button" id="c1b" class="dataset button">C1 Half</button>
-	<button type="button" id="c2a" class="dataset button">C2</button>
-	<button type="button" id="c3" class="dataset button">C3</button>
-	<!-- <button type="button" id="s1" class="dataset button">Cropped</button> -->
+
 
       </div>
       <div class="rawoutput">
