@@ -84,12 +84,12 @@ class Slice(object):
         the candidate region"""
         v = self.crop([l])
         v.data.dilate_all(d)
-        v.data.label_inexclusive(v.labels.v==l)
+        v.data.label_inexclusive(v.labels.v==l,l)
         v.adj.set_adj_all()
         v.graph_cut(1,lite=True)
         return v
 
-    def remove_label(self,l,d):
+    def remove_label_old(self,l,d):
         """removal that truly removes region"""
         v = self.crop([l])
         v.data.or_all(crop_box(data.select_region(self.labels.v,l),
@@ -100,6 +100,19 @@ class Slice(object):
                       skip=[0])
         new_l = (key for key,value in v.shifted.items() if value==l).next()
         v.data.label_erase(new_l)
+        v.adj.set_adj_all()
+        v.graph_cut(1)
+        return v
+
+    def remove_label(self,l,d):
+        """removal that truly removes region"""
+        v = self.crop([l],[l])
+        new_mask = crop_box(data.select_region(self.labels.v,l),
+                               (v.win[1]
+                                , v.win[0]
+                                , v.win[1] + v.labels.v.shape[1]
+                                , v.win[0] + v.labels.v.shape[0]))
+        v.data.or_term(new_mask)
         v.adj.set_adj_all()
         v.graph_cut(1)
         return v
@@ -145,7 +158,7 @@ class Slice(object):
         self.adj = adj.Adj(self.labels)
         return new_label
 
-    def crop(self,label_list):
+    def crop(self,label_list,blank=[]):
         """fork off subwindow volume"""
         label_list = self.adj.get_adj(label_list)
         mask = self.labels.create_mask(label_list)
@@ -161,8 +174,11 @@ class Slice(object):
         for l in label_list:
             label_transform[new_label]=l
             # print("Shifting "+str(l)+" to "+str(new_label))
-            new_seed[cropped_seed==l] = new_label
-            new_label += 1
+            if not l in blank:
+                new_seed[cropped_seed==l] = new_label
+                new_label += 1
+            else:
+                new_seed[cropped_seed==l] = 0
         # new_seed[np.logical_not(mask_cropped)] = 0
         return Slice(new_img
                      , new_seed

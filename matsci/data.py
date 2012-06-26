@@ -313,16 +313,19 @@ class Data(object):
                       if x[0]!=l else x[1]
                       for x in zip(range(len(self.regions)),self.regions)]
 
-    def label_inexclusive(self,reg):
+    def label_inexclusive(self,reg,l):
         self.regions = [ np.logical_or(reg,x[1])
                       if x[0]!=l else x[1]
                       for x in zip(range(len(self.regions)),self.regions)]
 
     def or_all(self,reg,skip=[]):
-        print(str(range(len(self.regions))))
         self.regions = [ np.logical_or(reg,x[1])
                          if not x[0] in skip else x[1]
                          for x in zip(range(len(self.regions)),self.regions)]
+
+    def or_term(self,reg):
+        self.regions = [self.regions[0]] + \
+            map(lambda img : np.logical_or(img,reg), self.regions[1:])
 
     def matrix(self):
         return stack_matrix(self.regions)
