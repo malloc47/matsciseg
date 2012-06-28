@@ -27,8 +27,6 @@ def main(*args):
     im = np.dstack((im,im,im))
     im = np.multiply(im,255).astype('uint8')
 
-    # im = np.hstack((im,im))
-
     for fname in args[4:]:
         f = open(fname, 'r')
         label = convert_linear(f.read().split(),w,h)
@@ -36,30 +34,18 @@ def main(*args):
         num = int(fn[5:-12].split('-')[0])
         l1 = int(fn[5:-12].split('-')[1])
         l2 = int(fn[5:-12].split('-')[2])
-        # print(str(im))
-        # print(str(im.shape))
-        # print(str(label))
-        # print(str(label.shape))
         im_new = render_labels.draw_on_img(im.copy(),render_labels.label_to_bmp(label))
-        im2 = render_labels.draw_on_img(im_new.copy(),label==l1,(0,255,0))
+        im2 = render_labels.draw_on_img(im.copy(),label==l1,(0,255,0))
         im2 = render_labels.draw_on_img(im2,label==l2,(0,0,255))
         im_new = np.hstack((im2,im_new))
         scipy.misc.imsave(str(num)+'.png',im_new);
         
-    
-
-    # output = np.zeros((h,w),dtype='int16')
-
-    # counter = 0
-    # print(str(len(label)))
-    # for i in range(h):
-    #     for j in range(w):
-    #         output[i,j] = int(label[counter])
-    #         counter += 1
-            
-    # np.savetxt(out,output,fmt='%1d')    
-
     return 0
 
 if __name__ == '__main__':
     sys.exit(main(*sys.argv))
+
+# Example usage
+# ../create_alpha_beta_video.py 200 200 ../seq1/cropped2/image0091.png *.linearlabel
+# ffmpeg -f image2 -r 2 -i %d.png -b 4000k alpha-beta.avi
+# ffmpeg -f image2 -r 2 -i %d.png -b 4000k -r 25 alpha-beta.mpg
