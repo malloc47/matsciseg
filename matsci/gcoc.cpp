@@ -180,10 +180,13 @@ static PyObject *graph_cut(PyObject *self, PyObject *args) {
   d[2] = data_p->dimensions[2];
   
   GCoptimizationGridGraph *gc = new GCoptimizationGridGraph(d[1],d[0],num_labels);
+  
+  // gc->setVerbosity(2);
 
   int *data = new int[d[0]*d[1]*num_labels];
   int *sites = new int[d[0]*d[1]];
   int *result = new int[d[0]*d[1]];
+  bool *adj = new bool[adj_p->dimensions[0]*adj_p->dimensions[1]];
 
   int i=0,j=0,k=0;
 
@@ -204,6 +207,13 @@ static PyObject *graph_cut(PyObject *self, PyObject *args) {
     for(j=0;j<d[1]; j++)
       gc->setLabel(j+(i*d[1]),
 		   int(*((npy_int16*)PyArray_GETPTR2(seedimg_p,i,j))));
+
+  // adj term
+  for(i=0;i<adj_p->dimensions[0]; i++)
+    for(j=0;j<adj_p->dimensions[1]; j++) {
+      // adj[j+(i*adj_p->dimensions[1])] = bool(*((npy_bool*)PyArray_GETPTR2(adj_p,i,j)));
+      adj[j+(i*adj_p->dimensions[1])] = bool(*((npy_bool*)PyArray_GETPTR2(adj_p,i,j)));
+    }
 
   // set data term
   gc->setDataCost(data);
@@ -244,7 +254,7 @@ static PyObject *graph_cut(PyObject *self, PyObject *args) {
     result[i] = gc->whatLabel(i);
 
   // do the graph cut
-  gc->swap(1);
+  gc->swap(1,adj);
 
   // retrieve labeling
   for(i=0;i<d[0]*d[1]; i++)
@@ -270,6 +280,7 @@ static PyObject *graph_cut(PyObject *self, PyObject *args) {
   delete [] data;
   delete [] sites;
   delete [] result;
+  delete [] adj;
 
   if(has_func)
     Py_XDECREF(func);
