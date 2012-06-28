@@ -4,9 +4,9 @@ import numpy as np
 import scipy
 from scipy import ndimage
 
-def draw_on_img(img,bmp):
+def draw_on_img(img,bmp,color=(255,0,0)):
     out = img.copy()
-    out[np.nonzero(bmp>0)] = (255,0,0)
+    out[np.nonzero(bmp>0)] = color
     return out
 
 def label_to_bmp(labels):
