@@ -37,7 +37,8 @@ def main(*args):
         im_new = render_labels.draw_on_img(im.copy(),render_labels.label_to_bmp(label))
         im2 = render_labels.draw_on_img(im.copy(),label==l1,(0,255,0))
         im2 = render_labels.draw_on_img(im2,label==l2,(0,0,255))
-        im_new = np.hstack((im2,im_new))
+        b = np.multiply(np.ones((im2.shape[0],20,3),dtype='uint8'),255)
+        im_new = np.hstack((im2,b,im_new))
         scipy.misc.imsave(str(num)+'.png',im_new);
         
     return 0
