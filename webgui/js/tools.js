@@ -18,7 +18,7 @@ var tools = (function () {
 
     var currentCursor;
 
-    var props = {'imgMode'	: 'seg',
+    var props = {'imgMode'	: 'img',
 		 'dilation'	: 15,
 		 'size'		: 5};
     
