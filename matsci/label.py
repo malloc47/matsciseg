@@ -7,6 +7,21 @@ def create_mask(labels,label_list):
     """get binary mask from a list of labels (in an integer matrix)"""
     return reduce(np.logical_or,map(lambda l:labels==l,label_list))
 
+def region_outline(labels):
+    def binary_remove(img):
+        def any_is_zero(d):
+            return d.all()
+        return data.relative_complement((img,
+                                         scipy.ndimage.generic_filter(a,
+                                                                      lambda d: d.all(),
+                                                                      mode='nearest',
+                                                                      size=3)))
+    # convert to list of tuples with indices and labels
+    indices = binary_remove(labels > 0).nonzero()
+    return [(i,j,labels[i,j]) for i,j in zip(a.nonzero()[0].tolist(),a.nonzero()[1].tolist())]
+
+ 
+
 def fit_region(im):
     """return coordinates of box that fits around a binary region"""
     mask_win = np.argwhere(im)
@@ -112,4 +127,5 @@ class Label(object):
     def max(self):
         return self.v.max()
 
-    
+    def region_outline(self):
+        region_outline(self.v)

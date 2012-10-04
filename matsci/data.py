@@ -308,6 +308,11 @@ class Data(object):
     def label_erase(self,l):
         self.regions[l] = np.zeros_like(self.regions[l])
 
+    def pixels_exclusive(self,pixels):
+        for i,j,l in pixels:
+            for r in range(0,len(self.regions)):
+                self.regions[r][i,j] = True if r==l else False
+
     def label_exclusive(self,reg,l):
         self.regions = [ np.logical_and(np.logical_not(reg),x[1])
                       if x[0]!=l else x[1]
