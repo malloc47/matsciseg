@@ -86,8 +86,8 @@ class Slice(object):
             if v is None:
                 continue
             v.data.dilate(d)
-            v.pixels_exclusive(v.labels.region_outline())
-            v.graph_cut(1,lite=True)
+            v.data.pixels_exclusive(v.labels.region_outline())
+            v.graph_cut(1,lite=False)
             self.merge(v)
             
     def remove_label_dilation(self,l,d):
