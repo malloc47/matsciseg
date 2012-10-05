@@ -104,3 +104,6 @@ class Adj(object):
         """remove topology constraints for a single label"""
         self.v[l,:] = True
         self.v[:,l] = True
+
+    def num_adj(self):
+        return np.sum(self.v)/2
