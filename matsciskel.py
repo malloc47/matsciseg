@@ -15,9 +15,9 @@ def label_to_bmp(labels):
     seg = np.maximum(abs(grad[0]),abs(grad[1]))
     return seg
 
-def draw_on_img(img,bmp):
+def draw_on_img(img,bmp,color=(255,0,0)):
     out = img.copy()
-    out[np.nonzero(bmp>0)] = (255,0,0)
+    out[np.nonzero(bmp>0)] = color
     return out
 
 def read_img(img_name):
