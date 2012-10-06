@@ -86,7 +86,10 @@ class Slice(object):
             if v is None:
                 continue
             v.data.dilate(d)
-            v.data.pixels_exclusive(v.labels.region_outline())
+            v.data.pixels_exclusive(
+                v.labels.region_outline()
+                + [(i,j,l) for (i,j,l) in v.labels.centers_of_mass() if l > 0]
+                )
             v.graph_cut(1,lite=False)
             self.merge(v)
             
@@ -240,7 +243,7 @@ class Slice(object):
 
         output = gcoc.graph_cut(self.data.matrix(),
                                 self.img,
-                                self.labels.v,
+                                np.array(self.labels.v).astype('int16'),
                                 self.adj.v,
                                 self.labels.max()+1, # todo: extract from data
                                 mode)

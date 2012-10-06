@@ -60,3 +60,14 @@ def filtergui_cmd(arg,im,im_gray,seed):
     v = matsci.gco.Slice(im_gray,seed,lightweight=True)
     v.edit_labels_gui(5)
     return v.graph_cut(arg['gctype'])
+
+def clique_cmd(arg,im,im_gray,seed):
+    v = matsci.gco.Slice(im_gray,seed)
+    v.clique_swap(arg['d'])
+    v2 = matsci.gco.Slice(im_gray,seed)
+    v2.data.dilate_all(arg['d'])
+    v2.graph_cut(1)
+    import matsciskel
+    import cv2
+    cv2.imwrite('cliquetest.png',matsciskel.draw_on_img(matsciskel.draw_on_img(im,matsciskel.label_to_bmp(v2.labels.v)),matsciskel.label_to_bmp(v.labels.v),color=(0,0,255)))
+    return v.labels.v

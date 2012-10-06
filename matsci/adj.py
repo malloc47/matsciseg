@@ -68,7 +68,7 @@ def circle(p,shape,r=None):
 
 class Adj(object):
     def __init__(self,labels):
-        self.v = gcoc.adjacent(labels.v,labels.max()+1)
+        self.v = gcoc.adjacent(np.array(labels.v).astype('int16'),labels.max()+1)
         # self.v = adjacent(labels.v)
     
     def get_adj(self,label_list):

@@ -20,6 +20,12 @@ def region_outline(labels):
     # convert to list of tuples with indices and labels
     return [(i,j,labels[i,j]) for i,j in zip(indices[0].tolist(),indices[1].tolist())]
 
+def centers_of_mass(labels):
+    return [ (int(i),int(j),labels[i,j]) for i,j in
+             [ndimage.measurements.center_of_mass(labels==l)
+              for l in range(0,labels.max()+1)]
+             if not np.isnan(i) and not np.isnan(j)]
+
 def fit_region(im):
     """return coordinates of box that fits around a binary region"""
     mask_win = np.argwhere(im)
@@ -127,3 +133,6 @@ class Label(object):
 
     def region_outline(self):
         return region_outline(self.v)
+
+    def centers_of_mass(self):
+        return centers_of_mass(self.v)
