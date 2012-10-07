@@ -165,6 +165,27 @@ def erode(img,d):
                             cv2.getStructuringElement(cv2.MORPH_ELLIPSE,
                                                       (d,d))).astype(bool)
 
+def erode_to(img,d=3,rel_size=0.5,min_size=15):
+    """erode to structure to specified relative size"""
+    prev_size = np.count_nonzero(img)
+    new_size = prev_size
+    center = ndimage.measurements.center_of_mass(img)
+    center = (int(center[0]),int(center[1]))
+
+    while new_size > rel_size * prev_size and new_size > min_size:
+        img = erode(img,d)
+        new_size = np.count_nonzero(img)
+
+    # handle case where region was > min_size but was dilated to 0
+    # anyway by using center pixel as result
+    if new_size < 1:
+        print("ERROR: region dilated to size 0")
+        img2 = np.zeros_like(img).astype('bool')
+        img2[center] = True
+        return img2
+    else:
+        return img
+
 def relative_complement(p):
     return np.logical_and(p[0],np.logical_not(p[1]))
 
@@ -281,6 +302,20 @@ class Data(object):
                         dilate(img,clamp(find_max_dist(edges,pre(img)))),
                         self.regions)
 
+    def dilate_fixed_center(self,d,rel_size=0.25,min_size=15,first=False):
+        if first:
+            tmp = [erode_to(img,3,rel_size,min_size) for img in self.regions]
+            self.regions = [ dilate(img,d) for img in self.regions ]
+            for x in zip(range(len(self.regions)),tmp):
+                self.label_exclusive(*x)
+        else:
+            tmp = [np.zeros_like(self.regions[0])] + \
+                [erode_to(img,3,rel_size,min_size) for img in self.regions[1:]]
+            self.regions = [self.regions[0]] + \
+                [ dilate(img,d) for img in self.regions[1:] ]
+            for x in zip(range(len(self.regions)),tmp):
+                self.label_exclusive(*x)
+
     def output_data_term2(self):
         # just for testing (spit out data term as images)
         for i in range(0,len(self.regions)):
@@ -313,7 +348,9 @@ class Data(object):
             for r in range(0,len(self.regions)):
                 self.regions[r][i,j] = True if r==l else False
 
-    def label_exclusive(self,reg,l):
+    def label_exclusive(self,l,reg=None):
+        if reg is None:
+            reg = self.regions[l]
         self.regions = [ np.logical_and(np.logical_not(reg),x[1])
                       if x[0]!=l else x[1]
                       for x in zip(range(len(self.regions)),self.regions)]

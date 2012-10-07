@@ -85,10 +85,12 @@ class Slice(object):
             v = self.crop([l])
             if v is None:
                 continue
-            v.data.dilate(d)
+            # v.data.dilate(d)
+            v.data.dilate_fixed_center(d, rel_size=0.1, min_size=15)
+            v.data.label_exclusive(0, v.labels.v == 0)
             v.data.pixels_exclusive(
                 v.labels.region_outline()
-                + [(i,j,l) for (i,j,l) in v.labels.centers_of_mass() if l > 0]
+                # + [(i,j,l) for (i,j,l) in v.labels.centers_of_mass() if l > 0]
                 )
             v.graph_cut(1,lite=False)
             self.merge(v)
@@ -135,11 +137,11 @@ class Slice(object):
         v = self.crop(list(self.adj.get_adj_radius(p,self.labels.v)))
         p = (p[0]-v.win[0],p[1]-v.win[1],p[2],p[3])
         l = v.new_label_circle(p)
-        v.data.label_exclusive(v.labels.v==l,l)
+        v.data.label_exclusive(l,v.labels.v==l)
         # v.data.dilate_label(l,p[3])
         # directly set data term instead of dilating--matches gui
         v.data.regions[l] = adj.circle((p[0],p[1],p[2]+p[3]),v.labels.v.shape)
-        v.data.label_exclusive(v.labels.v==0,0)
+        v.data.label_exclusive(0,v.labels.v==0)
         v.adj.set_adj_label_all(l)
         v.graph_cut(1)
         return v
@@ -149,9 +151,9 @@ class Slice(object):
         v = self.crop(list(np.unique(self.labels.v[line_img])))
         p = (p[0]-v.win[0],p[1]-v.win[1],p[2]-v.win[0],p[3]-v.win[1],p[4],p[5])
         l = v.new_label_line(p)
-        v.data.label_exclusive(v.labels.v==l,l)
+        v.data.label_exclusive(l,v.labels.v==l)
         v.data.regions[l] = data.line(p,v.labels.v.shape,p[4]+p[5])
-        v.data.label_exclusive(v.labels.v==0,0)
+        v.data.label_exclusive(0,v.labels.v==0)
         v.adj.set_adj_label_all(l)
         v.graph_cut(1)
         return v
@@ -237,13 +239,14 @@ class Slice(object):
         # else:
         #     print("All pixels have a label")
 
-        print("region size: " + str(self.img.shape))
+        # print("region size: " + str(self.img.shape))
         # print("min: " + str(self.labels.v.min()))
         # print("max: " + str(self.labels.v.max()))
 
         output = gcoc.graph_cut(self.data.matrix(),
                                 self.img,
                                 np.array(self.labels.v).astype('int16'),
+                                # self.labels.v,
                                 self.adj.v,
                                 self.labels.max()+1, # todo: extract from data
                                 mode)
