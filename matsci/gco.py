@@ -21,6 +21,11 @@ def crop_box(a,box):
     (x0,y0,x1,y1) = box
     return a[y0:y1, x0:x1]
 
+def candidate_point(p,q,r):
+    new_q = tuple([ i-j for i,j in zip(p,q)])
+    theta = math.atan2(*new_q[::-1])
+    return (int(r*math.cos(theta)),int(r*math.sin(theta)))
+
 class Slice(object):
     def __init__(self, img, labels, shifted={}, 
                  win=(0,0), mask=None, lightweight=False,
@@ -185,9 +190,15 @@ class Slice(object):
 
     def non_homeomorphic_yjunction(self,d=3,r=4):
         j = self.labels.junctions(d)
+        com = self.labels.centers_of_mass()
         for (p,ls) in j:
             v = self.crop(ls)
+            candidates = v.yjunction_candidates(p,r)
             
+    def yjunction_candidates(self,p,r):
+        p_shifted = tuple([ i-j for i,j in zip(p,self.win)])
+        return [ (candidate_point(p_shifted,(x,y),r),l)
+                 for x,y,l in self.labels.centers_of_mass() ]
 
     def rev_shift(self,l):
         return dict((v,k) for k,v in self.shifted.items())[l]
