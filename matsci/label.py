@@ -2,7 +2,7 @@
 import numpy as np
 import scipy
 from scipy import ndimage
-import data
+import data,adj
 
 def create_mask(labels,label_list):
     """get binary mask from a list of labels (in an integer matrix)"""
@@ -112,6 +112,15 @@ def region_clean(regions):
     # todo: what's happening with the -1s?
     # return out
 
+def junctions(regions,d=3):
+    ps = np.nonzero(scipy.ndimage.generic_filter(regions,
+                                 lambda d: len(np.unique(d)) >= 3,
+                                 mode='nearest',
+                                 size=(2,2)))
+    ps = [ (i,j,d) for (i,j) in zip(ps[0],ps[1]) ]
+    return [ (p[:-1] , set(np.unique(regions[adj.circle(p,regions.shape)])) )
+             for p in ps ]
+
 def fit_region_z(im):
     """similar to fit_region"""
     mask_win = np.argwhere(im)
@@ -131,8 +140,14 @@ class Label(object):
     def max(self):
         return self.v.max()
 
+    def sizes(self):
+        return label_sizes(self.v)
+
     def region_outline(self):
         return region_outline(self.v)
 
     def centers_of_mass(self):
         return centers_of_mass(self.v)
+
+    def junctions(self,d=3):
+        return junctions(self.v,d)

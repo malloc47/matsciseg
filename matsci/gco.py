@@ -100,7 +100,9 @@ class Slice(object):
         the candidate region"""
         v = self.crop([l])
         v.data.dilate_all(d)
-        v.data.label_inexclusive(v.labels.v==l,l)
+        shifted = v.rev_shift(l)
+        v.data.regions[shifted] = v.labels.v==shifted
+        v.data.label_inexclusive(v.labels.v==shifted,shifted)
         v.adj.set_adj_all()
         v.graph_cut(1,lite=True)
         return v
@@ -173,6 +175,22 @@ class Slice(object):
         self.data = data.Data(self.labels.v)
         self.adj = adj.Adj(self.labels)
         return new_label
+
+    def non_homeomorphic_remove(self,d,size):
+        s = self.labels.sizes()
+        print(str([l for l in s if l < size]))
+        for l in [ l for (l,s) in zip(range(len(s)),s) if s < size ]:
+            v = self.remove_label_dilation(l,d)
+            self.merge(v)
+
+    def non_homeomorphic_yjunction(self,d=3,r=4):
+        j = self.labels.junctions(d)
+        for (p,ls) in j:
+            v = self.crop(ls)
+            
+
+    def rev_shift(self,l):
+        return dict((v,k) for k,v in self.shifted.items())[l]
 
     def crop(self,label_list,blank=[]):
         """fork off subwindow volume"""
