@@ -107,3 +107,9 @@ class Adj(object):
 
     def num_adj(self):
         return np.sum(self.v)/2
+
+    def copy(self):
+        from copy import deepcopy
+        cp = Adj()
+        cp.v = deepcopy(self.v)
+        return cp

@@ -6,6 +6,8 @@ import scipy
 from scipy import ndimage
 from copy import deepcopy
 import data, adj, label
+import operator
+import math
 
 def smoothFn(s1,s2,l1,l2,adj):
     """smoothness function that could be passed to the minimzation"""
@@ -22,9 +24,13 @@ def crop_box(a,box):
     return a[y0:y1, x0:x1]
 
 def candidate_point(p,q,r):
-    new_q = tuple([ i-j for i,j in zip(p,q)])
+    new_q = tuple([ j-i for i,j in zip(p,q)])
     theta = math.atan2(*new_q[::-1])
-    return (int(r*math.cos(theta)),int(r*math.sin(theta)))
+    if theta < 0:
+        theta += 2*math.pi
+    print(str(theta))
+    return (int(r*math.cos(theta))+p[0],
+            int(r*math.sin(theta))+p[1])
 
 class Slice(object):
     def __init__(self, img, labels, shifted={}, 
@@ -188,24 +194,60 @@ class Slice(object):
             v = self.remove_label_dilation(l,d)
             self.merge(v)
 
-    def non_homeomorphic_yjunction(self,d=3,r=4):
-        j = self.labels.junctions(d)
-        com = self.labels.centers_of_mass()
+    def non_homeomorphic_yjunction(self,d,r=3,r2=4,corr=0.66,min_size=100):
+        import pylab
+        import matplotlib.cm as cm
+        import matsci.gui
+        t = np.mean(self.img)*0.75
+        j = self.labels.junctions(r)
+        sizes = self.labels.sizes()
         for (p,ls) in j:
-            v = self.crop(ls)
-            candidates = v.yjunction_candidates(p,r)
+            print(str(p))
+            print(str(ls))
+            if min([sizes[s] for s in ls]) < min_size:
+                continue
+            v = self.crop(list(ls),extended=False)
+            pylab.imshow(
+                matsci.gui.color_jet(
+                    matsci.gui.grey_to_rgb(v.img)
+                    , v.labels.v))
+            pylab.hold(True)
+            p_shifted = tuple([ j-i for i,j in zip(v.win,p)])
+            pylab.plot([p_shifted[1]],[p_shifted[0]],'r.',markersize=d)
+            candidates = [ (x,y,l) for ((x,y),l) in v.yjunction_candidates(p,r2) ]
+            print(str(candidates))
+            for c in candidates:
+                pylab.plot([c[1]],[c[0]],'g.',markersize=d)
+            for c in v.labels.centers_of_mass():
+                pylab.plot([c[1]],[c[0]],'b.',markersize=d)
+            pylab.show()
+            cuts = []
+            for c in candidates:
+                v2 = v.copy()
+                v2.new_label_circle(c)
+                v2.data.dilate(d)
+                v2.data.pixels_exclusive([(i,j,l) for (i,j,l) in 
+                                          v2.labels.centers_of_mass() if l > 0])
+                v2.graph_cut(1)
+                score = v2.labels.region_boundary_intensity(v2.img,v2.labels.max(),t)
+                cuts += [(v2,score)]
+            best = max(cuts,key=operator.itemgetter(1))
+            if best[1] > corr:
+                print('#$%L@#KJ$LSEKRJSZ I GIOT A HIGET')
+                self.merge(best[0])
             
     def yjunction_candidates(self,p,r):
-        p_shifted = tuple([ i-j for i,j in zip(p,self.win)])
+        p_shifted = tuple([ j-i for i,j in zip(self.win,p)])
         return [ (candidate_point(p_shifted,(x,y),r),l)
-                 for x,y,l in self.labels.centers_of_mass() ]
+                 for x,y,l in self.labels.centers_of_mass() if l > 0 ]
 
     def rev_shift(self,l):
         return dict((v,k) for k,v in self.shifted.items())[l]
 
-    def crop(self,label_list,blank=[]):
+    def crop(self,label_list,blank=[],extended=True):
         """fork off subwindow volume"""
-        label_list = self.adj.get_adj(label_list)
+        if extended:
+            label_list = self.adj.get_adj(label_list)
         if len(label_list) < 2:
             return None
         mask = self.labels.create_mask(label_list)
@@ -288,3 +330,15 @@ class Slice(object):
                       , lightweight=lite
                       , nodata=lite)
         return self.labels.v
+
+    def copy(self):
+        from copy import deepcopy
+        cp = Slice(self.img
+                   , self.labels.v.copy()
+                   , self.shifted
+                   , self.win
+                   , self.mask
+                   , lightweight=True
+                   , nodata=True)
+        cp.data = self.data.copy()
+        return cp

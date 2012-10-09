@@ -8,23 +8,30 @@ def create_mask(labels,label_list):
     """get binary mask from a list of labels (in an integer matrix)"""
     return reduce(np.logical_or,map(lambda l:labels==l,label_list))
 
+def binary_remove(img):
+    return data.relative_complement((img,
+                                     scipy.ndimage.generic_filter(img,
+                                                                  lambda d: d.all(),
+                                                                  mode='constant',
+                                                                  cval=0,
+                                                                  footprint=[[0,1,0],[1,1,1],[0,1,0]])))
+
 def region_outline(labels):
-    def binary_remove(img):
-        return data.relative_complement((img,
-                                         scipy.ndimage.generic_filter(img,
-                                                                      lambda d: d.all(),
-                                                                      mode='constant',
-                                                                      cval=0,
-                                                                      footprint=[[0,1,0],[1,1,1],[0,1,0]])))
     indices = binary_remove(labels > 0).nonzero()
     # convert to list of tuples with indices and labels
     return [(i,j,labels[i,j]) for i,j in zip(indices[0].tolist(),indices[1].tolist())]
 
 def centers_of_mass(labels):
-    return [ (int(i),int(j),labels[i,j]) for i,j in
-             [ndimage.measurements.center_of_mass(labels==l)
+    return [ (int(i),int(j),l) for i,j,l in
+             [ ndimage.measurements.center_of_mass(labels==l) + (l,)
               for l in range(0,labels.max()+1)]
              if not np.isnan(i) and not np.isnan(j)]
+
+def region_boundary_intensity(labels,img,l,t):
+    boundary = img[binary_remove(labels==l)]
+    thresh = np.count_nonzero(boundary > t)
+    total = len(boundary)
+    return float(thresh)/float(total)
 
 def fit_region(im):
     """return coordinates of box that fits around a binary region"""
@@ -151,3 +158,12 @@ class Label(object):
 
     def junctions(self,d=3):
         return junctions(self.v,d)
+
+    def region_boundary_intensity(self,img,l,t):
+        return region_boundary_intensity(self.v,img,l,t)
+
+    def copy(self):
+        from copy import deepcopy
+        cp = Label()
+        cp.v = deepcopy(self.v)
+        return cp
