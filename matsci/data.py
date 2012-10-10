@@ -168,10 +168,11 @@ def erode(img,d):
 def erode_to(img,d=3,rel_size=0.5,min_size=15):
     """erode to structure to specified relative size"""
     prev_size = np.count_nonzero(img)
+    if(prev_size <= 0):
+        return img
     new_size = prev_size
     center = ndimage.measurements.center_of_mass(img)
     center = (int(center[0]),int(center[1]))
-
     while new_size > rel_size * prev_size and new_size > min_size:
         img = erode(img,d)
         new_size = np.count_nonzero(img)
@@ -339,6 +340,7 @@ class Data(object):
             output = combine(output,s)
             # scipy.misc.imsave("seq5/output/data"+str(i)+".png",output)
         scipy.misc.imsave("data.png",output)
+        return output
 
     def label_erase(self,l):
         self.regions[l] = np.zeros_like(self.regions[l])

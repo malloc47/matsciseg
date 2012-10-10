@@ -28,7 +28,6 @@ def candidate_point(p,q,r):
     theta = math.atan2(*new_q[::-1])
     if theta < 0:
         theta += 2*math.pi
-    print(str(theta))
     return (int(r*math.cos(theta))+p[0],
             int(r*math.sin(theta))+p[1])
 
@@ -146,9 +145,12 @@ class Slice(object):
         v.graph_cut(1)
         return v
 
-    def add_label_circle(self,p):
-        v = self.crop(list(self.adj.get_adj_radius(p,self.labels.v)))
-        p = (p[0]-v.win[0],p[1]-v.win[1],p[2],p[3])
+    def add_label_circle(self,p,crop=True):
+        if crop:
+            v = self.crop(list(self.adj.get_adj_radius(p,self.labels.v)))
+            p = (p[0]-v.win[0],p[1]-v.win[1],p[2],p[3])
+        else:
+            v = self
         l = v.new_label_circle(p)
         v.data.label_exclusive(l,v.labels.v==l)
         # v.data.dilate_label(l,p[3])
@@ -189,56 +191,109 @@ class Slice(object):
 
     def non_homeomorphic_remove(self,d,size):
         s = self.labels.sizes()
-        print(str([l for l in s if l < size]))
+        # print(str([l for l in s if l < size]))
         for l in [ l for (l,s) in zip(range(len(s)),s) if s < size ]:
             v = self.remove_label_dilation(l,d)
             self.merge(v)
 
-    def non_homeomorphic_yjunction(self,d,r=3,r2=4,corr=0.66,min_size=100):
+    def non_homeomorphic_yjunction(self, d=20, r1=1, r2=1, r3=7, corr=0.66,
+                                   min_size=100, new_min_size=25):
+        """
+        r1 = new point radius
+        r2 = new point dilation
+        r3 = distance from y-junction to place seed
+        """
         import pylab
         import matplotlib.cm as cm
         import matsci.gui
-        t = np.mean(self.img)*0.75
-        j = self.labels.junctions(r)
+
+        def imshow(img):
+            pylab.clf()
+            pylab.imshow(img,cmap=cm.Greys_r)
+            pylab.show()
+
+        t = np.mean(self.img)*1.5
+        print('Image mean: '+str(np.mean(self.img)))
+        j = self.labels.junctions(r1)
         sizes = self.labels.sizes()
+        final = []
         for (p,ls) in j:
-            print(str(p))
-            print(str(ls))
             if min([sizes[s] for s in ls]) < min_size:
                 continue
             v = self.crop(list(ls),extended=False)
-            pylab.imshow(
-                matsci.gui.color_jet(
-                    matsci.gui.grey_to_rgb(v.img)
-                    , v.labels.v))
-            pylab.hold(True)
-            p_shifted = tuple([ j-i for i,j in zip(v.win,p)])
-            pylab.plot([p_shifted[1]],[p_shifted[0]],'r.',markersize=d)
-            candidates = [ (x,y,l) for ((x,y),l) in v.yjunction_candidates(p,r2) ]
-            print(str(candidates))
-            for c in candidates:
-                pylab.plot([c[1]],[c[0]],'g.',markersize=d)
-            for c in v.labels.centers_of_mass():
-                pylab.plot([c[1]],[c[0]],'b.',markersize=d)
-            pylab.show()
+
+            # pylab.clf()
+            # pylab.imshow(
+            #     matsci.gui.color_jet(
+            #         matsci.gui.grey_to_rgb(v.img)
+            #         , v.labels.v))
+            # pylab.hold(True)
+            # p_shifted = tuple([ j-i for i,j in zip(v.win,p)])
+            # pylab.plot([p_shifted[1]],[p_shifted[0]],'r.',markersize=d)
+
+            candidates = [(x,y,l) for ((x,y),l) in v.yjunction_candidates(p,r3)]
+
+            # print(str(candidates))
+            # for c in candidates:
+            #     pylab.plot([c[1]],[c[0]],'g.',markersize=d)
+            # for c in [(i,j,l) for (i,j,l) in 
+            #           v.labels.centers_of_mass() if l > 0]:
+            #     pylab.plot([c[1]],[c[0]],'b.',markersize=d)
+
+            # pylab.show()
+
             cuts = []
             for c in candidates:
                 v2 = v.copy()
-                v2.new_label_circle(c)
+                new_l = v2.new_label_circle(c)
                 v2.data.dilate(d)
                 v2.data.pixels_exclusive([(i,j,l) for (i,j,l) in 
-                                          v2.labels.centers_of_mass() if l > 0])
+                                          v2.labels.centers_of_mass() 
+                                          if l > 0 and v2.labels.v[i,j]==l])
+                # v2.data.label_exclusive(new_l,adj.circle((c[0],c[1],r2),v2.labels.v.shape))
+                # v2.data.regions[new_l] = adj.circle((c[0],c[1],d),v2.labels.v.shape)
+                v2.data.label_exclusive(0,v2.labels.v==0)
+                v2.adj.set_adj_label_all(new_l)
+
+                # imshow(v2.data.output_data_term())
+
                 v2.graph_cut(1)
-                score = v2.labels.region_boundary_intensity(v2.img,v2.labels.max(),t)
-                cuts += [(v2,score)]
-            best = max(cuts,key=operator.itemgetter(1))
-            if best[1] > corr:
-                print('#$%L@#KJ$LSEKRJSZ I GIOT A HIGET')
-                self.merge(best[0])
+
+                # new_l = v2.new_label_circle(c)
+                # # v2.data.dilate_fixed_center(d, rel_size=0.1, min_size=15,first=False)
+                # v2.data.dilate(d)
+                # # v2.data.pixels_exclusive([(i,j,l) for (i,j,l) in 
+                # #                           v2.labels.centers_of_mass() if l > 0])
+                # # v2.data.dilate_fixed_center(d, rel_size=0.1, min_size=15,first=False)
+                # imshow(v2.data.output_data_term())
+                # v2.data.regions[new_l] = adj.circle((c[0],c[1],r1+r2),v2.labels.v.shape)
+                # imshow(v2.data.output_data_term())
+                # v2.data.label_exclusive(new_l,adj.circle((c[0],c[1],r1),v2.labels.v.shape))
+                # imshow(v2.data.output_data_term())
+                # v2.data.label_exclusive(0,v2.labels.v==0)
+                # imshow(v2.data.output_data_term())
+                # v2.adj.set_adj_label_all(new_l)
+                # v2.data.label_exclusive(0,v2.labels.v==0)
+                # v2.graph_cut(1,lite=True)
+                # v2.add_label_circle(c+(r2,),crop=False)
+                if(np.count_nonzero(v2.labels.v == new_l) > new_min_size):
+                    # img2 = v2.img.copy()
+                    # img2[np.logical_not(label.binary_remove(v2.labels.v == new_l))] = 0
+                    # imshow(img2)
+                    score = v2.labels.region_boundary_intensity(v2.img,new_l,t)
+                    cuts += [(v2,score)]
+            if cuts:
+                best = max(cuts,key=operator.itemgetter(1))
+                if best[1] > corr:
+                    print('Creating new region: '+str(best[1]))
+                    final += [best[0]]
+        print('Number of new segments: '+str(len(final)))
+        for f in final:
+            self.merge(f)
             
     def yjunction_candidates(self,p,r):
         p_shifted = tuple([ j-i for i,j in zip(self.win,p)])
-        return [ (candidate_point(p_shifted,(x,y),r),l)
+        return [ (candidate_point(p_shifted,(x,y),r),r)
                  for x,y,l in self.labels.centers_of_mass() if l > 0 ]
 
     def rev_shift(self,l):
@@ -333,7 +388,7 @@ class Slice(object):
 
     def copy(self):
         from copy import deepcopy
-        cp = Slice(self.img
+        cp = Slice(self.img.copy()
                    , self.labels.v.copy()
                    , self.shifted
                    , self.win

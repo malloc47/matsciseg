@@ -121,10 +121,10 @@ def region_clean(regions):
 
 def junctions(regions,d=3):
     ps = np.nonzero(scipy.ndimage.generic_filter(regions,
-                                 lambda d: len(np.unique(d)) >= 3,
+                                 lambda a: len(np.unique(a)) >= 3,
                                  mode='nearest',
                                  size=(2,2)))
-    ps = [ (i,j,d) for (i,j) in zip(ps[0],ps[1]) ]
+    ps = [ (i,j,3) for (i,j) in zip(ps[0],ps[1]) ]
     return [ (p[:-1] , set(np.unique(regions[adj.circle(p,regions.shape)])) )
              for p in ps ]
 

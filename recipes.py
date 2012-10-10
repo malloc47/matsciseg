@@ -64,6 +64,7 @@ def filtergui_cmd(arg,im,im_gray,seed):
 def clique_cmd(arg,im,im_gray,seed):
     v2 = matsci.gco.Slice(im_gray,seed)
     v2.data.dilate_fixed_center(arg['d'], rel_size=0.1, min_size=15, first=True)
+    # v2.non_homeomorphic_remove(10,50)
     # v2.data.dilate_all(arg['d'])
     v2.graph_cut(1)
     v = matsci.gco.Slice(im_gray,seed)
@@ -72,5 +73,18 @@ def clique_cmd(arg,im,im_gray,seed):
     import cv2
     cv2.imwrite('cliquetest.png',matsciskel.draw_on_img(matsciskel.draw_on_img(im,matsciskel.label_to_bmp(v2.labels.v)),matsciskel.label_to_bmp(v.labels.v),color=(0,0,255)))
     cv2.imwrite('cliquetest_global.png',matsciskel.draw_on_img(im,matsciskel.label_to_bmp(v2.labels.v),color=(0,0,255)))
+    cv2.imwrite('cliquetest_local.png',matsciskel.draw_on_img(im,matsciskel.label_to_bmp(v.labels.v),color=(0,0,255)))
+    return v.labels.v
+
+def compare_cmd(arg,im,im_gray,seed):
+    v = matsci.gco.Slice(im_gray,seed)
+    # v.data.dilate_fixed_center(arg['d'], rel_size=0.1, min_size=15, first=True)
+    # v.data.dilate_all(arg['d'])
+    # v.graph_cut(1)
+    # v.clique_swap(arg['d'])
+    # v.non_homeomorphic_remove(arg['d'],arg['d'])
+    v.non_homeomorphic_yjunction(arg['d'],r3=7)
+    import matsciskel
+    import cv2
     cv2.imwrite('cliquetest_local.png',matsciskel.draw_on_img(im,matsciskel.label_to_bmp(v.labels.v),color=(0,0,255)))
     return v.labels.v
