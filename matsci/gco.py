@@ -108,6 +108,9 @@ class Slice(object):
     def local_adj(self):
         return [ self.crop([l]).adj for l in range(0,self.labels.max()) ]
 
+    def local(self):
+        return [ self.crop([l]) for l in range(0,self.labels.max()) ]
+
     def remove_label_dilation(self,l,d):
         """removal that uses a large dilation to (hopefully) remove
         the candidate region"""

@@ -116,6 +116,10 @@ class Adj(object):
     def num_adj(self):
         return np.sum(self.v)/2
 
+    def local(self):
+        """return adjacencies, ignoring background"""
+        return self.v[1:,1:]
+
     def pairs(self):
         return pairs(self.v)
 
