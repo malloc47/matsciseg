@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import sys,os
+sys.path.insert(0,os.path.join(os.getcwd(),'..'))
 import numpy as np
 from scipy.ndimage.morphology import distance_transform_edt, binary_dilation
 from scipy.ndimage import gaussian_filter, median_filter
