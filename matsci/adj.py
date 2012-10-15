@@ -66,9 +66,17 @@ def circle(p,shape,r=None):
 #     y,x = np.ogrid[-shape[0]:shape[0], -shape[1]:shape[1]]
 #     return (x-(p[0]-shape[0]*2))**2+(y-(p[1]-shape[1]*2))**2 <= r**2
 
+def pairs(adj):
+    return [ (i,j) for (i,j) in 
+             map(tuple,np.transpose(np.nonzero(adj)).tolist())
+             if i > j ]
+
 class Adj(object):
     def __init__(self,labels):
-        self.v = gcoc.adjacent(np.array(labels.v).astype('int16'),labels.max()+1)
+        try:
+            self.v = gcoc.adjacent(np.array(labels.v).astype('int16'),labels.max()+1)
+        except:
+            self.v = gcoc.adjacent(np.array(labels).astype('int16'),labels.max()+1)
         # self.v = adjacent(labels.v)
     
     def get_adj(self,label_list):
@@ -107,6 +115,9 @@ class Adj(object):
 
     def num_adj(self):
         return np.sum(self.v)/2
+
+    def pairs(self):
+        return pairs(self.v)
 
     def copy(self):
         from copy import deepcopy

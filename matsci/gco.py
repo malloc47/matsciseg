@@ -104,7 +104,10 @@ class Slice(object):
                 )
             v.graph_cut(1,lite=False)
             self.merge(v)
-            
+
+    def local_adj(self):
+        return [ self.crop([l]).adj for l in range(0,self.labels.max()) ]
+
     def remove_label_dilation(self,l,d):
         """removal that uses a large dilation to (hopefully) remove
         the candidate region"""

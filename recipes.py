@@ -1,4 +1,5 @@
 import matsci.gco
+import numpy as np
 
 def global_cmd(arg,im,im_gray,seed):
     v = matsci.gco.Slice(im_gray,seed)
@@ -87,4 +88,37 @@ def compare_cmd(arg,im,im_gray,seed):
     import matsciskel
     import cv2
     cv2.imwrite('cliquetest_local.png',matsciskel.draw_on_img(im,matsciskel.label_to_bmp(v.labels.v),color=(0,0,255)))
+    return v.labels.v
+
+def local_stats_cmd(arg,im,im_gray,seed):
+    import pylab
+    v = matsci.gco.Slice(im_gray,seed)
+    adj = v.local_adj()
+    center = []
+    maxdeg = []
+    mindeg = []
+    for a in adj:
+        center += [ np.sort(np.subtract(a.v.sum(axis=0),1))[-1] ]
+        maxdeg += [ np.sort(np.subtract(a.v.sum(axis=0),1))[-2] ]
+        mindeg += [ np.sort(np.subtract(a.v.sum(axis=0),1))[0] ]
+    # pylab.hist(center,align='left',bins=range(1,15))
+    # pylab.xlabel('local region degrees')
+    # pylab.ylabel('number of regions with degree')
+    # pylab.show()
+    # pylab.hist(maxdeg,align='left',bins=range(1,15))
+    # pylab.xlabel('degree of surrounding grain (max)')
+    # pylab.ylabel('number of regions with degree')
+    # pylab.show()
+    # pylab.hist(mindeg,align='left',bins=range(1,15))
+    # pylab.xlabel('degree of surrounding grain (min)')
+    # pylab.ylabel('number of regions with degree')
+    # pylab.show()
+    import cPickle as pickle
+    import os.path
+    pickle.dump(center,open(os.path.basename(arg['label']).split('.')[0]+'-center.pkl','w'))
+    pickle.dump(maxdeg,open(os.path.basename(arg['label']).split('.')[0]+'-max.pkl','w'))
+    pickle.dump(mindeg,open(os.path.basename(arg['label']).split('.')[0]+'-min.pkl','w'))
+    print('Avg Center Deg: ' + str(np.mean(center)))
+    print('Avg Max Deg: ' + str(np.mean(maxdeg)))
+    print('Avg Min Deg: ' + str(np.mean(mindeg)))
     return v.labels.v
