@@ -29,6 +29,17 @@ def edge_list(seed):
                 binary_dilation(seed==j)) 
                       for (i,j) in pairs ])
 
+def highlight_label(img,labels,h):
+    img = img.astype('float')
+    for (l,c) in h:
+        r = img[:,:,0]
+        g = img[:,:,1]
+        b = img[:,:,2]
+        r[labels==l] += c[0]
+        g[labels==l] += c[1]
+        b[labels==l] += c[2]
+    return np.clip(img,0,255).astype('uint8')
+
 def main(*args):
     if(len(args) < 1):
         return 1
@@ -53,12 +64,33 @@ def main(*args):
         v = matsci.gco.Slice(im,seed)
         vs = v.local()
 
-        for x in vs:
-            center += [ np.sort(np.subtract(x.adj.local().sum(axis=0),1))[-1] ]
-            maxdeg += [ np.sort(np.subtract(x.adj.local().sum(axis=0),1))[-2] ]
-            mindeg += [ np.sort(np.subtract(x.adj.local().sum(axis=0),1))[0] ]
-            if np.sort(np.subtract(x.adj.local().sum(axis=0),1))[-2] > 3:
-                scipy.misc.imsave('deg/'+str(counter)+'.png',matsci.gui.color_jet(matsci.gui.grey_to_rgb(x.img),x.labels.v))
+        for x,l in vs:
+            ls = zip(range(1,len(x.adj.deg(ignore_background=True))),
+                     x.adj.deg(ignore_background=True))
+            new_l = x.rev_shift(l)
+            center += [ j for (i,j) in ls if i == new_l ]
+            ls = [ (i,j) for (i,j) in ls if i != new_l ]
+            maxdeg += [max(ls,key=lambda x: x[1])[1]]
+            mindeg += [min(ls,key=lambda x: x[1])[1]]
+
+            # ls = np.delete(x.adj.deg(ignore_background=True),new_l-1)
+            # center += [x.adj.deg(new_l,ignore_background=True)]
+            # maxdeg += [max(ls)]
+            # mindeg += [min(ls)]
+            # center += [ np.sort(np.subtract(x.adj.local().sum(axis=0),1))[-1] ]
+            # maxdeg += [ np.sort(np.subtract(x.adj.local().sum(axis=0),1))[-2] ]
+            # mindeg += [ np.sort(np.subtract(x.adj.local().sum(axis=0),1))[0] ]
+            # if np.sort(np.subtract(x.adj.local().sum(axis=0),1))[-2] > 3:
+            if max(ls,key=lambda x: x[1])[1] > 3:
+                # scipy.misc.imsave('deg/'+str(counter)+'.png',matsci.gui.color_jet(matsci.gui.grey_to_rgb(x.img),x.labels.v))
+                scipy.misc.imsave('deg/'+str(counter)+'.png',
+                                  highlight_label(
+                        matsciskel.draw_on_img(matsci.gui.grey_to_rgb(x.img),
+                                               matsciskel.label_to_bmp(x.labels.v))
+                        , x.labels.v,
+                        # center in red, deg>3 in blue
+                        [(new_l, (128,0,0))] + [ (i, (0,0,128)) for (i,j) in ls if j > 3 ]
+                        ))
                 counter += 1
             
     pylab.hist(center,align='left',bins=range(1,15))

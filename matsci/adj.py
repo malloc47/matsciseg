@@ -120,6 +120,27 @@ class Adj(object):
         """return adjacencies, ignoring background"""
         return self.v[1:,1:]
 
+    def deg(self,l=None,ignore_background=False):
+        a = self.v[1:,1:] if ignore_background else self.v
+
+        if l is None:
+            return np.subtract(a.sum(axis=0),1)
+        else:
+            return np.subtract(a.sum(axis=0),1)[l-1 if ignore_background else l]
+
+    # def _deg(self,l=None):
+    #     # a = self.v[1:,1:] if ignore_background else self.v
+    #     if l is None:
+    #         return np.subtract(self.v.sum(axis=0),1)
+    #     else:
+    #         return np.subtract(self.v.sum(axis=0),1)[l]
+
+    # def _deg_no_bg(self,l=None):
+    #     if l is None:
+    #         return np.subtract(self.v[1:,1:].sum(axis=0),1)
+    #     else:
+    #         return np.subtract(self.v[1:,1:].sum(axis=0),1)[l-1]
+
     def pairs(self):
         return pairs(self.v)
 
