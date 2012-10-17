@@ -57,14 +57,17 @@ def main(*args):
             maxdeg += [max(ls,key=lambda x: x[1])[1]]
             mindeg += [min(ls,key=lambda x: x[1])[1]]
 
-            if max(ls,key=lambda x: x[1])[1] > 3:
+            if max(ls,key=lambda x: x[1])[1] == 6:
                 scipy.misc.imsave('deg/'+str(counter)+'.png',
                                   highlight_label(
                         matsciskel.draw_on_img(matsci.gui.grey_to_rgb(x.img),
                                                matsciskel.label_to_bmp(x.labels.v))
                         , x.labels.v,
                         # center in red, deg>3 in blue
-                        [(new_l, (128,0,0))] + [ (i, (0,0,128)) for (i,j) in ls if j > 3 ]
+                        [(new_l, (128,0,0))] + \
+                            [ (i, (0,0,128)) for (i,j) in ls if j == 4 ] + \
+                            [ (i, (128,128,0)) for (i,j) in ls if j == 5 ] + \
+                            [ (i, (128,0,128)) for (i,j) in ls if j == 6 ]
                         ))
                 counter += 1
 
