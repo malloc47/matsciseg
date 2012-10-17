@@ -134,6 +134,13 @@ def fit_region_z(im):
     (y0,x0),(y1,x1) = mask_win.min(0),mask_win.max(0)
     return (x0,y0,x1,y1)
 
+def edge_list(labels):
+    pairs = matsci.adj.Adj(labels).pairs()
+    return zip(pairs,[np.logical_and(
+                binary_dilation(labels==i),
+                binary_dilation(labels==j)) 
+                      for (i,j) in pairs ])
+
 class Label(object):
     def __init__(self,labels=None):
         if not labels is None:
@@ -161,6 +168,9 @@ class Label(object):
 
     def region_boundary_intensity(self,img,l,t):
         return region_boundary_intensity(self.v,img,l,t)
+
+    def edge_list():
+        return edge_list(self.v)
 
     def copy(self):
         from copy import deepcopy
