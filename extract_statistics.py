@@ -2,18 +2,13 @@
 import sys,os
 sys.path.insert(0,os.path.join(os.getcwd(),'..'))
 import numpy as np
-from scipy.ndimage.morphology import distance_transform_edt, binary_dilation
-from scipy.ndimage import gaussian_filter, median_filter
 import scipy
 import cPickle as pickle
 import matsciskel
-import cv2
-import itertools
-import matsci.adj
-import random
-import matsci.gui
-
-import matsci.gco
+# import matsci.adj
+# import matsci.gui
+# import matsci.gco
+import matsci
 
 def highlight_label(img,labels,h):
     img = img.astype('float')
