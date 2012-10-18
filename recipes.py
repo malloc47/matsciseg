@@ -63,11 +63,39 @@ def filtergui_cmd(arg,im,im_gray,seed):
     return v.graph_cut(arg['gctype'])
 
 def clique_cmd(arg,im,im_gray,seed):
+    v = matsci.gco.Slice(im_gray,seed)
+    v.clique_swap(arg['d'])
+    return v.labels.v
+
+def clique2_cmd(arg,im,im_gray,seed):
+    v = matsci.gco.Slice(im_gray,seed)
+    v.clique_swap(arg['d'],
+                  lambda x: max(x.adj.degs(ignore_bg=True, 
+                                           ignore=[x.rev_shift(x.center)]),
+                                key=lambda y: y[1])[1] > 3)
+    return v.labels.v
+
+def clique_compare_cmd(arg,im,im_gray,seed):
     v2 = matsci.gco.Slice(im_gray,seed)
     v2.data.dilate_fixed_center(arg['d'], rel_size=0.1, min_size=15, first=True)
     # v2.non_homeomorphic_remove(10,50)
     # v2.data.dilate_all(arg['d'])
     v2.graph_cut(1)
+    v = matsci.gco.Slice(im_gray,seed)
+    v.clique_swap(arg['d'])
+    import matsciskel
+    import cv2
+    cv2.imwrite('cliquetest.png',matsciskel.draw_on_img(matsciskel.draw_on_img(im,matsciskel.label_to_bmp(v2.labels.v)),matsciskel.label_to_bmp(v.labels.v),color=(0,0,255)))
+    cv2.imwrite('cliquetest_global.png',matsciskel.draw_on_img(im,matsciskel.label_to_bmp(v2.labels.v),color=(0,0,255)))
+    cv2.imwrite('cliquetest_local.png',matsciskel.draw_on_img(im,matsciskel.label_to_bmp(v.labels.v),color=(0,0,255)))
+    return v.labels.v
+
+def clique_compare2_cmd(arg,im,im_gray,seed):
+    v2 = matsci.gco.Slice(im_gray,seed)
+    v2.clique_swap(arg['d'],
+                   lambda x: max(x.adj.degs(ignore_bg=True, 
+                                            ignore=[x.rev_shift(x.center)]),
+                                 key=lambda y: y[1])[1] > 3)
     v = matsci.gco.Slice(im_gray,seed)
     v.clique_swap(arg['d'])
     import matsciskel

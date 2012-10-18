@@ -34,7 +34,7 @@ def candidate_point(p,q,r):
 class Slice(object):
     def __init__(self, img, labels, shifted={}, 
                  win=(0,0), mask=None, lightweight=False,
-                 nodata=False):
+                 nodata=False, center=None):
         """initialize fields and compute defaults"""
         # These values are created when the class is instantiated.
         self.img = img.copy()
@@ -54,6 +54,7 @@ class Slice(object):
         self.shifted=shifted
         self.win=win
         self.mask=mask
+        self.center=center
 
     def edit_labels_gui(self,d):
         import gui
@@ -90,10 +91,13 @@ class Slice(object):
                       , nodata=True)
 
 # lut = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,0,0,1,1,0,0]
-    def clique_swap(self,d):
+    def clique_swap(self,d,f=None):
         for l in range(0,self.labels.max()):
             v = self.crop([l])
             if v is None:
+                continue
+            if not f is None and f(v):
+                print('skipping ' + str(v.center))
                 continue
             # v.data.dilate(d)
             v.data.dilate_fixed_center(d, rel_size=0.1, min_size=15)
@@ -308,10 +312,10 @@ class Slice(object):
     def crop(self,label_list,blank=[],extended=True):
         """fork off subwindow volume"""
         if extended:
-            label_list = self.adj.get_adj(label_list)
-        if len(label_list) < 2:
+            new_label_list = self.adj.get_adj(label_list)
+        if len(new_label_list) < 2:
             return None
-        mask = self.labels.create_mask(label_list)
+        mask = self.labels.create_mask(new_label_list)
         box = label.fit_region(mask)
         # crop out everything with the given window
         mask_cropped = crop_box(mask,box)
@@ -321,7 +325,7 @@ class Slice(object):
         new_seed = np.zeros_like(cropped_seed)
         label_transform = {}
         new_label = 1
-        for l in label_list:
+        for l in new_label_list:
             label_transform[new_label]=l
             # print("Shifting "+str(l)+" to "+str(new_label))
             if not l in blank:
@@ -335,7 +339,8 @@ class Slice(object):
                      , label_transform
                      , (box[1],box[0])
                      , mask_cropped
-                     , lightweight=True)
+                     , lightweight=True
+                     , center = label_list[0] if len(label_list) < 2 else None)
 
     def merge(self,v):
         """merge another subwindow volume into this volume"""
