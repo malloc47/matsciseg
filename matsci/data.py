@@ -141,11 +141,11 @@ def bresenham(p,shape):
         ystep = -1
     for x in range(x1, x2):
         if issteep:
-            a[x,y] = True
-            # points.append((y, x))
+            if x >= 0 and x < a.shape[0] and y >= 0 and y < a.shape[1]:
+                a[x,y] = True
         else:
-            a[y,x] = True
-            # points.append((x, y))
+            if x >= 0 and x < a.shape[1] and y >= 0 and y < a.shape[0]:
+                a[y,x] = True
         error -= deltay
         if error < 0:
             y += ystep
