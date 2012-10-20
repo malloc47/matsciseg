@@ -19,8 +19,10 @@ def main(*args):
     minsamp = 3000
     
     r = np.array(range(0,nlevels))
-    dist_hists = {}
-    grain_hist = np.zeros(256,dtype='int16')
+    output = {}
+    output['dist'] = {}
+    output['dist_raw'] = {}
+    output['grain_all'] = np.zeros(256,dtype='int16')
 
     for i in range(1,len(args),2):
         im_path = args[i]
@@ -35,34 +37,39 @@ def main(*args):
 
         dt = distance_transform_edt(np.logical_not(ground_edges)).astype('int')
 
-        for j in range(0,maxdist):
+        output['dist'][0] = np.histogram(img[ground_edges],bins=nlevels)[0]
+        output['dist_raw'][0] = img[ground_edges]
+
+        for j in range(1,maxdist):
             tmp = img[dt==j]
+            output['dist_raw'][j] = tmp
             b = np.histogram(tmp,bins=nlevels)[0]
             if len(tmp) >= minsamp:
-                if j in dist_hists:
-                    dist_hists[j] += b
+                if j in output['dist']:
+                    output['dist'][j] += b
                 else:
-                    dist_hists[j] = b
+                    output['dist'][j] = b
             else:
                 break
 
         for j in range(0,ground.max()):
             try:
-                grain_hist[int(np.mean(img[binary_erosion(ground==j,iterations=7)]))] += 1
+                output['grain_all'][int(np.mean(img[binary_erosion(ground==j,iterations=7)]))] += 1
             except:
                 pass
                 # print("Didn't get region")
 
     # normalize everything
-    for d in dist_hists:
-        dist_hists[d] = dist_hists[d].astype('float64')
-        dist_hists[d] /= sum(dist_hists[d])
+    for d in output['dist']:
+        output['dist'][d] = output['dist'][d].astype('float64')
+        output['dist'][d] /= sum(output['dist'][d])
 
-    grain_hist = grain_hist.astype('float64')
-    grain_hist /= sum(grain_hist)
+    output['grain_all'] = output['grain_all'].astype('float64')
+    output['grain_all'] /= sum(output['grain_all'])
 
-    pickle.dump(dist_hists,open('histograms.pkl','wb'))
-    pickle.dump(grain_hist,open('grains.pkl','wb'))
+    pickle.dump(output['dist'],open('histograms.pkl','wb'))
+    pickle.dump(output['grain_all'],open('grains.pkl','wb'))
+    pickle.dump(output,open('data.pkl','wb'))
 
     return 0
 

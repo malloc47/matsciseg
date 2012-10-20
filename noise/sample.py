@@ -2,14 +2,19 @@
 import sys,os
 sys.path.insert(0,os.path.join(os.getcwd(),'..'))
 import numpy as np
-from scipy.ndimage.morphology import distance_transform_edt, binary_dilation
+from scipy.ndimage.morphology import distance_transform_edt, binary_dilation, grey_closing
 from scipy.ndimage import gaussian_filter, median_filter
+from scipy.stats import norm
+import scipy
 import cPickle as pickle
 import matsciskel
 import cv2
 import itertools
 import matsci.adj
+import matsci.data
+import matsci.label
 import random
+import math
 
 def edges(seed):
     grad = np.gradient(seed)
@@ -18,6 +23,14 @@ def edges(seed):
 def histsamp(a, num):
     return np.searchsorted(np.cumsum(a),np.random.random(num))
 
+def expand_hist(a):
+    return reduce(lambda i,j: i+j,[ [j]*i for (i,j) in zip(a,range(0,len(a))) ])
+
+def normsamp(a, num, loc=None, scale=None):
+    if loc is None or scale is None:
+        loc, scale = norm.fit(a)
+    return np.clip(norm.rvs(loc=loc, scale=scale, size=num),0,255)
+
 def edge_list(seed):
     pairs = matsci.adj.Adj(seed).pairs()
     return zip(pairs,[np.logical_and(
@@ -25,20 +38,32 @@ def edge_list(seed):
                 binary_dilation(seed==j)) 
                       for (i,j) in pairs ])
 
+def line(c,a,l,shape):
+    """
+    qcreate line from center point c, angle a, and length l in the
+    specified square shape
+    """
+    p1 = tuple(map(int,map(round, [c[0] + l*math.cos(a), c[1] + l*math.sin(a)])))
+    p2 = tuple(map(int,map(round, [c[0] + l*math.cos(a+math.pi), c[1] + l*math.sin(a+math.pi)])))
+    return matsci.data.bresenham(p1+p2,shape)
+
 def main(*args):
     if(len(args) < 3):
         return 1
 
     nlevels = 256
+    ncircles = random.randint(0,5)
+    nlines = random.randint(0,2)
+    print(str(nlines))
 
     r = np.array(range(0,nlevels))
-    hists = pickle.load(open(args[1],'rb'))
-    grain_hist = pickle.load(open(args[2],'rb'))
+    source = pickle.load(open(args[1],'rb'))
+    # grain_hist = pickle.load(open(args[2],'rb'))
 
     out = None
 
     # create edges
-    for i in range(3,len(args),2):
+    for i in range(2,len(args),2):
         gt_path = args[i]
         out_path = args[i+1]
         ground = np.genfromtxt(gt_path,dtype='int16')
@@ -47,32 +72,67 @@ def main(*args):
         if out is None:
             out = np.zeros(ground.shape,dtype='int16')
 
+        
+
         dt = distance_transform_edt(np.logical_not(ground_edges))
 
         for p,e in edge_list(ground):
             s = binary_dilation(e,iterations=3)
             dt[s] += random.choice([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.25, 0.5, 1])
 
+        for c in [ (random.randint(0,ground.shape[0]), 
+                    random.randint(0,ground.shape[1]), 
+                    random.randint(25,75)) 
+                   for k in range(0,ncircles) ]:
+            print(str(c))
+            dt[matsci.adj.circle(c,out.shape)] += 1
+
         dt = dt.astype('int16')
 
-        for d in hists:
-            out[dt==d] = histsamp(hists[d], len(out[dt==d]))
+        # out[dt==0] = normsamp(source['dist_raw'][0], len(out[dt==0]))
+        # print(str(normsamp(source['dist_raw'][0], len(out[dt==0]), 255,128)))
+        out[dt==0] = normsamp(source['dist_raw'][0], len(out[dt==0]), 255,128)
+
+        out = grey_closing(out, size=(3,3))
+
+        for d in source['dist']:
+            if not d==0:
+                out[dt==d] = histsamp(source['dist'][d], len(out[dt==d]))
 
         # fill in the rest of the pixels with value from last sampling
-        m = max(hists.keys())
-        out[dt>=m-1] = histsamp(hists[m], len(out[dt>=m-1]))
+        m = max(source['dist'].keys())
+        out[dt>=m-1] = histsamp(source['dist'][m], len(out[dt>=m-1]))
 
-    # out = np.clip(out,0,255)
+        # out = np.clip(out,0,255)
 
-    # create varying intensities within grains
-    for i in range(0,ground.max()):
-        out[ground==i] += histsamp(grain_hist,1)[0]
+        # create varying intensities within grains
+        for i in range(0,ground.max()):
+            out[ground==i] += histsamp(source['grain_all'],1)[0]
 
-    out = np.clip(out,0,255).astype('uint8')
+        for l in [ binary_dilation(
+                line( (random.randint(0,ground.shape[0]), 
+                       random.randint(0,ground.shape[1]))
+                      , random.random() * math.pi * 2 # angle
+                      , int(math.sqrt(math.pow(ground.shape[0],2)+
+                                      math.pow(ground.shape[1],2))) + 1 # length
+                      , ground.shape))
+                   for k in range(0,nlines) ]:
+            out[l] += np.clip(map(int,map(round,norm.rvs(loc=64, scale=32, size=len(out[l])))),0,255)
+
+        # for i in range(0,ground.max()):
+        #     reg = out[ground==i]
+        #     c = scipy.ndimage.measurements.center_of_mass(reg)
+        #     p = matsci.label.fit_region_z(reg)
+        #     w = abs(p[0]-p[2])
+        #     h = abs(p[1]-p[3])
+        #     print(str((c,w,h)))
+
+        out = np.clip(out,0,255).astype('uint8')
+
     # out = gaussian_filter(out, sigma=1)
     # out = median_filter(out, 3)
 
-    cv2.imwrite(out_path,out)
+        cv2.imwrite(out_path,out)
 
     return 0
 
