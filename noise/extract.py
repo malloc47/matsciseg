@@ -67,8 +67,8 @@ def main(*args):
     output['grain_all'] = output['grain_all'].astype('float64')
     output['grain_all'] /= sum(output['grain_all'])
 
-    pickle.dump(output['dist'],open('histograms.pkl','wb'))
-    pickle.dump(output['grain_all'],open('grains.pkl','wb'))
+    # pickle.dump(output['dist'],open('histograms.pkl','wb'))
+    # pickle.dump(output['grain_all'],open('grains.pkl','wb'))
     pickle.dump(output,open('data.pkl','wb'))
 
     return 0

@@ -53,12 +53,14 @@ def main(*args):
 
     nlevels = 256
     ncircles = random.randint(0,5)
+    print('Number of circles: ' + str(ncircles))
     nlines = random.randint(0,2)
-    print(str(nlines))
+    print('Number of lines: ' + str(nlines))
+    nscratches = random.randint(45,90)
+    print('Number of scratches: ' + str(nscratches))
 
     r = np.array(range(0,nlevels))
     source = pickle.load(open(args[1],'rb'))
-    # grain_hist = pickle.load(open(args[2],'rb'))
 
     out = None
 
@@ -72,8 +74,6 @@ def main(*args):
         if out is None:
             out = np.zeros(ground.shape,dtype='int16')
 
-        
-
         dt = distance_transform_edt(np.logical_not(ground_edges))
 
         for p,e in edge_list(ground):
@@ -84,13 +84,11 @@ def main(*args):
                     random.randint(0,ground.shape[1]), 
                     random.randint(25,75)) 
                    for k in range(0,ncircles) ]:
-            print(str(c))
+            # print(str(c))
             dt[matsci.adj.circle(c,out.shape)] += 1
 
         dt = dt.astype('int16')
 
-        # out[dt==0] = normsamp(source['dist_raw'][0], len(out[dt==0]))
-        # print(str(normsamp(source['dist_raw'][0], len(out[dt==0]), 255,128)))
         out[dt==0] = normsamp(source['dist_raw'][0], len(out[dt==0]), 255,128)
 
         out = grey_closing(out, size=(3,3))
@@ -103,11 +101,9 @@ def main(*args):
         m = max(source['dist'].keys())
         out[dt>=m-1] = histsamp(source['dist'][m], len(out[dt>=m-1]))
 
-        # out = np.clip(out,0,255)
-
         # create varying intensities within grains
-        for i in range(0,ground.max()):
-            out[ground==i] += histsamp(source['grain_all'],1)[0]
+        for k in range(0,ground.max()):
+            out[ground==k] += histsamp(source['grain_all'],1)[0]
 
         for l in [ binary_dilation(
                 line( (random.randint(0,ground.shape[0]), 
@@ -117,16 +113,42 @@ def main(*args):
                                       math.pow(ground.shape[1],2))) + 1 # length
                       , ground.shape))
                    for k in range(0,nlines) ]:
-            out[l] += np.clip(map(int,map(round,norm.rvs(loc=64, scale=32, size=len(out[l])))),0,255)
+            out[l] += np.clip(map(int,map(round,norm.rvs(loc=64, scale=32, size=len(out[l])))),0,255).astype('int16')
 
-        # for i in range(0,ground.max()):
-        #     reg = out[ground==i]
-        #     c = scipy.ndimage.measurements.center_of_mass(reg)
-        #     p = matsci.label.fit_region_z(reg)
-        #     w = abs(p[0]-p[2])
-        #     h = abs(p[1]-p[3])
-        #     print(str((c,w,h)))
-
+        # inter-grain scratches
+        for k in random.sample(range(0,ground.max()), nscratches):
+            reg = ground==k
+            if reg.sum() < 500:
+                continue
+            c = scipy.ndimage.measurements.center_of_mass(reg)
+            p = matsci.label.fit_region_z(reg)
+            w = abs(p[0]-p[2])
+            h = abs(p[1]-p[3])
+            largest = int(round(min(w,h)/2))
+            angle = random.random() * math.pi * 2
+            val = random.randint(2,48)
+            for j in range(1,random.randint(1,25)):
+                l = np.logical_and(
+                    line(
+                        (random.randint(int(c[1]-h/2),
+                                        int(c[1]+h/2)),
+                         random.randint(int(c[0]-w/2),
+                                        int(c[0]+w/2)))
+                        , angle
+                        , random.randint(2,largest)
+                        , ground.shape)
+                    , reg)
+                out[l] += np.clip(
+                    map(int,
+                        map(round,
+                            norm.rvs(
+                                loc=val,
+                                scale=32, 
+                                size=len(out[l])))),
+                    0,
+                    255
+                    ).astype('int16')
+                
         out = np.clip(out,0,255).astype('uint8')
 
     # out = gaussian_filter(out, sigma=1)
