@@ -40,7 +40,7 @@ def edge_list(seed):
 
 def line(c,a,l,shape):
     """
-    qcreate line from center point c, angle a, and length l in the
+    create line from center point c, angle a, and length l in the
     specified square shape
     """
     p1 = tuple(map(int,map(round, [c[0] + l*math.cos(a), c[1] + l*math.sin(a)])))
