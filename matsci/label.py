@@ -2,6 +2,7 @@
 import numpy as np
 import scipy
 from scipy import ndimage
+from scipy.ndimage.morphology import binary_dilation
 import data,adj
 
 def create_mask(labels,label_list):
@@ -85,6 +86,24 @@ def largest_connected_component(im):
     sizes = [ ((labels==l).sum(),l) for l in range(1,num+1) ]
     return labels==max(sizes,key=lambda x:x[0])[1]
 
+def boundary_connected_component(im,boundary):
+    labels,num = ndimage.label(im)
+    if num < 1:
+        return im
+    sizes_connections = [ ((labels==l).sum()
+                           , (np.logical_and(binary_dilation(labels==l), 
+                                            boundary)).sum()
+                           , l)
+                          for l in range(1,num+1) ]
+    print(str(sizes_connections))
+    connected = [ (s,c,l) for (s,c,l) in sizes_connections
+                  if c == max(sizes_connections, key=lambda x: x[1])[1] ]
+
+    if len(connected) < 2:
+        return labels == connected[0][2]
+    else:
+        return labels == max(connected, key=lambda x: x[0])[2]
+
 def small_filter(labels,label_num):
     """cover small label region with the nearest label"""
     mask     = create_mask(labels,[label_num]);
@@ -106,17 +125,18 @@ def small_filter(labels,label_num):
 
     return labels
 
-def region_clean(regions):
+def region_clean(regions, boundary=None):
     out = np.ones(regions.shape,dtype=regions.dtype)*-1
     for l in range(regions.max()+1) :
         layer = (regions==l)
         if layer.any() :
-            # labeled = ndimage.label(layer>0)[0]
-            labeled = largest_connected_component(layer>0)
+            if boundary is None:
+                labeled = largest_connected_component(layer>0)
+            else:
+                labeled = boundary_connected_component(layer>0, boundary)
             # copy only the largest connected component
             out[np.nonzero(labeled == label_max(labeled))] = l
     return small_filter(out,-1)
-    # todo: what's happening with the -1s?
     # return out
 
 def junctions(regions,d=3):
@@ -142,10 +162,11 @@ def edge_list(labels):
                       for (i,j) in pairs ])
 
 class Label(object):
-    def __init__(self,labels=None):
+    def __init__(self,labels=None, boundary=None):
         if not labels is None:
             self.v = region_clean(region_shift(labels,
-                                               region_transform(labels)))
+                                               region_transform(labels))
+                                  , boundary=boundary)
     
     def create_mask(self,label_list):
         """get binary mask from a list of labels (in an integer matrix)"""

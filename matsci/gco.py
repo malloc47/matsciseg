@@ -42,7 +42,9 @@ class Slice(object):
             self.labels = label.Label()
             self.labels.v = labels
         else:
-            self.labels = label.Label(labels)
+            self.labels = label.Label(
+                labels, 
+                boundary=(None if center is None else labels==0))
         # self.orig_labels = self.labels.copy()
         # self.num_labels = self.labels.max()+1
         if nodata:
@@ -88,7 +90,8 @@ class Slice(object):
                       , self.win
                       , self.mask
                       , lightweight=True
-                      , nodata=True)
+                      , nodata=True
+                      , center=self.center)
 
 # lut = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,0,0,1,1,0,0]
     def clique_swap(self,d,f=None):
@@ -394,7 +397,8 @@ class Slice(object):
                       , self.win
                       , self.mask
                       , lightweight=lite
-                      , nodata=lite)
+                      , nodata=lite
+                      , center=self.center)
         return self.labels.v
 
     def copy(self):
@@ -405,6 +409,7 @@ class Slice(object):
                    , self.win
                    , self.mask
                    , lightweight=True
-                   , nodata=True)
+                   , nodata=True
+                   , center=self.center)
         cp.data = self.data.copy()
         return cp
