@@ -52,32 +52,41 @@ def main(*args):
     if(len(args) < 3):
         return 1
 
-    nlevels = 256
-    ncircles = random.randint(0,5)
-    print('Number of circles: ' + str(ncircles))
-    nlines = random.randint(0,2)
-    print('Number of lines: ' + str(nlines))
-    nscratches = random.randint(45,90)
-    print('Number of scratches: ' + str(nscratches))
-
-    r = np.array(range(0,nlevels))
-    source = pickle.load(open(args[1],'rb'))
-
-    out = None
-
-    # create edges
     for i in range(2,len(args),2):
+
+        seed = random.randint(0, sys.maxint)
+        random.seed(seed)
+        np.random.seed(seed)
+
+        nlevels = 256
+        ncircles = random.randint(0,5)
+        print('Number of circles: ' + str(ncircles))
+        nlines = random.randint(0,2)
+        print('Number of lines: ' + str(nlines))
+        nscratches = random.randint(45,90)
+        print('Number of scratches: ' + str(nscratches))
+
+        r = np.array(range(0,nlevels))
+        source = pickle.load(open(args[1],'rb'))
+
         gt_path = args[i]
         out_path = args[i+1]
+        seed_path = os.path.splitext(out_path)[0]+'.seed'
         ground = np.genfromtxt(gt_path,dtype='int16')
         ground_edges = edges(ground)
 
-        if out is None:
-            out = np.zeros(ground.shape,dtype='int16')
+        with open(seed_path,'wb') as f:
+            f.write(str(seed))
+
+        out = np.zeros(ground.shape,dtype='int16')
 
         dt = distance_transform_edt(np.logical_not(ground_edges))
 
+        # supress edges
         for p,e in edge_list(ground):
+            # lower threshold on edge "length"
+            if e.sum() < 50:
+                continue
             s = binary_dilation(e,iterations=3)
             dt[s] += random.choice([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.25, 0.5, 1])
 
@@ -85,7 +94,6 @@ def main(*args):
                     random.randint(0,ground.shape[1]), 
                     random.randint(25,75)) 
                    for k in range(0,ncircles) ]:
-            # print(str(c))
             dt[matsci.adj.circle(c,out.shape)] += 1
 
         dt = dt.astype('int16')
@@ -114,7 +122,11 @@ def main(*args):
                                       math.pow(ground.shape[1],2))) + 1 # length
                       , ground.shape))
                    for k in range(0,nlines) ]:
-            out[l] += np.clip(map(int,map(round,norm.rvs(loc=64, scale=32, size=len(out[l])))),0,255).astype('int16')
+            out[l] += np.clip(map(int,map(round,norm.rvs(loc=64, 
+                                                         scale=32, 
+                                                         size=len(out[l]))))
+                              ,0
+                              ,255).astype('int16')
 
         # inter-grain scratches
         for k in random.sample(range(0,ground.max()), nscratches):
