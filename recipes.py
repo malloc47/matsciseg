@@ -64,7 +64,7 @@ def filtergui_cmd(arg,im,im_gray,seed):
 
 def clique_cmd(arg,im,im_gray,seed):
     v = matsci.gco.Slice(im_gray,seed)
-    v.clique_swap(arg['d'])
+    v.clique_swap(arg['d'],f=None)
     return v.labels.v
 
 def clique2_cmd(arg,im,im_gray,seed):

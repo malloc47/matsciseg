@@ -95,7 +95,7 @@ def boundary_connected_component(im,boundary):
                                             boundary)).sum()
                            , l)
                           for l in range(1,num+1) ]
-    print(str(sizes_connections))
+    # print(str(sizes_connections))
     connected = [ (s,c,l) for (s,c,l) in sizes_connections
                   if c == max(sizes_connections, key=lambda x: x[1])[1] ]
 
@@ -130,10 +130,11 @@ def region_clean(regions, boundary=None):
     for l in range(regions.max()+1) :
         layer = (regions==l)
         if layer.any() :
-            if boundary is None:
-                labeled = largest_connected_component(layer>0)
-            else:
-                labeled = boundary_connected_component(layer>0, boundary)
+            labeled = largest_connected_component(layer>0)
+            # if boundary is None:
+            #     labeled = largest_connected_component(layer>0)
+            # else:
+            #     labeled = boundary_connected_component(layer>0, boundary)
             # copy only the largest connected component
             out[np.nonzero(labeled == label_max(labeled))] = l
     return small_filter(out,-1)
