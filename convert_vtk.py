@@ -3,7 +3,7 @@ import os,sys
 import numpy as np
 import scipy
 import scipy.ndimage
-from matsci.gui import color_jet
+#from matsci.gui import color_jet
 from render_labels import draw_on_img, label_to_bmp
 
 def label_preprocess(labels):
@@ -39,6 +39,7 @@ def main(*args):
 
     output = np.zeros(size,dtype='int16')
 
+    print('reading vtk file')
     with open(vtk_path) as f:
         # skip over front matter
         line = f.readline()
@@ -59,9 +60,11 @@ def main(*args):
 
     img = np.zeros((size[0],size[1],3), dtype='uint8')
 
+    print('preprocessing')
     for k in range(0,size[2]):
         output[:,:,k] = label_preprocess(output[:,:,k])
 
+    print('writing out slices')
     for k in range(0,size[2]):
         np.savetxt(output_file+format(k,'04d')+'.label',
                    output[:,:,k],fmt='%1d')
