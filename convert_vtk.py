@@ -2,9 +2,28 @@
 import os,sys
 import numpy as np
 import scipy
-from scipy import ndimage
+import scipy.ndimage
 from matsci.gui import color_jet
 from render_labels import draw_on_img, label_to_bmp
+
+def label_preprocess(labels):
+    new_label = labels.max()+1
+    for l in range(labels.max()+1):
+        layer = (labels==l)
+
+        if not layer.any():
+            continue
+
+        ls,n = scipy.ndimage.label(layer)
+
+        if n < 2:
+            continue
+        
+        for m in range(2,n+1):
+            labels[ls == m] = new_label
+            new_label += 1
+
+    return labels
 
 def main(*args):
     if(len(args) < 3):
@@ -24,13 +43,10 @@ def main(*args):
         # skip over front matter
         line = f.readline()
         while not line.startswith('LOOKUP_TABLE'):
-            # print('skipping: ' + line)
             line = f.readline()
         for line in f:
             labels = line.split()
             for l in labels:
-                # output[i] = l
-                # i += 1
                 output[i,j,k] = l
                 j += 1
                 if j > size[1]-1:
@@ -43,18 +59,17 @@ def main(*args):
 
     img = np.zeros((size[0],size[1],3), dtype='uint8')
 
-    # for i in range(0,size[0]):
-    #     for j in range(0,size[1]):
-    #         for k in range(0,size[2]):
-    #             output2[i,j,k] = output[ k*(size[1]*size[0]) + j*size[0] + i ]
+    for k in range(0,size[2]):
+        output[:,:,k] = label_preprocess(output[:,:,k])
 
     for k in range(0,size[2]):
-        np.savetxt(output_file+format(k,'04d')+'.label',output[:,:,k],fmt='%1d')
-        scipy.misc.imsave(output_file+format(k,'04d')+'.png',
-                          draw_on_img(color_jet(img,
-                                                output[:,:,k],
-                                                alpha=1.0), 
-                                      label_to_bmp(output[:,:,k])))
+        np.savetxt(output_file+format(k,'04d')+'.label',
+                   output[:,:,k],fmt='%1d')
+        # scipy.misc.imsave(output_file+format(k,'04d')+'.png',
+        #                   draw_on_img(color_jet(img,
+        #                                         output[:,:,k],
+        #                                         alpha=1.0), 
+        #                               label_to_bmp(output[:,:,k])))
         
     return 0
 
