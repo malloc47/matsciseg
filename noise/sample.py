@@ -16,6 +16,7 @@ import matsci.data
 import matsci.label
 import random
 import math
+from subprocess import check_output
 
 def edges(seed):
     grad = np.gradient(seed)
@@ -52,19 +53,15 @@ def main(*args):
     if(len(args) < 3):
         return 1
 
+    git_hash = check_output(['git','rev-parse','HEAD']).strip()
+
     for i in range(2,len(args),2):
+
+        nlevels = 256
 
         seed = random.randint(0, sys.maxint)
         random.seed(seed)
         np.random.seed(seed)
-
-        nlevels = 256
-        ncircles = random.randint(0,5)
-        print('Number of circles: ' + str(ncircles))
-        nlines = random.randint(0,2)
-        print('Number of lines: ' + str(nlines))
-        nscratches = random.randint(45,90)
-        print('Number of scratches: ' + str(nscratches))
 
         r = np.array(range(0,nlevels))
         source = pickle.load(open(args[1],'rb'))
@@ -76,7 +73,14 @@ def main(*args):
         ground_edges = edges(ground)
 
         with open(seed_path,'wb') as f:
-            f.write(str(seed))
+            f.write(str(seed)+' '+git_hash)
+
+        ncircles = random.randint(0,5)
+        print('Number of circles: ' + str(ncircles))
+        nlines = random.randint(0,2)
+        print('Number of lines: ' + str(nlines))
+        nscratches = random.randint(ground.min(),ground.max())
+        print('Number of scratches: ' + str(nscratches))
 
         out = np.zeros(ground.shape,dtype='int16')
 
