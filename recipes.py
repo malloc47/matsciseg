@@ -5,7 +5,7 @@ def global_cmd(arg,im,im_gray,seed):
     v = matsci.gco.Slice(im_gray,seed)
     print("Initialized")
     v.data.dilate_all(arg['d'])
-    v.data.output_data_term()
+    # v.data.output_data_term()
     print("Dilated")
     # v.set_adj_label_all(0);
     # print("Adjacent")
@@ -18,7 +18,7 @@ def auto_cmd(arg,im,im_gray,seed):
     v = matsci.gco.Slice(im_gray,seed)
     print("Initialized")
     v.data.dilate_auto(v.img,v.labels,arg['d'])
-    v.data.output_data_term()
+    # v.data.output_data_term()
     print("Dilated")
     v.graph_cut(arg['gctype'])
     print("Graph Cut Complete")
