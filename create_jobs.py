@@ -16,8 +16,8 @@ def main(*args):
     name_to_dir = lambda n: 'syn/'+n
     stdlen = range(0,50)
     ground_slices = [5,15,25,35,45]
-
     dilation = 10
+
     def global_cmd(n,rn,i,j,r):
         if rn==i:
             return """ mkdir -p {0}/{4}/{1:d}/
@@ -65,6 +65,14 @@ LD_LIBRARY_PATH=/home/malloc47/src/programs/OpenCV-2.0.0/build/lib /home/malloc4
 LD_LIBRARY_PATH=/home/malloc47/src/programs/OpenCV-2.0.0/build/lib /home/malloc47/src/projects/matsci/matscicut-debian/matscicut {0}/img/{3:04d}.png {0}/{4}/{1:d}/{3:04d}-old.label {0}/{4}/{1:d}/{3:04d}.label
 """.format(n,rn,i,j,r,dilation)
     datasets += [ (n,'local-local-'+str(dilation),stdlen,ground_slices,local_local_cmd) for n in names]
+
+    names = [ 'd1s'+str(i) for i in range(13,15) ]
+    stdlen = range(0,500)
+    ground_slices = range(0,500,50)+[499]
+    datasets += [ (n,'global-'+str(dilation),stdlen,ground_slices,global_cmd) for n in names]
+    datasets += [ (n,'global-local-'+str(dilation),stdlen,ground_slices,global_local_cmd) for n in names]
+    datasets += [ (n,'local-local-'+str(dilation),stdlen,ground_slices,local_local_cmd) for n in names]
+    datasets += [ (n,'local-'+str(dilation),stdlen,ground_slices,local_cmd) for n in names]
 
     for n,run,slices,gt,cmd in datasets:
         for g in gt:
