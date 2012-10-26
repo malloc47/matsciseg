@@ -8,8 +8,13 @@ import matsciskel
 import matsci
 
 def main(*args):
-    if(len(args) < 1):
+    if(len(args) < 2):
         return 1
+
+    prefix = args[1]
+
+    exe = '/home/malloc47/src/projects/matsciskel/matsciskel.py'
+    data_path = '/home/malloc47/src/projects/matsciskel'
 
     datasets = []
     names = [ 'd1s'+str(i) for i in range(1,13) ]
@@ -20,50 +25,50 @@ def main(*args):
 
     def global_cmd(n,rn,i,j,r):
         if rn==i:
-            return """ mkdir -p {0}/{4}/{1:d}/
-ln -s ../../ground/{2:04d}.label {0}/{4}/{1:d}/{2:04d}.label
-./matsciskel.py e global {0}/img/{2:04d}.png {0}/ground/{2:04d}.label {0}/img/{3:04d}.png {0}/{4}/{1:d}/{3:04d}.label {0}/{4}/{1:d}/{3:04d}.png {5}
-""".format(n,rn,i,j,r,dilation)
+            return """ mkdir -p {7}/{0}/{4}/{1:d}/
+ln -s ../../ground/{2:04d}.label {7}/{0}/{4}/{1:d}/{2:04d}.label
+{6} e global {7}/{0}/img/{2:04d}.png {7}/{0}/ground/{2:04d}.label {7}/{0}/img/{3:04d}.png {7}/{0}/{4}/{1:d}/{3:04d}.label {7}/{0}/{4}/{1:d}/{3:04d}.png {5}
+""".format(n,rn,i,j,r,dilation,exe,data_path)
         else:
-            return """./matsciskel.py e global {0}/img/{2:04d}.png {0}/{4}/{1:d}/{2:04d}.label {0}/img/{3:04d}.png {0}/{4}/{1:d}/{3:04d}.label {0}/{4}/{1:d}/{3:04d}.png {5}
-""".format(n,rn,i,j,r,dilation)
+            return """{6} e global {7}/{0}/img/{2:04d}.png {7}/{0}/{4}/{1:d}/{2:04d}.label {7}/{0}/img/{3:04d}.png {7}/{0}/{4}/{1:d}/{3:04d}.label {7}/{0}/{4}/{1:d}/{3:04d}.png {5}
+""".format(n,rn,i,j,r,dilation,exe,data_path)
     datasets += [ (n,'global-'+str(dilation),stdlen,ground_slices,global_cmd) for n in names]
 
     def global_local_cmd(n,rn,i,j,r):
         if rn==i:
-            return """mkdir -p {0}/{4}/{1:d}/
-ln -s ../../ground/{2:04d}.label {0}/{4}/{1:d}/{2:04d}.label
-./matsciskel.py e global {0}/img/{2:04d}.png {0}/ground/{2:04d}.label {0}/img/{3:04d}.png {0}/{4}/{1:d}/{3:04d}-old.label {0}/{4}/{1:d}/{3:04d}.png {5}
-LD_LIBRARY_PATH=/home/malloc47/src/programs/OpenCV-2.0.0/build/lib /home/malloc47/src/projects/matsci/matscicut-debian/matscicut {0}/img/{3:04d}.png {0}/{4}/{1:d}/{3:04d}-old.label {0}/{4}/{1:d}/{3:04d}.label
-""".format(n,rn,i,j,r,dilation)
+            return """mkdir -p {7}/{0}/{4}/{1:d}/
+ln -s ../../ground/{2:04d}.label {7}/{0}/{4}/{1:d}/{2:04d}.label
+{6} e global {7}/{0}/img/{2:04d}.png {7}/{0}/ground/{2:04d}.label {7}/{0}/img/{3:04d}.png {7}/{0}/{4}/{1:d}/{3:04d}-old.label {7}/{0}/{4}/{1:d}/{3:04d}.png {5}
+LD_LIBRARY_PATH=/home/malloc47/src/programs/OpenCV-2.0.0/build/lib /home/malloc47/src/projects/matsci/matscicut-debian/matscicut {7}/{0}/img/{3:04d}.png {7}/{0}/{4}/{1:d}/{3:04d}-old.label {7}/{0}/{4}/{1:d}/{3:04d}.label
+""".format(n,rn,i,j,r,dilation,exe,data_path)
         else:
-            return """./matsciskel.py e global {0}/img/{2:04d}.png {0}/{4}/{1:d}/{2:04d}.label {0}/img/{3:04d}.png {0}/{4}/{1:d}/{3:04d}-old.label {0}/{4}/{1:d}/{3:04d}.png {5}
-LD_LIBRARY_PATH=/home/malloc47/src/programs/OpenCV-2.0.0/build/lib /home/malloc47/src/projects/matsci/matscicut-debian/matscicut {0}/img/{3:04d}.png {0}/{4}/{1:d}/{3:04d}-old.label {0}/{4}/{1:d}/{3:04d}.label
-""".format(n,rn,i,j,r,dilation)
+            return """{6} e global {7}/{0}/img/{2:04d}.png {7}/{0}/{4}/{1:d}/{2:04d}.label {7}/{0}/img/{3:04d}.png {7}/{0}/{4}/{1:d}/{3:04d}-old.label {7}/{0}/{4}/{1:d}/{3:04d}.png {5}
+LD_LIBRARY_PATH=/home/malloc47/src/programs/OpenCV-2.0.0/build/lib /home/malloc47/src/projects/matsci/matscicut-debian/matscicut {7}/{0}/img/{3:04d}.png {7}/{0}/{4}/{1:d}/{3:04d}-old.label {7}/{0}/{4}/{1:d}/{3:04d}.label
+""".format(n,rn,i,j,r,dilation,exe,data_path)
     datasets += [ (n,'global-local-'+str(dilation),stdlen,ground_slices,global_local_cmd) for n in names]
 
     def local_cmd(n,rn,i,j,r):
         if rn==i:
-            return """mkdir -p {0}/{4}/{1:d}/
-ln -s ../../ground/{2:04d}.label {0}/{4}/{1:d}/{2:04d}.label
-./matsciskel.py e clique {0}/img/{2:04d}.png {0}/ground/{2:04d}.label {0}/img/{3:04d}.png {0}/{4}/{1:d}/{3:04d}.label {0}/{4}/{1:d}/{3:04d}.png {5}
-""".format(n,rn,i,j,r,dilation)
+            return """mkdir -p {7}/{0}/{4}/{1:d}/
+ln -s ../../ground/{2:04d}.label {7}/{0}/{4}/{1:d}/{2:04d}.label
+{6} e clique {7}/{0}/img/{2:04d}.png {7}/{0}/ground/{2:04d}.label {7}/{0}/img/{3:04d}.png {7}/{0}/{4}/{1:d}/{3:04d}.label {7}/{0}/{4}/{1:d}/{3:04d}.png {5}
+""".format(n,rn,i,j,r,dilation,exe,data_path)
         else:
-            return """./matsciskel.py e clique {0}/img/{2:04d}.png {0}/{4}/{1:d}/{2:04d}.label {0}/img/{3:04d}.png {0}/{4}/{1:d}/{3:04d}.label {0}/{4}/{1:d}/{3:04d}.png {5}
-""".format(n,rn,i,j,r,dilation)
+            return """./matsciskel.py e clique {7}/{0}/img/{2:04d}.png {7}/{0}/{4}/{1:d}/{2:04d}.label {7}/{0}/img/{3:04d}.png {7}/{0}/{4}/{1:d}/{3:04d}.label {7}/{0}/{4}/{1:d}/{3:04d}.png {5}
+""".format(n,rn,i,j,r,dilation,exe,data_path)
     datasets += [ (n,'local-'+str(dilation),stdlen,ground_slices,local_cmd) for n in names]
 
     def local_local_cmd(n,rn,i,j,r):
         if rn==i:
-            return """mkdir -p {0}/{4}/{1:d}/
-ln -s ../../ground/{2:04d}.label {0}/{4}/{1:d}/{2:04d}.label
-./matsciskel.py e clique {0}/img/{2:04d}.png {0}/ground/{2:04d}.label {0}/img/{3:04d}.png {0}/{4}/{1:d}/{3:04d}-old.label {0}/{4}/{1:d}/{3:04d}.png {5}
-LD_LIBRARY_PATH=/home/malloc47/src/programs/OpenCV-2.0.0/build/lib /home/malloc47/src/projects/matsci/matscicut-debian/matscicut {0}/img/{3:04d}.png {0}/{4}/{1:d}/{3:04d}-old.label {0}/{4}/{1:d}/{3:04d}.label
-""".format(n,rn,i,j,r,dilation)
+            return """mkdir -p {7}/{0}/{4}/{1:d}/
+ln -s ../../ground/{2:04d}.label {7}/{0}/{4}/{1:d}/{2:04d}.label
+{6} e clique {7}/{0}/img/{2:04d}.png {7}/{0}/ground/{2:04d}.label {7}/{0}/img/{3:04d}.png {7}/{0}/{4}/{1:d}/{3:04d}-old.label {7}/{0}/{4}/{1:d}/{3:04d}.png {5}
+LD_LIBRARY_PATH=/home/malloc47/src/programs/OpenCV-2.0.0/build/lib /home/malloc47/src/projects/matsci/matscicut-debian/matscicut {7}/{0}/img/{3:04d}.png {7}/{0}/{4}/{1:d}/{3:04d}-old.label {7}/{0}/{4}/{1:d}/{3:04d}.label
+""".format(n,rn,i,j,r,dilation,exe,data_path)
         else:
-            return """./matsciskel.py e clique {0}/img/{2:04d}.png {0}/{4}/{1:d}/{2:04d}.label {0}/img/{3:04d}.png {0}/{4}/{1:d}/{3:04d}-old.label {0}/{4}/{1:d}/{3:04d}.png {5}
-LD_LIBRARY_PATH=/home/malloc47/src/programs/OpenCV-2.0.0/build/lib /home/malloc47/src/projects/matsci/matscicut-debian/matscicut {0}/img/{3:04d}.png {0}/{4}/{1:d}/{3:04d}-old.label {0}/{4}/{1:d}/{3:04d}.label
-""".format(n,rn,i,j,r,dilation)
+            return """{6} e clique {7}/{0}/img/{2:04d}.png {7}/{0}/{4}/{1:d}/{2:04d}.label {7}/{0}/img/{3:04d}.png {7}/{0}/{4}/{1:d}/{3:04d}-old.label {7}/{0}/{4}/{1:d}/{3:04d}.png {5}
+LD_LIBRARY_PATH=/home/malloc47/src/programs/OpenCV-2.0.0/build/lib /home/malloc47/src/projects/matsci/matscicut-debian/matscicut {7}/{0}/img/{3:04d}.png {7}/{0}/{4}/{1:d}/{3:04d}-old.label {7}/{0}/{4}/{1:d}/{3:04d}.label
+""".format(n,rn,i,j,r,dilation,exe,data_path)
     datasets += [ (n,'local-local-'+str(dilation),stdlen,ground_slices,local_local_cmd) for n in names]
 
     names = [ 'd1s'+str(i) for i in range(13,15) ]
@@ -78,8 +83,8 @@ LD_LIBRARY_PATH=/home/malloc47/src/programs/OpenCV-2.0.0/build/lib /home/malloc4
         for g in gt:
             forward =  [ e for e in slices if e>=g]
             backward = list(reversed([ e for e in slices if e<=g]))
-            forward_file = 'ctrl/'+n+'-'+run+'-'+str(g)+'-f.sh'
-            backward_file = 'ctrl/'+n+'-'+run+'-'+str(g)+'-b.sh'
+            forward_file = prefix+n+'-'+run+'-'+str(g)+'-f.sh'
+            backward_file = prefix+n+'-'+run+'-'+str(g)+'-b.sh'
             with open(forward_file, 'wb') as f:
                 f.write('#!/bin/bash\n')
                 for i, j in zip(forward[:-1], forward[1:]):
