@@ -32,7 +32,7 @@ def main(*args):
     vtk_path = args[1];
     output_file = args[2];
 
-    size = (525,750,50)
+    size = (525,750,500)
     i = 0
     j = 0
     k = 0
