@@ -40,19 +40,27 @@ def plot_dataset(dataset):
         lgd_names += [d.method]
     plt.legend(lgd,lgd_names)
 
+def lsd(*l):
+    return filter(lambda d: os.path.isdir(os.path.join(*((os.getcwd(),)+l+(d,)))),
+                  os.listdir(os.path.join(*((os.getcwd(),)+l))))
+
 def main(*args):
     # get ready for a fun series of list/dict comprehensions...
     datasets = [ Dataset(name
                          , method
                          , { num: sorted([ read_score(s) for s in 
-                                    os.listdir(os.path.join(os.getcwd(),'syn',name,method,num)) ]
+                                           filter(lambda d : d.endswith('.score')
+                                                  ,os.listdir(os.path.join(os.getcwd(),'syn',
+                                                                           name,method,num))) ]
                                          , key=lambda sc: sc.slice)
                              for num in os.listdir(os.path.join(os.getcwd(),'syn',name,method))}
                          )
                  for (name,method) in
                  sum([zip([n]*len(m),m) for (n,m) in 
-                      [(nm,os.listdir(os.path.join(os.getcwd(),'syn',nm))) 
-                       for nm in os.listdir(os.path.join(os.getcwd(),'syn'))] ], [])
+                      # [(nm,os.listdir(os.path.join(os.getcwd(),'syn',nm))) 
+                      [(nm,lsd('syn',nm)) 
+                       # for nm in os.listdir(os.path.join(os.getcwd(),'syn'))] ], [])
+                       for nm in lsd('syn')] ], [])
                  if method != 'ground' and method != 'img']
 
     plt.figure()
