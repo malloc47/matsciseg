@@ -94,11 +94,11 @@ def main(*args):
             s = binary_dilation(e,iterations=3)
             dt[s] += random.choice([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.25, 0.5, 1])
 
-        for c in [ (random.randint(0,ground.shape[0]), 
-                    random.randint(0,ground.shape[1]), 
-                    random.randint(25,75)) 
-                   for k in range(0,ncircles) ]:
-            dt[matsci.adj.circle(c,out.shape)] += 1
+#        for c in [ (random.randint(0,ground.shape[0]), 
+#                    random.randint(0,ground.shape[1]), 
+#                    random.randint(25,75)) 
+#                   for k in range(0,ncircles) ]:
+#            dt[matsci.adj.circle(c,out.shape)] += 1
 
         dt = dt.astype('int16')
 
