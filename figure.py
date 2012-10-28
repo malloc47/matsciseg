@@ -1,0 +1,68 @@
+#!/usr/bin/env python
+import sys,os
+from collections import namedtuple
+import itertools
+import numpy as np
+sys.path.insert(0,os.path.join(os.getcwd(),'.'))
+# import pylab, matplotlib
+import matplotlib.pyplot as plt
+
+Score = namedtuple('Score', ['slice','f', 'p', 'r', 'd'])
+Dataset = namedtuple('Dataset', ['name', 'method', 'scores'])
+
+
+def read_score(path,d=3):
+    scores = np.genfromtxt(path,dtype='float',delimiter=',')[d-1]
+    # scores = np.array([np.random.normal(loc=0.0,scale=1),0.8,0.95,5])
+    return Score(int(os.path.splitext(os.path.basename(path))[0])
+                     , scores[0]
+                     , scores[1]
+                     , scores[2]
+                     , scores[3])
+
+def plot_job(job,field='f',fmt='-ro'):
+    xs = [j.slice for j in job]
+    ys = [j._asdict()[field] for j in job]
+    return plt.plot(xs,ys,fmt)
+
+def plot_jobs(jobs,field='f',fmt='-ro'):
+    for j in jobs:
+        plot_job(jobs[j],field,fmt)
+
+def plot_dataset(dataset):
+    color = ['r','b','g','y']
+    lgd = []
+    lgd_names = []
+    for d,c in zip(dataset,color):
+        print(str(d.name))
+        plot_jobs(d.scores,fmt='-'+c+'o')
+        lgd += [plt.Rectangle((0, 0), 1, 1, fc=c)]
+        lgd_names += [d.method]
+    plt.legend(lgd,lgd_names)
+
+def main(*args):
+    # get ready for a fun series of list/dict comprehensions...
+    datasets = [ Dataset(name
+                         , method
+                         , { num: sorted([ read_score(s) for s in 
+                                    os.listdir(os.path.join(os.getcwd(),'syn',name,method,num)) ]
+                                         , key=lambda sc: sc.slice)
+                             for num in os.listdir(os.path.join(os.getcwd(),'syn',name,method))}
+                         )
+                 for (name,method) in
+                 sum([zip([n]*len(m),m) for (n,m) in 
+                      [(nm,os.listdir(os.path.join(os.getcwd(),'syn',nm))) 
+                       for nm in os.listdir(os.path.join(os.getcwd(),'syn'))] ], [])
+                 if method != 'ground' and method != 'img']
+
+    plt.figure()
+    plot_dataset([ d for d in datasets if d.name == 'd1s16' ])
+    plt.show()
+
+    # plot_jobs(datasets[0].scores)
+    # p1 = plt.Rectangle((0, 0), 1, 1, fc="r")
+    # p2 = plt.Rectangle((0, 0), 1, 1, fc="b")
+    # plt.legend([p1,p2], ['cool data','more cool'])
+
+if __name__ == '__main__':
+    sys.exit(main(*sys.argv))
