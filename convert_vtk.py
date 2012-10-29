@@ -45,7 +45,8 @@ def main(*args):
         line = f.readline()
         while not line.startswith('DIMENSIONS'):
             line = f.readline()
-        size = [ i-1 for i in map(int,line.split(' ')[1:]) ]
+        x,y,z = [ i-1 for i in map(int,line.split(' ')[1:]) ]
+        size = (y,x,z)
         output = np.zeros(size,dtype='int16')
         while not line.startswith('LOOKUP_TABLE'):
             line = f.readline()
@@ -54,15 +55,15 @@ def main(*args):
             for l in labels:
                 output[i,j,k] = l
                 j += 1
-                if j > size[0]-1:
+                if j > size[1]-1:
                     j=0
                     i+=1
-                if i > size[1]-1:
+                if i > size[0]-1:
                     i=0
                     j=0
                     k+=1
 
-    img = np.zeros((size[1],size[0],3), dtype='uint8')
+    img = np.zeros((size[0],size[1],3), dtype='uint8')
 
     print('preprocessing')
     for k in range(0,size[2]):
