@@ -9,6 +9,7 @@ def main(*args):
     prefix = args[1]
 
     exe       = '/home/malloc47/src/projects/matsci/matsciskel/matsciskel.py'
+    ws_exe    = '/home/malloc47/src/projects/matsci/matsciskel/watershed.py'
     data_path = '/home/malloc47/src/projects/matsci/matsciskel'
 
     datasets = []
@@ -93,6 +94,30 @@ def main(*args):
     datasets += [ (n,'global-local-'+str(dilation),stdlen,ground_slices,global_local_cmd,rng) for n in names]
     datasets += [ (n,'local-local-'+str(dilation),stdlen,ground_slices,local_local_cmd,rng) for n in names]
     datasets += [ (n,'local-'+str(dilation),stdlen,ground_slices,local_cmd,rng) for n in names]
+
+    dilation = 10
+
+    def watershed_cmd(n,rn,i,j,r):
+        if rn==i:
+            return """mkdir -p {7}/{0}/{4}/{1:d}/
+ln -s ../../ground/{2:04d}.label {7}/{0}/{4}/{1:d}/{2:04d}.label
+{6} {7}/{0}/img/{3:04d}.png {7}/{0}/ground/{2:04d}.label {7}/{0}/{4}/{1:d}/{3:04d}.label 3 {5}
+    """.format(n,rn,i,j,r,dilation,ws_exe,data_path)
+        else:
+            return """{6} {7}/{0}/img/{3:04d}.png {7}/{0}/ground/{2:04d}.label {7}/{0}/{4}/{1:d}/{3:04d}.label 3 {5}
+    """.format(n,rn,i,j,r,dilation,ws_exe,data_path)
+
+    names = [ 'd1s'+str(i) for i in range(1,13) ]
+    stdlen = range(0,50)
+    ground_slices = [5,15,25,35,45]
+    rng = None
+    datasets += [ (n,'watershed-'+str(dilation),stdlen,ground_slices,watershed_cmd,rng) for n in names]
+
+    names = [ 'd1s'+str(i) for i in range(16,20) ]
+    stdlen = range(0,300)
+    ground_slices = [150]
+    rng = None
+    datasets += [ (n,'watershed-'+str(dilation),stdlen,ground_slices,watershed_cmd,rng) for n in names]
 
     for n,run,slices,gt,cmd,rng in datasets:
         for g in gt:
