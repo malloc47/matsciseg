@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import sys,os
-from matsci.gco import watershed
+from matsci.data import watershed
 from numpy import genfromtxt, savetxt
 from scipy.misc import imread
 
