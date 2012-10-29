@@ -152,7 +152,7 @@ def main(*args):
                          random.randint(int(c[0]-w/2),
                                         int(c[0]+w/2)))
                         , angle
-                        , random.randint(2,largest)
+                        , random.randint(2,max(3,largest))
                         , ground.shape)
                     , reg)
                 out[l] += np.clip(
