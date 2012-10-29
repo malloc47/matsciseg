@@ -32,7 +32,7 @@ def main(*args):
     vtk_path = args[1];
     output_file = args[2];
 
-    size = (525,750,500)
+    size = (750,525,500)
     i = 0
     j = 0
     k = 0
@@ -43,6 +43,10 @@ def main(*args):
     with open(vtk_path) as f:
         # skip over front matter
         line = f.readline()
+        while not line.startswith('DIMENSIONS'):
+            line = f.readline()
+        size = [ i-1 for i in map(int,line.split(' ')[1:]) ]
+        output = np.zeros(size,dtype='int16')
         while not line.startswith('LOOKUP_TABLE'):
             line = f.readline()
         for line in f:
@@ -50,15 +54,15 @@ def main(*args):
             for l in labels:
                 output[i,j,k] = l
                 j += 1
-                if j > size[1]-1:
+                if j > size[0]-1:
                     j=0
                     i+=1
-                if i > size[0]-1:
+                if i > size[1]-1:
                     i=0
                     j=0
                     k+=1
 
-    img = np.zeros((size[0],size[1],3), dtype='uint8')
+    img = np.zeros((size[1],size[0],3), dtype='uint8')
 
     print('preprocessing')
     for k in range(0,size[2]):
