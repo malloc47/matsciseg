@@ -104,7 +104,7 @@ ln -s ../../ground/{2:04d}.label {7}/{0}/{4}/{1:d}/{2:04d}.label
 {6} {7}/{0}/img/{3:04d}.png {7}/{0}/ground/{2:04d}.label {7}/{0}/{4}/{1:d}/{3:04d}.label 3 {5}
     """.format(n,rn,i,j,r,dilation,ws_exe,data_path)
         else:
-            return """{6} {7}/{0}/img/{3:04d}.png {7}/{0}/ground/{2:04d}.label {7}/{0}/{4}/{1:d}/{3:04d}.label 3 {5}
+            return """{6} {7}/{0}/img/{3:04d}.png {7}/{0}/{4}/{1:d}/{2:04d}.label {7}/{0}/{4}/{1:d}/{3:04d}.label 3 {5}
     """.format(n,rn,i,j,r,dilation,ws_exe,data_path)
 
     names = [ 'd1s'+str(i) for i in range(1,13) ]
