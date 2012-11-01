@@ -15,7 +15,7 @@ def main(*args):
     datasets = []
     name_to_dir = lambda n: 'syn/'+n
 
-    dilation = 20
+    dilation = 10
 
     def global_cmd(n,rn,i,j,r):
         if rn==i:

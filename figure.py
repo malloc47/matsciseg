@@ -31,7 +31,7 @@ def plot_jobs(jobs,field='f',fmt='-ro'):
         plot_job(jobs[j],field,fmt)
 
 def plot_dataset(dataset,run=None):
-    color = ['r','b','g','y']
+    color = ['r','b','g','y','c','m','w','k', 'r','b','g','y','c','m','w','k']
     lgd = []
     lgd_names = []
     for d,c in zip(dataset,color):
@@ -82,13 +82,17 @@ def main(*args):
                       )
 
     plt.figure()
+    plot_dataset([ d for d in datasets if d.name == 'd1s16' ],run='150')
+    plt.xlim(0,150)
+    plt.savefig('d1s16.pdf')
+
+    plt.figure()
     plot_dataset([ d for d in datasets if d.name == 'd1s17' ],run='150')
     plt.savefig('d1s17.pdf')
 
     plt.figure()
-    plot_dataset([ d for d in datasets if d.name == 'd1s16' ],run='150')
-    plt.xlim(0,150)
-    plt.savefig('d1s16.pdf')
+    plot_dataset([ d for d in datasets if d.name == 'd1s18' ],run='150')
+    plt.savefig('d1s18.pdf')
 
     # plot_jobs(datasets[0].scores)
     # p1 = plt.Rectangle((0, 0), 1, 1, fc="r")

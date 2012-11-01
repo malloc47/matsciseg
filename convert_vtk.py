@@ -32,7 +32,7 @@ def main(*args):
     vtk_path = args[1];
     output_file = args[2];
 
-    size = (750,525,300)
+    size = (525,750,300)
     i = 0
     j = 0
     k = 0
@@ -43,10 +43,6 @@ def main(*args):
     with open(vtk_path) as f:
         # skip over front matter
         line = f.readline()
-        while not line.startswith('DIMENSIONS'):
-            line = f.readline()
-        #size = tuple([ i-1 for i in map(int,line.split(' ')[1:]) ])
-        #output = np.zeros(size,dtype='int16')
         while not line.startswith('LOOKUP_TABLE'):
             line = f.readline()
         for line in f:
