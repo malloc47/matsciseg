@@ -12,6 +12,12 @@ def main(*args):
     im = scipy.misc.imread(args[1],flatten=True).astype('float32')
     im = np.divide(im,im.max())
     im = np.multiply(im,255).astype('uint8')
+
+    if(len(args) > 3):
+        im = scipy.misc.imresize(im
+                                 , (int(args[3]),int(args[4]))
+                                 , interp = 'bicubic')
+
     im = (im > 0)
 
     labels = region_clean(
