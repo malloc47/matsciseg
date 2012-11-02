@@ -157,8 +157,9 @@ static PyObject *graph_cut(PyObject *self, PyObject *args) {
     return NULL;
   }
 
-  if(data_p->descr->type_num != NPY_BOOL ||
-     img_p->descr->type_num != NPY_UINT8 ||
+  if( (data_p->descr->type_num != NPY_BOOL && 
+       data_p->descr->type_num != NPY_INT16 )||
+     img_p->descr->type_num != NPY_UINT8     ||
      seedimg_p->descr->type_num != NPY_INT16 ||
      adj_p->descr->type_num != NPY_BOOL) {
     PyErr_SetString(PyExc_ValueError, "Wrong intput matrix type");
@@ -191,11 +192,19 @@ static PyObject *graph_cut(PyObject *self, PyObject *args) {
   int i=0,j=0,k=0;
 
   // load up data term
-  for(i=0;i<d[0]; i++)
-    for(j=0;j<d[1]; j++)
-      for(k=0;k<num_labels; k++)
-  	data[ ( j+i*d[1]) * num_labels + k ] = 
-	  *((npy_bool*)PyArray_GETPTR3(data_p,i,j,k)) == 1 ? 0 : INF;
+  if(data_p->descr->type_num == NPY_BOOL)
+    for(i=0;i<d[0]; i++)
+      for(j=0;j<d[1]; j++)
+	for(k=0;k<num_labels; k++)
+	  data[ ( j+i*d[1]) * num_labels + k ] = 
+	    *((npy_bool*)PyArray_GETPTR3(data_p,i,j,k)) == 1 ? 0 : INF;
+  else
+    for(i=0;i<d[0]; i++)
+      for(j=0;j<d[1]; j++)
+	for(k=0;k<num_labels; k++)
+	  data[ ( j+i*d[1]) * num_labels + k ] = 
+	    *((npy_int16*)PyArray_GETPTR3(data_p,i,j,k)) < 0 ? 
+               INF : *((npy_int16*)PyArray_GETPTR3(data_p,i,j,k));
 
   // load up segmentation sites
   for(i=0;i<d[0]; i++)
