@@ -1,4 +1,4 @@
-import matsci.gco
+import matsci
 import numpy as np
 
 def global_cmd(arg,im,im_gray,im_prev,seed):
@@ -152,7 +152,24 @@ def local_stats_cmd(arg,im,im_gray,im_prev,seed):
     return v.labels.v
 
 def color_cmd(arg,im,im_gray,im_prev,labels):
+    import scipy
     from scipy.stats import norm
+    from scipy.ndimage.filters import gaussian_filter
+    import matplotlib.pyplot as plt
+    import matplotlib.cm as cm
+    from skimage import filter
+
+    norm_const = 100
+
+    # sx = sobel(im, axis=0, mode='constant')
+    # sy = sobel(im, axis=1, mode='constant')
+    # sob = np.hypot(sx, sy)
+
+    # edges = filter.canny(gaussian_filter(im_gray,4), sigma=1)
+    # plt.imshow(edges,cmap = cm.Greys_r)
+    # plt.show()
+
+    # edges = scipy.misc.imread('edge/0000-r.png',flatten=True).astype('bool')
 
     def normalize(img):
         return img.astype('float') / img.max()
@@ -172,14 +189,25 @@ def color_cmd(arg,im,im_gray,im_prev,labels):
         return n.pdf
 
     # list of gaussian mu/sigma for each channel for each label
-    norms = [ color_fit(img_prev,(labels==l)) for l in range(0,labels.max()+1) ]
+    norms = [ color_fit(im_prev,(labels==l)) for l in range(0,labels.max()+1) ]
 
-    d = [ (1000-(1000*np.mean(gauss(*rn)(im[:,:,0]),
-                             gauss(*gn)(im[:,:,1]),
-                             gauss(*bn)(im[:,:,2])))).astype('int16') 
-          for rn,gn,bn in norms ]
+    d = [ np.min(np.dstack((gauss(*rn)(normalize(im[:,:,0]))
+                            , gauss(*gn)(normalize(im[:,:,1]))
+                            , gauss(*bn)(normalize(im[:,:,2]))))
+                  ,axis=2)
+          for (rn,gn,bn) in norms ]
 
-    v = matsci.gco.Slice(im_gray,seed)
-    v.data = Data()
+    m = max([x.max() for x in d])
+    d = [(norm_const-(norm_const*x/m)).astype('int16') # - (edges*norm_const).astype('int16')
+         for x in d]
+
+    # for x in d:
+    #     plt.imshow(x,cmap = cm.Greys_r)
+    #     plt.show()
+
+    v = matsci.gco.Slice(im_gray.astype('uint8'),labels)
+    v.data = matsci.data.Data()
     v.data.regions = d
+    # v.adj.set_adj_all()
+    # return v.clique_swap(0)
     return v.graph_cut(arg['gctype'])
