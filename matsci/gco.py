@@ -103,7 +103,8 @@ class Slice(object):
                 print('skipping ' + str(v.center))
                 continue
             # v.data.dilate(d)
-            v.data.dilate_fixed_center(d, rel_size=0.1, min_size=15)
+            if(d>0):
+                v.data.dilate_fixed_center(d, rel_size=0.1, min_size=15)
             v.data.label_exclusive(0, v.labels.v == 0)
             v.data.pixels_exclusive(
                 v.labels.region_outline()
@@ -111,6 +112,7 @@ class Slice(object):
                 )
             v.graph_cut(1,lite=False)
             self.merge(v)
+        return self.labels.v
 
     def local_adj(self):
         return [ self.crop([l]).adj for l in range(0,self.labels.max()) ]
