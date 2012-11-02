@@ -1,7 +1,7 @@
 import matsci.gco
 import numpy as np
 
-def global_cmd(arg,im,im_gray,seed):
+def global_cmd(arg,im,im_gray,im_prev,seed):
     v = matsci.gco.Slice(im_gray,seed)
     print("Initialized")
     v.data.dilate_all(arg['d'])
@@ -14,7 +14,7 @@ def global_cmd(arg,im,im_gray,seed):
     # import code; code.interact(local=locals())
     return v.labels.v
 
-def auto_cmd(arg,im,im_gray,seed):
+def auto_cmd(arg,im,im_gray,im_prev,seed):
     v = matsci.gco.Slice(im_gray,seed)
     print("Initialized")
     v.data.dilate_auto(v.img,v.labels,arg['d'])
@@ -24,7 +24,7 @@ def auto_cmd(arg,im,im_gray,seed):
     print("Graph Cut Complete")
     return v.labels.v
 
-def globalgui_cmd(arg,im,im_gray,seed):
+def globalgui_cmd(arg,im,im_gray,im_prev,seed):
     v = matsci.gco.Slice(im_gray,seed)
     print("Initialized")
     v.data.dilate_all(arg['d'])
@@ -34,13 +34,13 @@ def globalgui_cmd(arg,im,im_gray,seed):
     # import code; code.interact(local=locals())
     return v.labels.v
 
-def gui_cmd(arg,im,im_gray,seed):
+def gui_cmd(arg,im,im_gray,im_prev,seed):
     v = matsci.gco.Slice(im_gray,seed)
     print("Initialized")
     v.edit_labels_gui(5)
     return v.labels.v
 
-def skel_cmd(arg,im,im_gray,seed):
+def skel_cmd(arg,im,im_gray,im_prev,seed):
     v = matsci.gco.Slice(im_gray,seed)
     print("Initialized")
     v.data.dilate(arg['d'])
@@ -49,25 +49,25 @@ def skel_cmd(arg,im,im_gray,seed):
     v.data.skel(v.orig)
     return v.graph_cut(arg['gctype'])
 
-def gauss_cmd(arg,im,im_gray,seed):
+def gauss_cmd(arg,im,im_gray,im_prev,seed):
     v = matsci.gco.Slice(im_gray,seed)
     print("Initialized")
     # v.dilate_first(arg['d']/10)
     v.data.fit_gaussian(v.img,arg['d'],arg['d2'],arg['d3'])
     return v.graph_cut(arg['gctype'])
 
-def filtergui_cmd(arg,im,im_gray,seed):
+def filtergui_cmd(arg,im,im_gray,im_prev,seed):
     """opens gui without doing a cleaning first"""
     v = matsci.gco.Slice(im_gray,seed,lightweight=True)
     v.edit_labels_gui(5)
     return v.graph_cut(arg['gctype'])
 
-def clique_cmd(arg,im,im_gray,seed):
+def clique_cmd(arg,im,im_gray,im_prev,seed):
     v = matsci.gco.Slice(im_gray,seed)
     v.clique_swap(arg['d'],f=None)
     return v.labels.v
 
-def clique2_cmd(arg,im,im_gray,seed):
+def clique2_cmd(arg,im,im_gray,im_prev,seed):
     v = matsci.gco.Slice(im_gray,seed)
     v.clique_swap(arg['d'],
                   lambda x: max(x.adj.degs(ignore_bg=True, 
@@ -75,7 +75,7 @@ def clique2_cmd(arg,im,im_gray,seed):
                                 key=lambda y: y[1])[1] > 3)
     return v.labels.v
 
-def clique_compare_cmd(arg,im,im_gray,seed):
+def clique_compare_cmd(arg,im,im_gray,im_prev,seed):
     v2 = matsci.gco.Slice(im_gray,seed)
     v2.data.dilate_fixed_center(arg['d'], rel_size=0.1, min_size=15, first=True)
     # v2.non_homeomorphic_remove(10,50)
@@ -90,7 +90,7 @@ def clique_compare_cmd(arg,im,im_gray,seed):
     cv2.imwrite('cliquetest_local.png',matsciskel.draw_on_img(im,matsciskel.label_to_bmp(v.labels.v),color=(0,0,255)))
     return v.labels.v
 
-def clique_compare2_cmd(arg,im,im_gray,seed):
+def clique_compare2_cmd(arg,im,im_gray,im_prev,seed):
     v2 = matsci.gco.Slice(im_gray,seed)
     v2.clique_swap(arg['d'],
                    lambda x: max(x.adj.degs(ignore_bg=True, 
@@ -105,7 +105,7 @@ def clique_compare2_cmd(arg,im,im_gray,seed):
     cv2.imwrite('cliquetest_local.png',matsciskel.draw_on_img(im,matsciskel.label_to_bmp(v.labels.v),color=(0,0,255)))
     return v.labels.v
 
-def compare_cmd(arg,im,im_gray,seed):
+def compare_cmd(arg,im,im_gray,im_prev,seed):
     v = matsci.gco.Slice(im_gray,seed)
     # v.data.dilate_fixed_center(arg['d'], rel_size=0.1, min_size=15, first=True)
     # v.data.dilate_all(arg['d'])
@@ -118,7 +118,7 @@ def compare_cmd(arg,im,im_gray,seed):
     cv2.imwrite('cliquetest_local.png',matsciskel.draw_on_img(im,matsciskel.label_to_bmp(v.labels.v),color=(0,0,255)))
     return v.labels.v
 
-def local_stats_cmd(arg,im,im_gray,seed):
+def local_stats_cmd(arg,im,im_gray,im_prev,seed):
     import pylab
     v = matsci.gco.Slice(im_gray,seed)
     adj = v.local_adj()
@@ -150,3 +150,36 @@ def local_stats_cmd(arg,im,im_gray,seed):
     print('Avg Max Deg: ' + str(np.mean(maxdeg)))
     print('Avg Min Deg: ' + str(np.mean(mindeg)))
     return v.labels.v
+
+def color_cmd(arg,im,im_gray,im_prev,labels):
+    from scipy.stats import norm
+
+    def normalize(img):
+        return img.astype('float') / img.max()
+
+    def fit(img,mask):
+        return norm.fit(normalize(img)[mask])
+
+    def color_fit(img,mask):
+        # these names aren't actually correct, methinks
+        r = img[:,:,0]
+        g = img[:,:,1]
+        b = img[:,:,2]
+        return (fit(r,mask),fit(g,mask),fit(b,mask))
+
+    def gauss(mu,sigma):
+        n = norm(loc=mu,scale=sigma)
+        return n.pdf
+
+    # list of gaussian mu/sigma for each channel for each label
+    norms = [ color_fit(img_prev,(labels==l)) for l in range(0,labels.max()+1) ]
+
+    d = [ (1000-(1000*np.mean(gauss(*rn)(im[:,:,0]),
+                             gauss(*gn)(im[:,:,1]),
+                             gauss(*bn)(im[:,:,2])))).astype('int16') 
+          for rn,gn,bn in norms ]
+
+    v = matsci.gco.Slice(im_gray,seed)
+    v.data = Data()
+    v.data.regions = d
+    return v.graph_cut(arg['gctype'])

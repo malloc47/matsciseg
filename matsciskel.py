@@ -33,8 +33,9 @@ def imgio(fn):
     """use to decorate recipes with io ops"""
     def imghandle(arg):
         im,im_gray = read_img(arg['im2'])
+        im_prev,im_prev_gray = read_img(arg['im'])
         seed=np.genfromtxt(arg['label'],dtype='int16')
-        output = fn(arg,im,im_gray,seed)
+        output = fn(arg,im,im_gray,img_prev,seed)
         np.savetxt(arg['label_out'],output,fmt='%1d')
         # bmp_labels = label_to_bmp(output)
         # cv2.imwrite(arg['im_out'],draw_on_img(im,bmp_labels))
