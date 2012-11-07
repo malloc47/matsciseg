@@ -5,10 +5,8 @@ import numpy as np
 import scipy
 import cPickle as pickle
 import matsciskel
-# import matsci.adj
-# import matsci.gui
-# import matsci.gco
 import matsci
+import matsci.gui
 
 def highlight_label(img,labels,h):
     img = img.astype('float')
@@ -30,6 +28,7 @@ def main(*args):
     center = []
     maxdeg = []
     mindeg = []
+    alldeg = []
     counter = 0
 
     for i in range(1,len(args),2):
@@ -51,9 +50,11 @@ def main(*args):
             ls = x.adj.degs(ignore_bg=True, ignore=[new_l])
             maxdeg += [max(ls,key=lambda x: x[1])[1]]
             mindeg += [min(ls,key=lambda x: x[1])[1]]
+            alldeg += [ y[1] for y in ls ]
 
-            if max(ls,key=lambda x: x[1])[1] == 6:
+            if max(ls,key=lambda x: x[1])[1] == 4:
                 scipy.misc.imsave('deg/'+str(counter)+'.png',
+                                  np.dstack((
                                   highlight_label(
                         matsciskel.draw_on_img(matsci.gui.grey_to_rgb(x.img),
                                                matsciskel.label_to_bmp(x.labels.v))
@@ -63,7 +64,10 @@ def main(*args):
                             [ (i, (0,0,128)) for (i,j) in ls if j == 4 ] + \
                             [ (i, (128,128,0)) for (i,j) in ls if j == 5 ] + \
                             [ (i, (128,0,128)) for (i,j) in ls if j == 6 ]
-                        ))
+                        )
+                                  ,
+                                  (x.mask.astype('uint8')*255)
+                                  )))
                 counter += 1
 
     pylab.hist(center,align='left',bins=range(1,15))
@@ -77,6 +81,10 @@ def main(*args):
     pylab.hist(mindeg,align='left',bins=range(1,15))
     pylab.xlabel('degree of surrounding grain (min)')
     pylab.ylabel('number of regions with degree')
+    pylab.show()
+    pylab.hist(alldeg,align='left',bins=range(1,15))
+    pylab.xlabel('degree of non-center grain')
+    pylab.ylabel('number of grains with degree')
     pylab.show()
 
     return 0
