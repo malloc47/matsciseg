@@ -1,3 +1,3 @@
 #!/bin/bash
 ./extract.py ../seq1/img/image0090.png ../seq1/ground/image0090.label ../seq1/img/image0091.png ../seq1/ground/image0091.label ../seq1/img/image0092.png ../seq1/ground/image0092.label ../seq1/img/image0093.png ../seq1/ground/image0093.label ../seq1/img/image0095.png ../seq1/ground/image0095.label ../seq1/img/image0096.png ../seq1/ground/image0096.label ../seq1/img/image0097.png ../seq1/ground/image0097.label ../seq1/img/image0098.png ../seq1/ground/image0098.label ../seq1/img/image0099.png ../seq1/ground/image0099.label ../seq1/img/image0100.png ../seq1/ground/image0100.label
-./sample.py histograms.pkl grains.pkl ../seq1/ground/image0090.label test_reconstruction.png
+./sample.py data.pkl ../seq1/ground/image0090.label test_reconstruction.png

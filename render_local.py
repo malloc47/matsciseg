@@ -65,7 +65,8 @@ def main(*args):
 
     out = (im.copy()).astype('int16')
 
-    for l in [16,25,33,47,81,55,94]: # random.sample((0,labels.max()+1),5):
+    # for l in [16,25,33,47,81,55,94]: # random.sample((0,labels.max()+1),5):
+    for l in [16,33,47]: # random.sample((0,labels.max()+1),5):
         a = v.adj.get_adj([l])
         mask = scipy.ndimage.morphology.binary_dilation(
             matsci.label.binary_remove(v.labels.create_mask(a))
