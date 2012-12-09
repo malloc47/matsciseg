@@ -2,6 +2,7 @@
 import sys,os
 import numpy as np
 from figure import Score
+import cPickle as pickle
 
 def read_score(path,sl,d=3):
     scores = np.genfromtxt(path,dtype='float',delimiter=',')[d-1]
@@ -16,9 +17,9 @@ def main(*args):
     m = np.zeros(dimensions,dtype='float')
 
     for (j,i), v in np.ndenumerate(m):
-        m = read_score('seq1/d-ex/{0}/image{1:04d}.score'.format(i,j),j)
+        m[j,i] = read_score('seq1/d-ex/{0}/image{1:04d}.score'.format(i+1,j+90),j).f
 
-    print(m)
+	pickle.dump(m,open('d-ex.pkl','w'))
 
 if __name__ == '__main__':
     sys.exit(main(*sys.argv))
