@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import sys,os
-from matsci.data import watershed
+from matsci.data import watershed, watershed_fixed
 from numpy import genfromtxt, savetxt
 from scipy.misc import imread
 
@@ -23,7 +23,7 @@ def main(*args):
     if(len(args) > 5):
         dilation = int(args[5])
 
-    w = watershed(im,labels,dilation,suppression)
+    w = watershed_fixed(im,labels,dilation,suppression)
     
     savetxt(label_out,w,fmt='%1d')
 

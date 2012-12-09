@@ -89,6 +89,20 @@ def watershed(im,labels,d=0,suppression=3):
     im = pymorph.hmin(im,suppression)
     return ndimage.watershed_ift(im, labels)
 
+def watershed_fixed(im,labels,d=0,suppression=3):
+    import pymorph
+    if d > 0:
+        new_labels = np.zeros_like(labels)
+        for l in range(1,labels.max()+1):
+            new_labels[erode_by(labels==l,
+                                d,
+                                min_size=1)] = l
+        labels=new_labels
+
+    # scipy.misc.imsave("dilate_test.png", labels_to_edges(labels))
+    im = pymorph.hmin(im,suppression)
+    return ndimage.watershed_ift(im, labels)
+
 def skel(img):
     """skeletonize image"""
     print("Skel")
@@ -181,6 +195,29 @@ def erode_to(img,d=3,rel_size=0.5,min_size=15):
     # anyway by using center pixel as result
     if new_size < 1:
         print("ERROR: region dilated to size 0")
+        img2 = np.zeros_like(img).astype('bool')
+        img2[center] = True
+        return img2
+    else:
+        return img
+
+def erode_by(img, iterations=3, min_size=15, d=3):
+    """erode to structure by numiterations or min size"""
+    prev_size = np.count_nonzero(img)
+    if(prev_size <= min_size):
+        return img
+    new_size = prev_size
+    center = ndimage.measurements.center_of_mass(img)
+    center = (int(center[0]),int(center[1]))
+    for i in range(1,iterations):
+        img = erode(img,d)
+        new_size = np.count_nonzero(img)
+        if new_size < min_size:
+            break
+
+    # handle case where region was > min_size but was dilated to 0
+    # anyway by using center pixel as result
+    if new_size < 1:
         img2 = np.zeros_like(img).astype('bool')
         img2[center] = True
         return img2
