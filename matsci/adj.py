@@ -108,6 +108,12 @@ class Adj(object):
         """remove all topology constraints (everything adjacent)"""
         self.v[:,:] = True
 
+    def set_adj_bg(self):
+        """make everything adj to background"""
+        self.v[0,:] = True
+        self.v[:,0] = True
+        self.v[1:,1:] = False
+
     def set_adj_label_all(self,l):
         """remove topology constraints for a single label"""
         self.v[l,:] = True

@@ -14,6 +14,16 @@ def global_cmd(arg,im,im_gray,im_prev,seed):
     # import code; code.interact(local=locals())
     return v.labels.v
 
+def matrix_cmd(arg,im,im_gray,im_prev,seed):
+    v = matsci.gco.Slice(im_gray,seed)
+    print("Initialized")
+    v.data.dilate_all(arg['d'])
+    print("Dilated")
+    v.adj.set_adj_bg()
+    v.graph_cut(arg['gctype'])
+    print("Graph Cut Complete")
+    return v.labels.v
+
 def auto_cmd(arg,im,im_gray,im_prev,seed):
     v = matsci.gco.Slice(im_gray,seed)
     print("Initialized")
