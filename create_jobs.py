@@ -30,11 +30,11 @@ def main(*args):
     def matrix_cmd(n,rn,i,j,r):
         if rn==i:
             return """ mkdir -p {7}/{0}/{4}/{1:d}/
-    ln -s ../../ground/{2:04d}.label {7}/{0}/{4}/{1:d}/{2:04d}.label
-    {6} e matrix {7}/{0}/img/{2:04d}.png {7}/{0}/ground/{2:04d}.label {7}/{0}/img/{3:04d}.png {7}/{0}/{4}/{1:d}/{3:04d}.label {7}/{0}/{4}/{1:d}/{3:04d}.png {5}
+    ln -s ../../ground/image{2:04d}.label {7}/{0}/{4}/{1:d}/image{2:04d}.label
+    {6} e matrix {7}/{0}/img/image{2:04d}.tif {7}/{0}/ground/image{2:04d}.label {7}/{0}/img/image{3:04d}.tif {7}/{0}/{4}/{1:d}/image{3:04d}.label {7}/{0}/{4}/{1:d}/image{3:04d}.png {5}
     """.format(n,rn,i,j,r,dilation,exe,data_path)
         else:
-            return """{6} e matrix {7}/{0}/img/{2:04d}.png {7}/{0}/{4}/{1:d}/{2:04d}.label {7}/{0}/img/{3:04d}.png {7}/{0}/{4}/{1:d}/{3:04d}.label {7}/{0}/{4}/{1:d}/{3:04d}.png {5}
+            return """{6} e matrix {7}/{0}/img/image{2:04d}.tif {7}/{0}/{4}/{1:d}/image{2:04d}.label {7}/{0}/img/image{3:04d}.tif {7}/{0}/{4}/{1:d}/image{3:04d}.label {7}/{0}/{4}/{1:d}/image{3:04d}.png {5}
     """.format(n,rn,i,j,r,dilation,exe,data_path)
 
     def global_local_cmd(n,rn,i,j,r):
@@ -117,6 +117,16 @@ ln -s ../../ground/{2:04d}.label {7}/{0}/{4}/{1:d}/{2:04d}.label
             return """{6} {7}/{0}/img/{3:04d}.png {7}/{0}/{4}/{1:d}/{2:04d}.label {7}/{0}/{4}/{1:d}/{3:04d}.label 3 {5}
     """.format(n,rn,i,j,r,dilation,ws_exe,data_path)
 
+    def watershed_seq9_cmd(n,rn,i,j,r):
+        if rn==i:
+            return """mkdir -p {7}/{0}/{4}/{1:d}/
+ln -s ../../ground/{2:04d}.label {7}/{0}/{4}/{1:d}/{2:04d}.label
+{6} {7}/{0}/img/{3:04d}.png {7}/{0}/ground/{2:04d}.label {7}/{0}/{4}/{1:d}/{3:04d}.label 3 {5}
+    """.format(n,rn,i,j,r,3,ws_exe,data_path)
+        else:
+            return """{6} {7}/{0}/img/{3:04d}.png {7}/{0}/{4}/{1:d}/{2:04d}.label {7}/{0}/{4}/{1:d}/{3:04d}.label 3 {5}
+    """.format(n,rn,i,j,r,3,ws_exe,data_path)
+
     def watershed_seq_cmd(n,rn,i,j,r):
         if rn==i:
             return """mkdir -p {7}/{0}/{4}/{1:d}/
@@ -144,6 +154,13 @@ ln -s ../../ground/image{2:04d}.label {7}/{0}/{4}/{1:d}/image{2:04d}.label
     ground_slices = [38,44,50]
     rng = None
     datasets += [ (n,'watershed-homeomorphic',stdlen,ground_slices,watershed_seq_cmd,rng) for n in names]
+
+    names = ['seq9']
+    stdlen = range(23,61)
+    ground_slices = [38,44,50]
+    rng = None
+    datasets += [ (n,'watershed-'+str(3),stdlen,ground_slices,watershed_seq9_cmd,rng) for n in names]
+
     names = ['seq9']
     stdlen = range(23,61)
     ground_slices = [38,44,50]
