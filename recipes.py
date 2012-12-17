@@ -15,7 +15,7 @@ def global_cmd(arg,im,im_gray,im_prev,seed):
     return v.labels.v
 
 def matrix_cmd(arg,im,im_gray,im_prev,seed):
-    v = matsci.gco.Slice(im_gray,seed)
+    v = matsci.gco.Slice(im_gray,seed,bg=True)
     print("Initialized")
     v.data.dilate_all(arg['d'])
     print("Dilated")

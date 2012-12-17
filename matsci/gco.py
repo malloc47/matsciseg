@@ -34,7 +34,7 @@ def candidate_point(p,q,r):
 class Slice(object):
     def __init__(self, img, labels, shifted={}, 
                  win=(0,0), mask=None, lightweight=False,
-                 nodata=False, center=None):
+                 nodata=False, center=None, bg=False):
         """initialize fields and compute defaults"""
         # These values are created when the class is instantiated.
         self.img = img.copy()
@@ -57,6 +57,7 @@ class Slice(object):
         self.win=win
         self.mask=mask
         self.center=center
+        self.bg=bg
 
     def edit_labels_gui(self,d):
         import gui
@@ -412,6 +413,7 @@ class Slice(object):
                    , self.mask
                    , lightweight=True
                    , nodata=True
-                   , center=self.center)
+                   , center=self.center
+                   , bg=self.bg)
         cp.data = self.data.copy()
         return cp

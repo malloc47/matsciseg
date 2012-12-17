@@ -125,9 +125,9 @@ def small_filter(labels,label_num):
 
     return labels
 
-def region_clean(regions, boundary=None):
+def region_clean(regions, boundary=None,bg=False):
     out = np.ones(regions.shape,dtype=regions.dtype)*-1
-    for l in range(regions.max()+1) :
+    for l in range(regions.max()+1) if not bg else range(1,regions.max()+1) :
         layer = (regions==l)
         if layer.any() :
             labeled = largest_connected_component(layer>0)
@@ -163,11 +163,12 @@ def edge_list(labels):
                       for (i,j) in pairs ])
 
 class Label(object):
-    def __init__(self,labels=None, boundary=None):
+    def __init__(self,labels=None, boundary=None, bg=False):
         if not labels is None:
-            self.v = region_clean(region_shift(labels,
-                                               region_transform(labels))
-                                  , boundary=boundary)
+            self.v = region_clean(region_shift(labels
+                                               , region_transform(labels))
+                                  , boundary=boundary
+                                  , bg=bg)
     
     def create_mask(self,label_list):
         """get binary mask from a list of labels (in an integer matrix)"""
