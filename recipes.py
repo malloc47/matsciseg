@@ -15,14 +15,26 @@ def global_cmd(arg,im,im_gray,im_prev,seed):
     return v.labels.v
 
 def matrix_cmd(arg,im,im_gray,im_prev,seed):
-    v = matsci.gco.Slice(im_gray,seed,bg=True)
+    v = matsci.gco.Slice(im_gray,seed,bg=True,lightweight=True)
+    print("Initialized")
+    v.data.dilate_fixed_center(arg['d'],rel_size=0.2,min_size=5,first=False)
+    v.data.dilate_first(arg['d'])
+    print("Dilated")
+    v.adj.set_adj_bg()
+    v.graph_cut(arg['gctype'],lite=True)
+    print("Graph Cut Complete")
+    return v.labels.v
+
+def matrix_unfixed_cmd(arg,im,im_gray,im_prev,seed):
+    v = matsci.gco.Slice(im_gray,seed,bg=True,lightweight=True)
     print("Initialized")
     v.data.dilate_all(arg['d'])
     print("Dilated")
     v.adj.set_adj_bg()
-    v.graph_cut(arg['gctype'])
+    v.graph_cut(arg['gctype'],lite=True)
     print("Graph Cut Complete")
     return v.labels.v
+
 
 def auto_cmd(arg,im,im_gray,im_prev,seed):
     v = matsci.gco.Slice(im_gray,seed)
