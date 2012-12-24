@@ -244,10 +244,27 @@ def fast_fit_gaussian(v,g,d):
     mean g0"""
     return np.logical_and(v>g[0]-g[1],v<g[0]+g[1])
 
+def fit_log(im,a,r,g):
+    """get negative log liklihood from a gaussian mean"""
+    out = r.copy()
+    out[a] = np.log(np.absolute( 255-(im[a] - g[0]) ))
+    out[np.isinf(out)] = -1
+    return out
+
 class Data(object):
     def __init__(self,labels=None):
         if not labels is None:
             self.regions = layer_list(labels)
+
+    def convert_to_int16(self):
+        def bool_to_int16(b):
+            output = np.zeros(b.shape,dtype='int16')
+            output[b==0] = -1
+            output[b>0] = 0
+            return output
+        self.regions = map(bool_to_int16 
+                           , self.regions)
+        
 
     def skel(self,d=None,erode_size=1):
         """run skeletonization and integrate to data term"""
@@ -266,6 +283,31 @@ class Data(object):
                 else:
                     # remove skeletonization from all other terms
                     self.regions[k] = relative_complement((self.regions[k],s))
+
+    def fit_log(self,im,d,d2):
+        """
+        compute and fit log liklihood on all pixels within a band radius
+        d/2 around a label, where the fit is within d2 std deviations
+        """
+        from functools import partial
+
+        tolerance = 2
+
+        # (erosion,dilation)
+        print("Computing log band area")
+        area = map(relative_complement,
+                   zip(map(lambda img : dilate(img,d), self.regions[1:]),
+                       map(lambda img : dilate(img,d2), self.regions[1:])))
+ 
+        self.convert_to_int16()
+
+        print("Log fit")
+        # fit_log has four arguments, but we only want to map three
+        f = partial(fit_log,im)
+        self.regions = [self.regions[0]] + \
+            map(f, zip(area
+                       , self.regions[1:]
+                       , compute_gaussian(self.regions[1:],im)))
 
     def fit_gaussian(self,im,d,d2,d3):
         """
