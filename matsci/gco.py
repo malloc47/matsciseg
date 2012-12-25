@@ -19,6 +19,22 @@ def smoothFn(s1,s2,l1,l2,adj):
     # return int(1.0/float((abs(float(s1)-float(s2)) if \
         # abs(float(s1)-float(s2)) > 9 else 9)+1)*255.0)
 
+def smoothFnSigma(s1,s2,l1,l2,adj,sigma):
+    """smoothness function that could be passed to the minimzation"""
+    if l1==l2 :
+        return 0
+    if not adj :
+        return 10000000
+    return int(math.exp( -1 * (((float(s1)-float(s2))**2 )/(2*(float(sigma)**2)))) * 255.0)
+
+def smoothFnSigmaMax(s1,s2,l1,l2,adj,sigma):
+    """smoothness function that could be passed to the minimzation"""
+    if l1==l2 :
+        return 0
+    if not adj :
+        return 10000000
+    return int(math.exp( -1 * ((max(float(s1),float(s2))**2 )/(2*(float(sigma)**2)))) * 255.0)
+
 def crop_box(a,box):
     (x0,y0,x1,y1) = box
     return a[y0:y1, x0:x1]
@@ -386,13 +402,19 @@ class Slice(object):
         # print("min: " + str(self.labels.v.min()))
         # print("max: " + str(self.labels.v.max()))
 
-        output = gcoc.graph_cut(self.data.matrix(),
-                                self.img,
-                                np.array(self.labels.v).astype('int16'),
-                                # self.labels.v,
-                                self.adj.v,
-                                self.labels.max()+1, # todo: extract from data
-                                mode)
+        sigma = 10
+        if mode > 2:
+            sigma = np.std(self.img)
+
+        output = gcoc.graph_cut(self.data.matrix()
+                                , self.img
+                                , np.array(self.labels.v).astype('int16')
+                                # , self.labels.v,
+                                , self.adj.v
+                                , self.labels.max()+1 # todo: extract from data
+                                , mode
+                                , sigma
+                                )
         # fully reinitialize self (recompute adj, data, etc.)
         self.__init__(self.img
                       , output

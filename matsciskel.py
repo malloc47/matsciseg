@@ -61,15 +61,29 @@ def main(*args):
     proc_type = args[1]
     proc = args[2]
 
-    if(args[1] == "e"):
-        proc_type = 1
-    elif(args[1] == "i"):
-        proc_type = 0
-    elif(args[1] == "m"):
-        proc_type = 2
-    else:
+    fntype = {
+        'i' : 0,
+        'e' : 1,
+        'm' : 2,
+        's' : 3,
+        't' : 4,
+        }
+
+    try:
+        proc_type = fntype[args[1]]
+    except:
         print("Bad argument type")
         return 0
+
+    # if(args[1] == "e"):
+    #     proc_type = 1
+    # elif(args[1] == "i"):
+    #     proc_type = 0
+    # elif(args[1] == "m"):
+    #     proc_type = 2
+    # else:
+    #     print("Bad argument type")
+    #     return 0
 
     arg = {'gctype'    : proc_type,
            'im1'       : args[3],

@@ -5,6 +5,8 @@
 #define MODE_I 0
 #define MODE_E 1
 #define MODE_M 2
+#define MODE_S 3
+#define MODE_T 4
 
 static PyMethodDef gcocMethods[] = { 
   {"graph_cut", graph_cut, METH_VARARGS, "Graph Cut Optimization wrapper"},
@@ -36,10 +38,10 @@ int smoothFnCb(int s1, int s2, int l1, int l2, void *extraData) {
 	Py_DECREF(args);
 
 	if (result == NULL)
-	  return NULL;
+	  return 0;
 
 	if(!PyInt_Check(result))
-	  return NULL;
+	  return 0;
 
 	int result_value = (int)PyLong_AsLong(result);
 
@@ -90,6 +92,28 @@ int smoothFnM(int s1, int s2, int l1, int l2, void *extraData) {
 	return int( 1/(256-std::min(double(sites[s1]),double(sites[s2]))) * N );
 }
 
+int smoothFnS(int s1, int s2, int l1, int l2, void *extraData) {
+	ForSmoothFn *extra = (ForSmoothFn *) extraData;
+	double sigma = extra->sigma;
+	PyArrayObject *adj = extra->adj;
+	int *sites = extra->sites;
+	if(l1 == l2) { return 0; }
+	if(!(*((npy_int16*)PyArray_GETPTR2(adj,l1,l2)))) { return INF; };
+
+	return int( exp( -1 * ((pow(double(sites[s1]) - double(sites[s2]),2.0))/(2.0*pow(sigma,2.0)))  )  * N );
+}
+
+int smoothFnSE(int s1, int s2, int l1, int l2, void *extraData) {
+	ForSmoothFn *extra = (ForSmoothFn *) extraData;
+	double sigma = extra->sigma;
+	PyArrayObject *adj = extra->adj;
+	int *sites = extra->sites;
+	if(l1 == l2) { return 0; }
+	if(!(*((npy_int16*)PyArray_GETPTR2(adj,l1,l2)))) { return INF; };
+
+	return int( exp( -1 * ((pow(std::max(double(sites[s1]),double(sites[s2])),2.0))/(2.0*pow(sigma,2.0)))  )  * N );
+}
+
 void GridGraph_DArraySArray(int width,int height,int num_pixels,int num_labels);
 
 static PyObject *graph_cut(PyObject *self, PyObject *args) {
@@ -97,23 +121,26 @@ static PyObject *graph_cut(PyObject *self, PyObject *args) {
   PyObject *func = NULL;
   int num_labels;
   int mode = MODE_I;
+  double sigma = 10.0;
   int d[3];
   bool has_func = false;
   // rediculous amount of typechecking, as it makes for fewer
   // headaches later
-  if (!PyArg_ParseTuple(args, "O!O!O!O!i|iO:set_callback", 
+  if (!PyArg_ParseTuple(args, "O!O!O!O!i|idO:set_callback", 
 			&PyArray_Type, &data_p,
 			&PyArray_Type, &img_p, 
 			&PyArray_Type, &seedimg_p, 
 			&PyArray_Type, &adj_p, 
 			&num_labels,
 			&mode,
+			&sigma,
 			&func)) {
     PyErr_SetString(PyExc_ValueError, "Parameters not right");
     return NULL;
   }
 
   printf("mode %i\n",mode);
+  printf("sigma %f\n",sigma);
 
   // check that the objects were successfully assigned
   if (NULL == data_p    ||
@@ -238,19 +265,29 @@ static PyObject *graph_cut(PyObject *self, PyObject *args) {
   // set the smooth function pointer
   if(has_func) {
     gc->setSmoothCost(&smoothFnCb,&toFn);
-  	printf("custom function\n");
+    printf("custom function\n");
   }
   else if(mode==MODE_I) {
     gc->setSmoothCost(&smoothFnI,&toFn);
-  	printf("intensity function\n");
+    printf("intensity function\n");
   }
   else if(mode==MODE_E) {
     gc->setSmoothCost(&smoothFnE,&toFn);
-  	printf("edge function\n");
+    printf("edge function\n");
   }
   else if(mode==MODE_M) {
     gc->setSmoothCost(&smoothFnM,&toFn);
-  	printf("min function\n");
+    printf("min function\n");
+  }
+  else if(mode==MODE_S) {
+    toFn.sigma = sigma;
+    gc->setSmoothCost(&smoothFnS,&toFn);
+    printf("contrast-sensitive function\n");
+  }
+  else if(mode==MODE_T) {
+    toFn.sigma = sigma;
+    gc->setSmoothCost(&smoothFnSE,&toFn);
+    printf("max contrast-sensitive function\n");
   }
   else { 
     PyErr_SetString(PyExc_ValueError, "Invalid mode specified");

@@ -2,15 +2,17 @@
 #include "numpy/arrayobject.h"
 #include "GCoptimization.h"
 #include <algorithm>
+#include <math.h>
 
 #define INF 10000000
 #define N 255
 
 struct ForSmoothFn {
-	int num_labels;
-	PyArrayObject *adj;
-	PyObject *func;
-	int *sites;
+  int num_labels;
+  PyArrayObject *adj;
+  PyObject *func;
+  int *sites;
+  double sigma;
 };
 
 PyMODINIT_FUNC initgcot();
