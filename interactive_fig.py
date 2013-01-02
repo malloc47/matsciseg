@@ -16,6 +16,8 @@ def main(*args):
     plt.plot(range(1, len(proposed)+1), proposed, '-ro', label='Proposed')
     plt.plot(range(1, len(magic_scissors)+1), magic_scissors, '-go', label='Magic Scissors')
     plt.legend()
+    plt.xlabel('Slice')
+    plt.ylabel('Number of Clicks')
     plt.savefig('interactive_eval.pdf')
 
     def to_minutes(t):
@@ -30,6 +32,8 @@ def main(*args):
     plt.plot(range(1, len(proposed_time)+1), proposed_time, '-ro', label='Proposed')
     plt.plot(range(1, len(magic_scissors_time)+1), magic_scissors_time, '-go', label='Magic Scissors')
     plt.legend()
+    plt.xlabel('Slice')
+    plt.ylabel('Minutes')
     plt.savefig('interactive_eval_time.pdf')
 
 if __name__ == '__main__':
