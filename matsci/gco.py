@@ -47,6 +47,22 @@ def candidate_point(p,q,r):
     return (int(r*math.cos(theta))+p[0],
             int(r*math.sin(theta))+p[1])
 
+def estimate_size(c,labels):
+    max_size = 50
+    lower_size = 2
+    fg = labels ==labels[c[0],c[1]]
+    d = 1
+    while True :
+        circle = adj.circle((c[0],c[1],d),labels.shape)
+        if np.sum(circle) > np.sum(np.logical_and(circle,fg)) or d >= max_size :
+            break
+        d = d+1
+    if d > lower_size+1:
+        return d-lower_size
+    else:
+        return d if d > lower_size-1 else lower_size
+    
+
 class Slice(object):
     def __init__(self, img, labels, shifted={}, 
                  win=(0,0), mask=None, lightweight=False,
@@ -96,7 +112,7 @@ class Slice(object):
             (x0,y0,x1,y1) = label.fit_region(self.labels.create_mask([r]))
             new_volumes.append(self.remove_label(r,max(x1-x0,y1-y0)+5))
         for c in create:
-            new_volumes.append(self.add_label_circle(c))
+            new_volumes.append(self.add_label_circle_auto(c))
         for l in line:
             new_volumes.append(self.add_label_line(l))
         for v in new_volumes:
@@ -183,6 +199,25 @@ class Slice(object):
             p = (p[0]-v.win[0],p[1]-v.win[1],p[2],p[3])
         else:
             v = self
+        l = v.new_label_circle(p)
+        v.data.label_exclusive(l,v.labels.v==l)
+        # v.data.dilate_label(l,p[3])
+        # directly set data term instead of dilating--matches gui
+        v.data.regions[l] = adj.circle((p[0],p[1],p[2]+p[3]),v.labels.v.shape)
+        v.data.label_exclusive(0,v.labels.v==0)
+        v.adj.set_adj_label_all(l)
+        v.graph_cut(1)
+        return v
+
+    def add_label_circle_auto(self,p,crop=True):
+        if crop:
+            v = self.crop(list(self.adj.get_adj_radius(p,self.labels.v)))
+            p = (p[0]-v.win[0],p[1]-v.win[1],p[2],p[3])
+        else:
+            v = self
+        d = estimate_size(p,v.labels.v)
+        print('auto d : '+str(d))
+        p = (p[0],p[1],d,2*d)
         l = v.new_label_circle(p)
         v.data.label_exclusive(l,v.labels.v==l)
         # v.data.dilate_label(l,p[3])
