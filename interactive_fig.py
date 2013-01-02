@@ -25,8 +25,6 @@ def main(*args):
     proposed_time = map(to_minutes,[1655, 76, 215, 124, 186, 110, 155, 293, 141, 284, 259])
     magic_scissors_time = map(to_minutes,[1655, 1562, 1300, 1069, 1039, 1016, 1021, 1042, 1079, 950, 834])
 
-    print(str(proposed_time))
-
     plt.figure()
     plt.xlim(1,11)
     plt.plot(range(1, len(proposed_time)+1), proposed_time, '-ro', label='Proposed')
