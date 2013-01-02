@@ -11,10 +11,14 @@ def main(*args):
     proposed = [850, 9, 67, 29, 41, 27, 35, 45, 36, 73, 66]
     magic_scissors = [850, 890, 852, 786, 758, 767, 788, 818, 770, 726, 614]
     hybrid = [850, 183, 188, 153, 264, 231, 247, 258, 276, 308, 241]
+    auto = [850, 6, 9, 10, 12, 8, 9, 16, 16, 18, 24]
 
     plt.figure()
     plt.xlim(1,11)
+    plt.ylim(0,1000)
+    # plt.yscale('log')
     plt.plot(range(1, len(proposed)+1), proposed, '-ro', label='Proposed')
+    plt.plot(range(1, len(auto)+1), auto, '-mo', label='Proposed + Parameter Estimation')
     plt.plot(range(1, len(magic_scissors)+1), magic_scissors, '-go', label='Intelligent Scissors')
     plt.plot(range(1, len(hybrid)+1), hybrid, '-bo', label='Intelligent Scissors + Propagation')
     plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.13))
@@ -29,10 +33,12 @@ def main(*args):
     proposed_time = map(to_minutes,[1655, 76, 215, 124, 186, 110, 155, 293, 141, 284, 259])
     magic_scissors_time = map(to_minutes,[1655, 1562, 1300, 1069, 1039, 1016, 1021, 1042, 1079, 950, 834])
     hybrid_time = map(to_minutes,[1655, 252, 207, 180, 229, 266, 235, 239, 252, 298, 265])
+    auto_time = map(to_minutes, [1655, 44, 57, 50, 61, 44, 56, 71, 67, 72, 90])
 
     plt.figure()
     plt.xlim(1,11)
     plt.plot(range(1, len(proposed_time)+1), proposed_time, '-ro', label='Proposed')
+    plt.plot(range(1, len(auto_time)+1), auto_time, '-mo', label='Proposed + Parameter Estimation')
     plt.plot(range(1, len(magic_scissors_time)+1), magic_scissors_time, '-go', label='Intelligent Scissors')
     plt.plot(range(1, len(hybrid_time)+1), hybrid_time, '-bo', label='Intelligent Scissors + Propagation')
     plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.13))
