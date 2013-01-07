@@ -8,6 +8,7 @@ sys.path.insert(0,os.path.join(os.getcwd(),'.'))
 import matplotlib as mpl
 mpl.use('pdf')
 import matplotlib.pyplot as plt
+import re
 
 Score = namedtuple('Score', ['slice','f', 'p', 'r', 'd'])
 Dataset = namedtuple('Dataset', ['name', 'method', 'scores'])
@@ -15,7 +16,7 @@ Dataset = namedtuple('Dataset', ['name', 'method', 'scores'])
 def read_score(path,d=3):
     scores = np.genfromtxt(path,dtype='float',delimiter=',')[d-1]
     # scores = np.array([np.random.normal(loc=0.0,scale=1),0.8,0.95,5])
-    return Score(int(os.path.splitext(os.path.basename(path))[0])
+    return Score(int(os.path.splitext(re.sub('[^0-9]','',os.path.basename(path)))[0])
                      , scores[0]
                      , scores[1]
                      , scores[2]
