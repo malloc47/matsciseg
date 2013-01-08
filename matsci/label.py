@@ -127,6 +127,8 @@ def small_filter(labels,label_num):
 
 def region_clean(regions, boundary=None,bg=False):
     out = np.ones(regions.shape,dtype=regions.dtype)*-1
+    if bg:
+        out[regions==0] = 0
     for l in range(regions.max()+1) if not bg else range(1,regions.max()+1) :
         layer = (regions==l)
         if layer.any() :
