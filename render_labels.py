@@ -14,6 +14,13 @@ def label_to_bmp(labels):
     seg = np.maximum(abs(grad[0]),abs(grad[1]))
     return seg
 
+def read_grey_as_rgb(imgin):
+    im = scipy.misc.imread(imgin,flatten=True).astype('float32')
+    im = np.divide(im,im.max())
+    im = np.multiply(im,255).astype('uint8')
+    im = np.dstack((im,im,im))
+    return im
+
 def main(*args):
     if(len(args) < 4):
         return 1
@@ -22,10 +29,11 @@ def main(*args):
     imgin = args[1];
     output = args[3];
 
-    im = scipy.misc.imread(imgin,flatten=True).astype('float32')
-    im = np.divide(im,im.max())
-    im = np.multiply(im,255).astype('uint8')
-    im = np.dstack((im,im,im))
+    # im = scipy.misc.imread(imgin,flatten=True).astype('float32')
+    # im = np.divide(im,im.max())
+    # im = np.multiply(im,255).astype('uint8')
+    # im = np.dstack((im,im,im))
+    im = read_grey_as_rgb(imgin)
     labels = np.genfromtxt(label_path,dtype='int16')
     bmp = label_to_bmp(labels)
     if(len(args) > 4):
