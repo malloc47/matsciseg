@@ -112,7 +112,7 @@ class Slice(object):
             (x0,y0,x1,y1) = label.fit_region(self.labels.create_mask([r]))
             new_volumes.append(self.remove_label(r,max(x1-x0,y1-y0)+5))
         for c in create:
-            new_volumes.append(self.add_label_circle_auto(c))
+            new_volumes.append(self.add_label_circle(c))
         for l in line:
             new_volumes.append(self.add_label_line(l))
         for v in new_volumes:
