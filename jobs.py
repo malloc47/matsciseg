@@ -15,7 +15,7 @@ def main(*args):
 
     datasets = []
 
-    def seq1_cmd(exe,data_path,name,dilation,edge_type,seg_type,run,rn,i,j):
+    def seq1_cmd(exe,data_path,name,edge_type,seg_type,dilation,run,rn,i,j):
         if rn==i:
             return """mkdir -p {7}/{0}/{4}/{1:d}/
     ln -s ../../ground/{2:04d}.label {7}/{0}/{4}/{1:d}/{2:04d}.label
@@ -27,7 +27,7 @@ def main(*args):
     LD_LIBRARY_PATH=/home/malloc47/src/programs/OpenCV-2.0.0/build/lib /home/malloc47/src/projects/matsci/matscicut-debian/matscicut {7}/{0}/img/{3:04d}.png {7}/{0}/{4}/{1:d}/{3:04d}-old.label {7}/{0}/{4}/{1:d}/{3:04d}.label
     """.format(name,rn,i,j,run,dilation,exe,data_path,edge_type,seg_type)
 
-    seq1_global = functools.partial(seq1_cmd,exe,data_path,20,'t','global','seq1','cs-20')
+    seq1_global = functools.partial(seq1_cmd,exe,data_path,'seq1','t','global',20,'cs-20')
 
     datasets = [ (seq1_global, range(90,101), range(90,101), None) ]
 
