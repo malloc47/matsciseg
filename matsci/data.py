@@ -301,6 +301,7 @@ class Data(object):
         print("Computing log band area")
         area = map(lambda a : dilate(a,d), self.regions)
         print("Log fit")
+        # no stddev for bg
         likelihoods = map(f,[(0.0,0.0)] + compute_gaussian(self.regions[1:],im))
         likelihoods = map(
             partial(
@@ -309,118 +310,7 @@ class Data(object):
             , likelihoods)
         for i in range(len(likelihoods)) :
             likelihoods[i][np.logical_not(area[i])] = -1
-        # self.regions = [bool_to_int16(self.regions[0])] + likelihoods
         self.regions = likelihoods
-
-    def fit_log_less_old(self,im,d,d2):
-        """
-        compute and fit log liklihood on all pixels within a band radius
-        d/2 around a label, where the fit is within d2 std deviations
-        """
-        from functools import partial
-
-        import matplotlib.pyplot as plt
-        import matplotlib.cm as cm
-
-        def bool_show(img):
-            out = img.copy()
-            out[img==True] = 255
-            out[img==False] = 0
-            return out
-
-        def int_show(img):
-            out = img.copy()
-            out[out<0] = 255
-            return out
-
-        # plt.imshow(bool_show(self.regions[0]), cmap = cm.Greys_r)
-        # plt.show()
-
-        # (erosion,dilation)
-        print("Computing log band area")
-        # area = map(relative_complement,
-        #            zip(map(lambda img : dilate(img,d), self.regions[1:]),
-        #                map(lambda img : erode(img,d2), self.regions[1:])))
-
-        area = map(lambda img : dilate(img,d), self.regions)
-
-        # plt.imshow(bool_show(area[0]), cmap = cm.Greys_r)
-        # plt.show()
-
-        # area = map(relative_complement,
-        #            zip(map(lambda img : dilate(img,d), self.regions),
-        #                map(lambda img : erode(img,d2), self.regions)))
-
-        # for i in range(len(self.regions)):
-        #     self.regions[i][erode(self.regions[i],d2)] = True
-        #     self.regions[i][np.logical_not(dilate(self.regions[i],d))] = False
-
-        self.convert_to_int16()
-        # self.regions = [r.astype('float') for r in self.regions]
-
-        # plt.imshow(int_show(self.regions[0]), cmap = cm.Greys_r)
-        # plt.show()
-
-        print("Log fit")
-        # fit_log has four arguments, but we only want to map three
-        f = partial(fit_log,im)
-        # tmp = [self.regions[0].astype('float')] + \
-        #     [ f(*a) for a in zip(area
-        #                          , self.regions[1:]
-        #                          , compute_gaussian(self.regions[1:],im)) ]
-        # tmp = [ f(*a) for a in compute_gaussian(self.regions,im) ]
-        tmp = map(f,compute_gaussian(self.regions,im))
-        m = max(map(np.max,tmp))
-        for i in range(len(tmp)):
-            tmp[i] = ((tmp[i]/m)*255).astype('int16')
-            tmp[i][area[i]] = -1
-
-        self.regions = tmp
-
-        # print(str(tmp[2].dtype))
-        # m = max(map(np.max,tmp))
-        # # import pdb
-        # # pdb.set_trace()
-
-        # plt.imshow(tmp[0], cmap = cm.Greys_r)
-        # plt.show()
-
-        # for i in range(len(self.regions)):
-        #     mask = self.regions[i] >= 0
-        #     self.regions[i][mask] = ((tmp[i][mask]/m)*255).astype('int16')
-        # # self.regions = [((r/m)*1000).astype('int16') for r in tmp]
-        # print(str(self.regions[1].dtype))
-
-        plt.imshow(int_show(self.regions[0]), cmap = cm.Greys_r)
-        plt.show()
-
-        plt.imshow(int_show(self.regions[2]), cmap = cm.Greys_r)
-        plt.show()
-
-    def fit_log_old(self,im,d,d2):
-        """
-        compute and fit log liklihood on all pixels within a band radius
-        d/2 around a label, where the fit is within d2 std deviations
-        """
-        from functools import partial
-
-        tolerance = 2
-
-        # (erosion,dilation)
-        print("Computing log band area")
-        area = map(relative_complement,
-                   zip(map(lambda img : dilate(img,d), self.regions[1:]),
-                       map(lambda img : erode(img,d2), self.regions[1:])))
- 
-        self.convert_to_int16()
-
-        print("Log fit")
-        # fit_log has four arguments, but we only want to map three
-        f = partial(fit_log,im)
-        self.regions = [self.regions[0]] + \
-            map(f, zip(area
-                       , self.regions[1:]
-                       , compute_gaussian(self.regions[1:],im)))
 
     def fit_gaussian(self,im,d,d2,d3):
         """
