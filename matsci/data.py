@@ -244,12 +244,28 @@ def fast_fit_gaussian(v,g,d):
     mean g0"""
     return np.logical_and(v>g[0]-g[1],v<g[0]+g[1])
 
-def fit_log(im,a,r,g):
+# def fit_log(im,a,r,g):
+#     """get negative log liklihood from a gaussian mean"""
+#     out = r.copy()
+#     out[a] = np.log(np.absolute( 255-(im[a] - g[0]) ))
+#     out[np.isinf(out)] = -1
+#     return out
+
+def fit_log(im,t,g):
     """get negative log liklihood from a gaussian mean"""
-    out = r.copy()
-    out[a] = np.log(np.absolute( 255-(im[a] - g[0]) ))
-    out[np.isinf(out)] = -1
-    return out
+    diff = np.clip(np.absolute(im.astype('float') - float(g[0])) - t*g[1],0,255)
+    return (-1.0*np.log( 1.0-diff/256.0 )).astype('float')
+    # out = r.copy().astype('float')
+    # # out[a] = np.log(np.absolute( 255-(im[a] - g[0]) ))
+    # out[a] = -1.0*np.log( 1.0-np.absolute(im[a].astype('float') - float(g[0]))/256.0 )
+    # # out[np.isinf(out)] = -1
+    # return out
+
+def bool_to_int16(b):
+    output = np.zeros(b.shape,dtype='int16')
+    output[b==0] = -1
+    output[b>0] = 0
+    return output
 
 class Data(object):
     def __init__(self,labels=None):
@@ -257,15 +273,9 @@ class Data(object):
             self.regions = layer_list(labels)
 
     def convert_to_int16(self):
-        def bool_to_int16(b):
-            output = np.zeros(b.shape,dtype='int16')
-            output[b==0] = -1
-            output[b>0] = 0
-            return output
         self.regions = map(bool_to_int16 
                            , self.regions)
         
-
     def skel(self,d=None,erode_size=1):
         """run skeletonization and integrate to data term"""
         # allow another data term to be passed in
@@ -284,7 +294,110 @@ class Data(object):
                     # remove skeletonization from all other terms
                     self.regions[k] = relative_complement((self.regions[k],s))
 
-    def fit_log(self,im,d,d2):
+    def fit_log(self,im,d,t):
+        from functools import partial
+        convert_to_int = lambda d,a: ((a/d)*255).astype('int16')
+        f = partial(fit_log,im,t)
+        print("Computing log band area")
+        area = map(lambda a : dilate(a,d), self.regions)
+        print("Log fit")
+        likelihoods = map(f,[(0.0,0.0)] + compute_gaussian(self.regions[1:],im))
+        likelihoods = map(
+            partial(
+                convert_to_int
+                , max(map(np.max,likelihoods)))
+            , likelihoods)
+        for i in range(len(likelihoods)) :
+            likelihoods[i][np.logical_not(area[i])] = -1
+        # self.regions = [bool_to_int16(self.regions[0])] + likelihoods
+        self.regions = likelihoods
+
+    def fit_log_less_old(self,im,d,d2):
+        """
+        compute and fit log liklihood on all pixels within a band radius
+        d/2 around a label, where the fit is within d2 std deviations
+        """
+        from functools import partial
+
+        import matplotlib.pyplot as plt
+        import matplotlib.cm as cm
+
+        def bool_show(img):
+            out = img.copy()
+            out[img==True] = 255
+            out[img==False] = 0
+            return out
+
+        def int_show(img):
+            out = img.copy()
+            out[out<0] = 255
+            return out
+
+        # plt.imshow(bool_show(self.regions[0]), cmap = cm.Greys_r)
+        # plt.show()
+
+        # (erosion,dilation)
+        print("Computing log band area")
+        # area = map(relative_complement,
+        #            zip(map(lambda img : dilate(img,d), self.regions[1:]),
+        #                map(lambda img : erode(img,d2), self.regions[1:])))
+
+        area = map(lambda img : dilate(img,d), self.regions)
+
+        # plt.imshow(bool_show(area[0]), cmap = cm.Greys_r)
+        # plt.show()
+
+        # area = map(relative_complement,
+        #            zip(map(lambda img : dilate(img,d), self.regions),
+        #                map(lambda img : erode(img,d2), self.regions)))
+
+        # for i in range(len(self.regions)):
+        #     self.regions[i][erode(self.regions[i],d2)] = True
+        #     self.regions[i][np.logical_not(dilate(self.regions[i],d))] = False
+
+        self.convert_to_int16()
+        # self.regions = [r.astype('float') for r in self.regions]
+
+        # plt.imshow(int_show(self.regions[0]), cmap = cm.Greys_r)
+        # plt.show()
+
+        print("Log fit")
+        # fit_log has four arguments, but we only want to map three
+        f = partial(fit_log,im)
+        # tmp = [self.regions[0].astype('float')] + \
+        #     [ f(*a) for a in zip(area
+        #                          , self.regions[1:]
+        #                          , compute_gaussian(self.regions[1:],im)) ]
+        # tmp = [ f(*a) for a in compute_gaussian(self.regions,im) ]
+        tmp = map(f,compute_gaussian(self.regions,im))
+        m = max(map(np.max,tmp))
+        for i in range(len(tmp)):
+            tmp[i] = ((tmp[i]/m)*255).astype('int16')
+            tmp[i][area[i]] = -1
+
+        self.regions = tmp
+
+        # print(str(tmp[2].dtype))
+        # m = max(map(np.max,tmp))
+        # # import pdb
+        # # pdb.set_trace()
+
+        # plt.imshow(tmp[0], cmap = cm.Greys_r)
+        # plt.show()
+
+        # for i in range(len(self.regions)):
+        #     mask = self.regions[i] >= 0
+        #     self.regions[i][mask] = ((tmp[i][mask]/m)*255).astype('int16')
+        # # self.regions = [((r/m)*1000).astype('int16') for r in tmp]
+        # print(str(self.regions[1].dtype))
+
+        plt.imshow(int_show(self.regions[0]), cmap = cm.Greys_r)
+        plt.show()
+
+        plt.imshow(int_show(self.regions[2]), cmap = cm.Greys_r)
+        plt.show()
+
+    def fit_log_old(self,im,d,d2):
         """
         compute and fit log liklihood on all pixels within a band radius
         d/2 around a label, where the fit is within d2 std deviations
@@ -297,7 +410,7 @@ class Data(object):
         print("Computing log band area")
         area = map(relative_complement,
                    zip(map(lambda img : dilate(img,d), self.regions[1:]),
-                       map(lambda img : dilate(img,d2), self.regions[1:])))
+                       map(lambda img : erode(img,d2), self.regions[1:])))
  
         self.convert_to_int16()
 

@@ -74,7 +74,7 @@ def skel_cmd(arg,im,im_gray,im_prev,seed):
 def log_cmd(arg,im,im_gray,im_prev,seed):
     v = matsci.gco.Slice(im_gray,seed)
     print("Initialized")
-    # v.dilate_first(arg['d']/10)
+    v.data.dilate_first(int(arg['d3']))
     v.data.fit_log(v.img,arg['d'],arg['d2'])
     return v.graph_cut(arg['gctype'])
 

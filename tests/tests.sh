@@ -13,3 +13,4 @@ export PYTHONPATH=./gco:/home/malloc47/usr/local/lib/python2.7/site-packages:/us
 # ./matsciskel.py i global seq5/img/image0118.png seq5/labels/image0118c.label seq5/img/image0119.png seq5/labels/image0119c.label seq5/output/image0119c.png 40
 # ./matsciskel.py i global seq5/img/image0119.png seq5/labels/image0119c.label seq5/img/image0120.png seq5/labels/image0120c.label seq5/output/image0120c.png 40
 #./matsciskel.py i gauss seq12/img/image0769.png seq5/ground/image0769.label seq12/img/image0770.png test3.label test3.png 50 5 2
+./matsciskel.py i log seq12/img/image0769.png seq12/ground/image0769.label seq12/img/image0770.png test4.label test4.png 30 2 5
