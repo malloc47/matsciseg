@@ -20,12 +20,16 @@ def main(*args):
         if rn==i:
             return """mkdir -p {7}/{0}/{4}/{1:d}/
     ln -s ../../ground/{10}{2:04d}.label {7}/{0}/{4}/{1:d}/{10}{2:04d}.label
+    if [ ! -f {7}/{0}/{4}/{1:d}/{10}{3:04d}.label ]; then
     {6} {8} {9} {7}/{0}/img/{10}{2:04d}.png {7}/{0}/ground/{10}{2:04d}.label {7}/{0}/img/{10}{3:04d}.png {7}/{0}/{4}/{1:d}/{10}{3:04d}-old.label {7}/{0}/{4}/{1:d}/{10}{3:04d}.png {5}
     LD_LIBRARY_PATH=/home/malloc47/src/programs/OpenCV-2.0.0/build/lib /home/malloc47/src/projects/matsci/matscicut-debian/matscicut {7}/{0}/img/{10}{3:04d}.png {7}/{0}/{4}/{1:d}/{10}{3:04d}-old.label {7}/{0}/{4}/{1:d}/{10}{3:04d}.label
+    fi
     """.format(name,rn,i,j,run,dilation,exe,data_path,edge_type,seg_type,fprefix)
         else:
-            return """{6} {8} {9} {7}/{0}/img/{10}{2:04d}.png {7}/{0}/{4}/{1:d}/{10}{2:04d}.label {7}/{0}/img/{10}{3:04d}.png {7}/{0}/{4}/{1:d}/{10}{3:04d}-old.label {7}/{0}/{4}/{1:d}/{10}{3:04d}.png {5}
+            return """if [ ! -f {7}/{0}/{4}/{1:d}/{10}{3:04d}.label ]; then
+{6} {8} {9} {7}/{0}/img/{10}{2:04d}.png {7}/{0}/{4}/{1:d}/{10}{2:04d}.label {7}/{0}/img/{10}{3:04d}.png {7}/{0}/{4}/{1:d}/{10}{3:04d}-old.label {7}/{0}/{4}/{1:d}/{10}{3:04d}.png {5}
     LD_LIBRARY_PATH=/home/malloc47/src/programs/OpenCV-2.0.0/build/lib /home/malloc47/src/projects/matsci/matscicut-debian/matscicut {7}/{0}/img/{10}{3:04d}.png {7}/{0}/{4}/{1:d}/{10}{3:04d}-old.label {7}/{0}/{4}/{1:d}/{10}{3:04d}.label
+    fi
     """.format(name,rn,i,j,run,dilation,exe,data_path,edge_type,seg_type,fprefix)
 
     def seq12_cmd(exe,data_path,name,edge_type,seg_type,d1,d2,d3,fprefix,run,rn,i,j):
@@ -52,7 +56,7 @@ ln -s ../../ground/image{2:04d}.label {7}/{0}/{4}/{1:d}/image{2:04d}.label
     seq1_auto = functools.partial(seq1_cmd,exe,data_path,'seq1','e','auto',20,'image','auto-20')
     seq12_global = functools.partial(seq12_cmd,exe,data_path,'seq12','i','log',30,2,5,'image','log-30')
     seq12_cs = functools.partial(seq12_cmd,exe,data_path,'seq12','s','log',30,2,5,'image','cs-log-30')
-    seq3_watershed = functools.partial(watershed_seq_cmd,5,20,wsi_exe,data_path,'seq3','watershed-fixed')
+    seq3_watershed = functools.partial(watershed_seq_cmd,2,30,wsi_exe,data_path,'seq3','watershed-fixed')
 
     datasets += [ (seq1_global, range(90,101), range(90,101), None, 'seq1') ]
     datasets += [ (seq1_auto, range(90,101), range(90,101), None, 'seq1-auto') ]
