@@ -11,6 +11,7 @@ def main(*args):
 
     exe       = '/home/malloc47/src/projects/matsci/matsciskel/matsciskel.py'
     ws_exe    = '/home/malloc47/src/projects/matsci/matsciskel/watershed.py'
+    wsi_exe    = '/home/malloc47/src/projects/matsci/matsciskel/watershed_intensity.py'
     data_path = '/home/malloc47/src/projects/matsci/matsciskel'
 
     datasets = []
@@ -37,11 +38,27 @@ def main(*args):
             return """{6} {8} {9} {7}/{0}/img/{10}{2:04d}.png {7}/{0}/{4}/{1:d}/{10}{2:04d}.label {7}/{0}/img/{10}{3:04d}.png {7}/{0}/{4}/{1:d}/{10}{3:04d}.label {7}/{0}/{4}/{1:d}/{10}{3:04d}.png {5} {11} {12}
     """.format(name,rn,i,j,run,d1,exe,data_path,edge_type,seg_type,fprefix,d2,d3)
 
+    def watershed_seq_cmd(dilation,suppression,ws_exe,data_path,name,run,rn,i,j):
+        if rn==i:
+            return """mkdir -p {7}/{0}/{4}/{1:d}/
+ln -s ../../ground/image{2:04d}.label {7}/{0}/{4}/{1:d}/image{2:04d}.label
+{6} {7}/{0}/img/image{3:04d}.png {7}/{0}/ground/image{2:04d}.label {7}/{0}/{4}/{1:d}/image{3:04d}.label {8} {5}
+    """.format(name,rn,i,j,run,dilation,ws_exe,data_path,suppression)
+        else:
+            return """{6} {7}/{0}/img/image{3:04d}.png {7}/{0}/{4}/{1:d}/image{2:04d}.label {7}/{0}/{4}/{1:d}/image{3:04d}.label {8} {5}
+    """.format(name,rn,i,j,run,dilation,ws_exe,data_path,suppression)
+
     seq1_global = functools.partial(seq1_cmd,exe,data_path,'seq1','t','global',20,'image','cs-20')
-    seq12_global = functools.partial(seq12_cmd,exe,data_path,'seq12','t','log',30,2,5,'image','log-30')
+    seq1_auto = functools.partial(seq1_cmd,exe,data_path,'seq1','e','auto',20,'image','auto-20')
+    seq12_global = functools.partial(seq12_cmd,exe,data_path,'seq12','i','log',30,2,5,'image','log-30')
+    seq12_cs = functools.partial(seq12_cmd,exe,data_path,'seq12','s','log',30,2,5,'image','cs-log-30')
+    seq3_watershed = functools.partial(watershed_seq_cmd,5,20,wsi_exe,data_path,'seq3','watershed-fixed')
 
     datasets += [ (seq1_global, range(90,101), range(90,101), None, 'seq1') ]
+    datasets += [ (seq1_auto, range(90,101), range(90,101), None, 'seq1-auto') ]
     datasets += [ (seq12_global, range(769,781), range(769,781), None, 'seq12') ]
+    datasets += [ (seq12_cs, range(769,781), range(769,781), None, 'seq12-s') ]
+    datasets += [ (seq3_watershed, range(40,51), range(40,51), None, 'seq3-w') ]
 
     for cmd, slices, gt, rng, name in datasets:
 

@@ -89,8 +89,20 @@ def watershed(im,labels,d=0,suppression=3):
     im = pymorph.hmin(im,suppression)
     return ndimage.watershed_ift(im, labels)
 
-def watershed_fixed(im,labels,d=0,suppression=3):
+def watershed_fixed(im,labels,d=0,suppression=3,intensity=False):
     import pymorph
+
+    def grad_mag(img):
+        x,y = np.gradient(img.astype('float'))
+        return np.clip(
+            np.round( 
+                np.sqrt(
+                    np.square(x)+np.square(y)) 
+                )
+            , 0
+            , 255
+            ).astype('uint8')
+
     if d > 0:
         new_labels = np.zeros_like(labels)
         for l in range(1,labels.max()+1):
@@ -100,7 +112,7 @@ def watershed_fixed(im,labels,d=0,suppression=3):
         labels=new_labels
 
     # scipy.misc.imsave("dilate_test.png", labels_to_edges(labels))
-    im = pymorph.hmin(im,suppression)
+    im = pymorph.hmin(im if not intensity else grad_mag(im),suppression)
     return ndimage.watershed_ift(im, labels)
 
 def skel(img):
