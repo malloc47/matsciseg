@@ -27,18 +27,30 @@ def main(*args):
     LD_LIBRARY_PATH=/home/malloc47/src/programs/OpenCV-2.0.0/build/lib /home/malloc47/src/projects/matsci/matscicut-debian/matscicut {7}/{0}/img/{10}{3:04d}.png {7}/{0}/{4}/{1:d}/{10}{3:04d}-old.label {7}/{0}/{4}/{1:d}/{10}{3:04d}.label
     """.format(name,rn,i,j,run,dilation,exe,data_path,edge_type,seg_type,fprefix)
 
+    def seq12_cmd(exe,data_path,name,edge_type,seg_type,d1,d2,d3,fprefix,run,rn,i,j):
+        if rn==i:
+            return """mkdir -p {7}/{0}/{4}/{1:d}/
+    ln -s ../../ground/{10}{2:04d}.label {7}/{0}/{4}/{1:d}/{10}{2:04d}.label
+    {6} {8} {9} {7}/{0}/img/{10}{2:04d}.png {7}/{0}/ground/{10}{2:04d}.label {7}/{0}/img/{10}{3:04d}.png {7}/{0}/{4}/{1:d}/{10}{3:04d}.label {7}/{0}/{4}/{1:d}/{10}{3:04d}.png {5} {11} {12}
+    """.format(name,rn,i,j,run,d1,exe,data_path,edge_type,seg_type,fprefix,d2,d3)
+        else:
+            return """{6} {8} {9} {7}/{0}/img/{10}{2:04d}.png {7}/{0}/{4}/{1:d}/{10}{2:04d}.label {7}/{0}/img/{10}{3:04d}.png {7}/{0}/{4}/{1:d}/{10}{3:04d}.label {7}/{0}/{4}/{1:d}/{10}{3:04d}.png {5} {11} {12}
+    """.format(name,rn,i,j,run,d1,exe,data_path,edge_type,seg_type,fprefix,d2,d3)
+
     seq1_global = functools.partial(seq1_cmd,exe,data_path,'seq1','t','global',20,'image','cs-20')
+    seq12_global = functools.partial(seq12_cmd,exe,data_path,'seq12','t','log',30,2,5,'image','log-30')
 
-    datasets = [ (seq1_global, range(90,101), range(90,101), None) ]
+    datasets += [ (seq1_global, range(90,101), range(90,101), None, 'seq1') ]
+    datasets += [ (seq12_global, range(769,781), range(769,781), None, 'seq12') ]
 
-    for cmd, slices, gt, rng in datasets:
+    for cmd, slices, gt, rng, name in datasets:
 
-        with open(prefix+'jobs', 'wb') as f:
+        with open(prefix+name+'-jobs', 'wb') as f:
             f.write('#!/bin/bash\n')
             for g in gt:
                 for postfix in ['f','b']:
                     file_name = os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                                             prefix+str(g)+'-'+postfix+'.sh')
+                                             prefix+name+'-'+str(g)+'-'+postfix+'.sh')
                     f.write(file_name+'\n')
 
         for g in gt:
@@ -48,8 +60,8 @@ def main(*args):
             else:
                 forward =  [ e for e in slices if e>=g]
                 backward = list(reversed([ e for e in slices if e<=g ]))
-            forward_file = prefix+str(g)+'-f.sh'
-            backward_file = prefix+str(g)+'-b.sh'
+            forward_file = prefix+name+'-'+str(g)+'-f.sh'
+            backward_file = prefix+name+'-'+str(g)+'-b.sh'
             with open(forward_file, 'wb') as f:
                 f.write('#!/bin/bash\n')
                 for i, j in zip(forward[:-1], forward[1:]):
