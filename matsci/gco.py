@@ -443,7 +443,7 @@ class Slice(object):
 
         output = gcoc.graph_cut(self.data.matrix()
                                 , self.img
-                                , np.array(self.labels.v).astype('int16')
+                                , np.array(self.labels.v)#.astype('int16')
                                 # , self.labels.v,
                                 , self.adj.v
                                 , self.labels.max()+1 # todo: extract from data
