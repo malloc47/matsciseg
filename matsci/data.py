@@ -386,11 +386,12 @@ class Data(object):
         def pre(im):
             return ndimage.morphology.morphological_gradient(im,size=(3,3))
         def clamp(dist):
-            return int(max(min(dist,max_d),min_d))
+            # hack: add fixed amount to push it past the border
+            return int(max(min(dist,max_d),min_d))+5 
         def find_max_dist(im1,im2):
             dist = ndimage.morphology.distance_transform_edt(np.logical_not(im1))
             return dist[im2].max()
-        edges = labels_to_edges(watershed(im.copy(),labels.copy(),w_d,w_s))
+        edges = labels_to_edges(watershed_fixed(im.copy(),labels.v.copy(),w_d,w_s))
         # for img in self.regions:
         #     print(clamp(find_max_dist(edges,pre(img))))
         self.regions = map(lambda img :
