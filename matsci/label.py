@@ -194,6 +194,20 @@ class Label(object):
     def region_boundary_intensity(self,img,l,t):
         return region_boundary_intensity(self.v,img,l,t)
 
+    def clean(self):
+        self.v = region_clean(region_shift(self.v
+                                           , region_transform(self.v)))
+
+    def split_label(self,l):
+        label = (self.v == l)
+        labels,num = ndimage.label(label > 0)
+        if num < 1:
+            return
+        for idx,new_label in zip(
+            range(1,num+1),
+            range(l,l+num)):
+            self.v[labels==idx] = new_label
+
     def edge_list():
         return edge_list(self.v)
 

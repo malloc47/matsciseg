@@ -97,8 +97,8 @@ class Adj(object):
     def set_adj_new(self,adj=[]):
         """ add new row and column to self.v for new label"""
         self.v = np.hstack((np.vstack((self.v,
-                                         np.zeros((1,self.v.shape[1])))),
-                              np.zeros((self.v.shape[0]+1,1))))
+                                         np.zeros((1,self.v.shape[1]),dtype='bool'))),
+                              np.zeros((self.v.shape[0]+1,1),dtype='bool')))
         self.v[-1,-1] = True
         for a in adj:
             self.v[-1,a] = True

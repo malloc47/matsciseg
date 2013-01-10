@@ -279,6 +279,12 @@ def bool_to_int16(b):
     output[b>0] = 0
     return output
 
+def bool_to_uint8(b):
+    output = np.zeros(b.shape,dtype='uint8')
+    output[b==0] = 0
+    output[b>0] = 255
+    return output
+
 class Data(object):
     def __init__(self,labels=None):
         if not labels is None:
@@ -421,7 +427,7 @@ class Data(object):
             # scipy.misc.imsave("seq5/output/data"+str(i)+".png",output)
             scipy.misc.imsave("d"+str(i)+".png",output)
 
-    def output_data_term(self):
+    def output_data_term(self,fname='data.png'):
         output = np.zeros(self.regions[0].shape,dtype='uint8')
         def alpha_composite(a,b,alpha=0.5):
             return np.add(np.multiply(a,alpha).astype('uint8'),
@@ -434,8 +440,11 @@ class Data(object):
             s[s==True] = 255
             output = combine(output,s)
             # scipy.misc.imsave("seq5/output/data"+str(i)+".png",output)
-        scipy.misc.imsave("data.png",output)
+        scipy.misc.imsave(fname,output)
         return output
+
+    def add_dummy_label(self):
+        self.regions += [np.ones_like(self.regions[-1])]
 
     def label_erase(self,l):
         self.regions[l] = np.zeros_like(self.regions[l])
@@ -468,6 +477,9 @@ class Data(object):
 
     def matrix(self):
         return stack_matrix(self.regions)
+    
+    def length(self):
+        return(len(self.regions))
 
     def copy(self):
         from copy import deepcopy

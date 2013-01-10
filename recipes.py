@@ -35,6 +35,24 @@ def matrix_unfixed_cmd(arg,im,im_gray,im_prev,seed):
     print("Graph Cut Complete")
     return v.labels.v
 
+def non_homomorphic_cmd(arg,im,im_gray,im_prev,seed):
+    v = matsci.gco.Slice(im_gray,seed,bg=True,lightweight=True)
+    print("Initialized")
+    l = v.new_dummy_label()
+    v.data.dilate_all(arg['d'])
+    v.data.output_data_term()
+    print("Dilated")
+    v.graph_cut(arg['gctype'],lite=True)
+    print("Graph Cut Complete")
+    import scipy
+    scipy.misc.imsave("d.png",matsci.data.bool_to_uint8(v.labels.v==l))
+    # import pdb
+    # pdb.set_trace()
+    if not np.any(v.labels.v==l):
+        print('ERROR: no new label')
+    v.labels.split_label(l)
+    v.labels.clean()
+    return v.labels.v
 
 def auto_cmd(arg,im,im_gray,im_prev,seed):
     v = matsci.gco.Slice(im_gray,seed)

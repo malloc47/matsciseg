@@ -256,6 +256,14 @@ class Slice(object):
         self.adj = adj.Adj(self.labels)
         return new_label
 
+    def new_dummy_label(self):
+        new_label = self.labels.max()+1
+        self.data.add_dummy_label()
+        self.adj.set_adj_new()
+        self.adj.set_adj_all()
+        # self.adj.set_adj_label_all(new_label)
+        return new_label
+
     def non_homeomorphic_remove(self,d,size):
         s = self.labels.sizes()
         # print(str([l for l in s if l < size]))
@@ -437,6 +445,11 @@ class Slice(object):
         # print("min: " + str(self.labels.v.min()))
         # print("max: " + str(self.labels.v.max()))
 
+        # print(str(self.data.matrix().shape))
+        # print(str(self.img.shape))
+        # print(str(np.array(self.labels.v).shape))
+        # print(str(self.adj.v.shape))
+
         sigma = 10
         if mode > 2:
             sigma = np.std(self.img)
@@ -446,7 +459,8 @@ class Slice(object):
                                 , np.array(self.labels.v)#.astype('int16')
                                 # , self.labels.v,
                                 , self.adj.v
-                                , self.labels.max()+1 # todo: extract from data
+                                # , self.labels.max()+1 # todo: extract from data
+                                , self.data.length()
                                 , mode
                                 , sigma
                                 )
