@@ -42,6 +42,16 @@ def main(*args):
             return """{6} {8} {9} {7}/{0}/img/{10}{2:04d}.png {7}/{0}/{4}/{1:d}/{10}{2:04d}.label {7}/{0}/img/{10}{3:04d}.png {7}/{0}/{4}/{1:d}/{10}{3:04d}.label {7}/{0}/{4}/{1:d}/{10}{3:04d}.png {5} {11} {12}
     """.format(name,rn,i,j,run,d1,exe,data_path,edge_type,seg_type,fprefix,d2,d3)
 
+    def seq1_2_cmd(exe,data_path,name,edge_type,seg_type,d1,d2,fprefix,run,rn,i,j):
+        if rn==i:
+            return """mkdir -p {7}/{0}/{4}/{1:d}/
+    ln -s ../../ground/{10}{2:04d}.label {7}/{0}/{4}/{1:d}/{10}{2:04d}.label
+    {6} {8} {9} {7}/{0}/img/{10}{2:04d}.png {7}/{0}/ground/{10}{2:04d}.label {7}/{0}/img/{10}{3:04d}.png {7}/{0}/{4}/{1:d}/{10}{3:04d}.label {7}/{0}/{4}/{1:d}/{10}{3:04d}.png {5} {11}
+    """.format(name,rn,i,j,run,d1,exe,data_path,edge_type,seg_type,fprefix,d2)
+        else:
+            return """{6} {8} {9} {7}/{0}/img/{10}{2:04d}.png {7}/{0}/{4}/{1:d}/{10}{2:04d}.label {7}/{0}/img/{10}{3:04d}.png {7}/{0}/{4}/{1:d}/{10}{3:04d}.label {7}/{0}/{4}/{1:d}/{10}{3:04d}.png {5} {11}
+    """.format(name,rn,i,j,run,d1,exe,data_path,edge_type,seg_type,fprefix,d2)
+
     def watershed_seq_cmd(dilation,suppression,ws_exe,data_path,name,run,rn,i,j):
         if rn==i:
             return """mkdir -p {7}/{0}/{4}/{1:d}/
@@ -53,12 +63,13 @@ ln -s ../../ground/image{2:04d}.label {7}/{0}/{4}/{1:d}/image{2:04d}.label
     """.format(name,rn,i,j,run,dilation,ws_exe,data_path,suppression)
 
     seq1_global = functools.partial(seq1_cmd,exe,data_path,'seq1','t','global',20,'image','cs-20')
+    seq1_dummy = functools.partial(seq1_2_cmd,exe,data_path,'seq1','e','global',20,12,'image','dummy')
     seq1_auto = functools.partial(seq1_cmd,exe,data_path,'seq1','e','auto',20,'image','auto-20')
     seq12_global = functools.partial(seq12_cmd,exe,data_path,'seq12','i','log',30,2,5,'image','log-30')
     seq12_cs = functools.partial(seq12_cmd,exe,data_path,'seq12','s','log',30,2,5,'image','cs-log-30')
     seq3_watershed = functools.partial(watershed_seq_cmd,2,30,wsi_exe,data_path,'seq3','watershed-fixed')
-
     datasets += [ (seq1_global, range(90,101), range(90,101), None, 'seq1') ]
+    datasets += [ (seq1_dummy, range(90,101), range(90,101), None, 'seq1-dummy') ]
     datasets += [ (seq1_auto, range(90,101), range(90,101), None, 'seq1-auto') ]
     datasets += [ (seq12_global, range(769,781), range(769,781), None, 'seq12') ]
     datasets += [ (seq12_cs, range(769,781), range(769,781), None, 'seq12-s') ]
