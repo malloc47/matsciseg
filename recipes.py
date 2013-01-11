@@ -35,19 +35,26 @@ def matrix_unfixed_cmd(arg,im,im_gray,im_prev,seed):
     print("Graph Cut Complete")
     return v.labels.v
 
-def non_homomorphic_cmd(arg,im,im_gray,im_prev,seed):
+def dummy_cmd(arg,im,im_gray,im_prev,seed):
+    import functools
     v = matsci.gco.Slice(im_gray,seed,bg=True,lightweight=True)
     print("Initialized")
     l = v.new_dummy_label()
     v.data.dilate_all(arg['d'])
-    v.data.output_data_term()
+    v.data.regions[-1] = matsci.data.dilate(matsci.data.labels_to_edges(v.labels.v),arg['d2'])
+    v.data.convert_to_int16()
+    def boost_val(n,m):
+        m[m==0] = n
+        return m
+    v.data.regions = map(functools.partial(boost_val,1)
+                         ,v.data.regions[:-1]) \
+        + [boost_val(0,v.data.regions[-1])]
+    # v.data.output_data_term()
     print("Dilated")
     v.graph_cut(arg['gctype'],lite=True)
     print("Graph Cut Complete")
-    import scipy
-    scipy.misc.imsave("d.png",matsci.data.bool_to_uint8(v.labels.v==l))
-    # import pdb
-    # pdb.set_trace()
+    # import scipy
+    # scipy.misc.imsave("d.png",matsci.data.bool_to_uint8(v.labels.v==l))
     if not np.any(v.labels.v==l):
         print('ERROR: no new label')
     v.labels.split_label(l)
