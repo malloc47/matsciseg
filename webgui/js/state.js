@@ -75,7 +75,25 @@ var state = (function ($,log,workcanvas,tools) {
 	log.init($('.output'),$('.overflow-wrap'));
 	tools.init();
 	sliceSelector.init($('.bottombar ul'));
-	$('.workingarea').dragscrollable(); 
+	$('.workingarea').dragscrollable();
+
+	$.getJSON("/datasets/",function(data) {
+	    parent = $('#datasets');
+	    data.forEach(function (e) {
+		parent.append('<button type="button" class="dataset button" id="'+e[0]+'">'+e[1]+'</button>')
+		// $(e[0]).button({icons: {primary: "ui-icon-document"}});
+	    });
+	    $('.dataset').button({icons: {primary: "ui-icon-document"}})
+		.click(function() {
+		    var dataset = $(this).attr('id');
+		    log.append("changing to "+dataset);
+		    $("#accordion").accordion("activate", 0);
+		    workcanvas.loading();
+		    state['command'] = 'dataset';
+		    state['dataset'] = dataset;
+		    syncstate();
+		});
+	});
 
 	sliderCallback = (function( event, ui ) {
 	    var name = $(this).attr('id');

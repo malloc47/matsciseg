@@ -66,6 +66,32 @@ def img_full_edge(request,imgnum):
     else:
         return HttpResponseBadRequest()
 
+def datasets(request):
+    if not request.is_ajax():
+        return HttpResponseBadRequest()
+
+    if request.method == 'GET':
+        labels = {
+            't1.pkl'  : 'Ti-26 All', 
+            'ti2.pkl' : 'Ti-26 2', 
+            'ti4.pkl' : 'Ti-26 4', 
+            'c1a.pkl' : 'C1 Full', 
+            'c1b.pkl' : 'C1 Half', 
+            'c2a.pkl' : 'C2', 
+            'c3.pkl'  : 'C3'
+            }
+
+        import glob
+        import os
+
+        files = glob.glob('*.pkl')
+        d = [ [ os.path.splitext(f)[0], labels[f] ] for f in files if f in labels ]
+
+        return HttpResponse(json.dumps(d),
+                            content_type='application/javascript; charset=utf8')
+    return HttpResponseBadRequest()
+
+
 def cmd(request):
     if not request.is_ajax():
         return HttpResponseBadRequest()
@@ -116,6 +142,7 @@ def handle_global(params):
     v = slices[current_img];
     slices[current_img] = matsci.gco.Slice(v.img,v.labels.v)
     slices[current_img].data.dilate_all(int(params['dilation']))
+    # slices[current_img].data.output_data_term()
     slices[current_img].graph_cut(1)
     return 'global graph cut successful'
 
