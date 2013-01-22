@@ -343,6 +343,17 @@ var state = (function ($,log,workcanvas,tools) {
 				 workcanvas.redraw();
 			     }
 			 });
+
+	$(window).resize(function() {
+	    var new_height = ($(window).height())-180;
+	    $('.workingarea').css(
+		{'height': new_height+'px'});
+	    // $('.navbar').css(
+	    // 	{'height': new_height+'px'});
+	    // $('.rawoutput').css(
+	    // 	{'height': new_height+'px'});
+	});
+
 	getstate();
     }); 
 
