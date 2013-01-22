@@ -137,6 +137,7 @@ var state = (function ($,log,workcanvas,tools) {
 	// set icons
 	$('#none').button({icons: {primary: "ui-icon-arrow-4"}});
 	$('#addition').button({icons: {primary: "ui-icon-plus"}});
+	$('#auto').button({icons: {primary: "ui-icon-plus"}});
 	$('#removal').button({icons: {primary: "ui-icon-close"}});
 	$('#line').button({icons: {primary: "ui-icon-minus"}});
 	$('#img').button({icons: {primary: "ui-icon-image"}});
@@ -157,6 +158,7 @@ var state = (function ($,log,workcanvas,tools) {
 	    var method = $(this).attr('id');
 	    if(method == 'local' && 
 	       !(tools.getStr('addition').length > 0 ||
+		 tools.getStr('auto').length > 0 ||
 		 tools.getStr('removal').length > 0 ||
 		 tools.getStr('line').length > 0)) {
 		log.append("error: no annotations");
@@ -166,6 +168,7 @@ var state = (function ($,log,workcanvas,tools) {
 	    workcanvas.loading();
 	    state['command'] = method;
 	    state['addition'] = tools.getStr('addition');
+	    state['auto'] = tools.getStr('auto');
 	    state['removal'] = tools.getStr('removal');
 	    state['line'] = tools.getStr('line');
 	    state['size'] = tools.getProp('size');
@@ -212,6 +215,7 @@ var state = (function ($,log,workcanvas,tools) {
 
 	workcanvas.onredraw(function() {
 	    addition = tools.get('addition');
+	    auto = tools.get('auto');
 	    removal = tools.get('removal');
 	    line = tools.get('line');
 	    dilation = tools.getProp('dilation');
@@ -219,6 +223,9 @@ var state = (function ($,log,workcanvas,tools) {
 	    for (var i=0; i<addition.length; i++) {
 	  	workcanvas.fillCircle(addition[i][0], addition[i][1], size+dilation, 'rgba(255,255,255,0.5)');
 	  	workcanvas.fillCircle(addition[i][0], addition[i][1], size, 'rgba(255,255,255,1.0)');
+	    }
+	    for (var i=0; i<auto.length; i++) {
+	  	workcanvas.fillCircle(auto[i][0], auto[i][1], 3, 'rgba(255,255,255,1.0)');
 	    }
 	    for (var i=0; i<removal.length; i++) {
 	  	workcanvas.fillX(removal[i][0], removal[i][1], 3, 'rgba(255,255,255,1.0)');
@@ -276,6 +283,7 @@ var state = (function ($,log,workcanvas,tools) {
 	// button aliases
 	hotkeys = {'m' : '#none',
 		   'a' : '#addition',
+		   't' : '#auto',
 		   'n' : '#line',
 		   'd' : '#removal',
 		   'r' : '#reset',

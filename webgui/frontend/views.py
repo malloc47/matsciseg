@@ -155,10 +155,13 @@ def handle_local(params):
     print('Local')
     # print(str(params))
     addition = [];
+    auto = [];
     removal = [];
     line = [];
     if 'addition' in params and params['addition']:
         addition = convert_string(params['addition'])
+    if 'auto' in params and params['auto']:
+        auto = convert_string(params['auto'])
     if 'removal' in params and params['removal']:
         removal = convert_string(params['removal'])
     if 'line' in params and params['line']:
@@ -167,10 +170,11 @@ def handle_local(params):
     dilation = int(params['dilation'])
     # x,y to i,j
     addition = [(b,a,size,dilation) for a,b in addition]
+    auto = [(b,a,size,dilation) for a,b in auto]
     removal = [(b,a) for a,b in removal]
     line = [(b,a,d,c,size,dilation) for a,b,c,d in 
             [l for l in line if len(l)==4]]
-    slices[current_img].edit_labels(addition,removal,line)
+    slices[current_img].edit_labels(addition,auto,removal,line)
     return 'local graph cut successful'
 
 def handle_click(params):

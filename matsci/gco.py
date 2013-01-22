@@ -102,17 +102,20 @@ class Slice(object):
             if not create and not remove:
                 break
 
-    def edit_labels(self,addition=[],removal=[],line=[]):
+    def edit_labels(self,addition=[],auto=[],removal=[],line=[]):
         removal = set([self.labels.v[(a,b)] for a,b in removal])
-        self.process_annotations(addition,removal,line)
+        self.process_annotations(create=addition,auto=auto,remove=removal,line=line)
 
-    def process_annotations(self,create=[],remove=[],line=[]):
+    def process_annotations(self,create=[],auto=[],remove=[],line=[]):
         new_volumes = []
+        print(str(auto))
         for r in remove:
             (x0,y0,x1,y1) = label.fit_region(self.labels.create_mask([r]))
             new_volumes.append(self.remove_label(r,max(x1-x0,y1-y0)+5))
         for c in create:
             new_volumes.append(self.add_label_circle(c))
+        for t in auto:
+            new_volumes.append(self.add_label_circle_auto(t))
         for l in line:
             new_volumes.append(self.add_label_line(l))
         for v in new_volumes:

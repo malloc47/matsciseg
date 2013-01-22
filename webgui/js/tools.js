@@ -4,6 +4,7 @@ var tools = (function () {
     // var imgMode;
 
     var data = {'addition' : [],
+		'auto'     : [],
 		'removal'  : [],
 		'line'     : []};
 
@@ -13,6 +14,7 @@ var tools = (function () {
 
     var cursorMode = {'none'		:{'cursor':'default'},
 		      'addition'	:{'cursor':'crosshair'},
+		      'auto'	        :{'cursor':'crosshair'},
 		      'removal'		:{'cursor':'move'},
 		      'line'		:{'cursor':'crosshair'}};
 
