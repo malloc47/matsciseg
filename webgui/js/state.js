@@ -137,7 +137,7 @@ var state = (function ($,log,workcanvas,tools) {
 	// set icons
 	$('#none').button({icons: {primary: "ui-icon-arrow-4"}});
 	$('#addition').button({icons: {primary: "ui-icon-plus"}});
-	$('#auto').button({icons: {primary: "ui-icon-plus"}});
+	$('#auto').button({icons: {primary: "ui-icon-circle-plus"}});
 	$('#removal').button({icons: {primary: "ui-icon-close"}});
 	$('#line').button({icons: {primary: "ui-icon-minus"}});
 	$('#img').button({icons: {primary: "ui-icon-image"}});
