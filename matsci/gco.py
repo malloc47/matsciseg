@@ -80,7 +80,7 @@ class Slice(object):
         # self.orig_labels = self.labels.copy()
         # self.num_labels = self.labels.max()+1
         if nodata:
-            self.data = None
+            self.data = data.Data()
         else:
             self.data = data.Data(self.labels.v)
             self.orig = self.data.copy() # potential slowdown
@@ -90,6 +90,23 @@ class Slice(object):
         self.mask=mask
         self.center=center
         self.bg=bg
+
+    @classmethod
+    def load(cls,in_file):
+        npz = np.load(in_file)
+        c = cls(npz['img'], npz['label'], nodata=True, lightweight=True)
+        c.data.regions = data.unstack_matrix(npz['data'])
+        return c
+
+    def save(self,out):
+        img,label,data = self.dump()
+        np.savez(out,img=img,label=label,data=data)
+        # np.save(img_path,self.img)
+        # np.save(label_path,self.labels.v)
+        # np.save(data_path,data.stack_matrix(self.data.regions))
+
+    def dump(self):
+        return (self.img,self.labels.v,data.stack_matrix(self.data.regions))
 
     def edit_labels_gui(self,d):
         import gui
