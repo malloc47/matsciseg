@@ -13,6 +13,8 @@ import matsci.gui
 import cPickle as pickle
 import matsci.gco
 
+from django.core.cache import cache
+
 def index(req):
     # t = loader.get_template('matsci.html')
     # c = Context({})

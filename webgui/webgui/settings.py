@@ -117,6 +117,17 @@ TEMPLATE_DIRS = (
     os.path.join(os.path.dirname(__file__), 'templates'),
 )
 
+CACHES = {
+    'default': {
+        'BACKEND': 'common.cache.LocMemRawCache',
+        'TIMEOUT': 1200,
+        'OPTIONS': {
+            'MAX_ENTRIES' : 30,
+            'CULL_FREQUENCY' : 4,
+        },
+    }
+}
+
 INSTALLED_APPS = (
     # 'django.contrib.auth',
     # 'django.contrib.contenttypes',
