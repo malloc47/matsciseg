@@ -42,7 +42,7 @@ def main(*args):
     X, Y = np.meshgrid(range(1,dimensions[1]), range(1,dimensions[0]))
     # zs = np.array([m[x,y] for x,y in zip(np.ravel(X), np.ravel(Y))])
     surf = ax.plot_surface(X,Y,m,rstride=1,cstride=1,cmap=cm.jet,linewidth=0,antialiased=False)
-    ax.set_xlabel('Dilation')
+    ax.set_xlabel('d')
     ax.set_ylabel('Slice')
     ax.set_zlabel('F-measure')
     ax.set_xlim(1, 50)
