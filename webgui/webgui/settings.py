@@ -170,6 +170,18 @@ LOGGING = {
     }
 }
 
+from glob import glob
+
+DATA_SOURCE = 'data/'
+
+datasets = { path : 
+             # { int(os.path.splitext(os.path.basename(f))[0]) : f  
+             { i : f  
+               for i,f in zip( range(len(glob(os.path.join(DATA_SOURCE,path) + '/*.npz'))),
+                             sorted(glob(os.path.join(DATA_SOURCE,path) + '/*.npz'))) }
+             for path in [ d for d in os.listdir(DATA_SOURCE) 
+                           if os.path.isdir(os.path.join(DATA_SOURCE, d)) ] }
+
 import cPickle as pickle
 print('loading dataset')
 slices = pickle.load(open('c2a.pkl','rb'))

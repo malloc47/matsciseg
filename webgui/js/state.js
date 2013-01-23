@@ -10,46 +10,46 @@ var state = (function ($,log,workcanvas,tools) {
 	return str;
     }
 
-    function getstate() {
-	$.getJSON("/state/",function(data) {
-	    state = data;
-    	    parsestate();
-	});
-    }
+    // function getstate() {
+    // 	$.getJSON("/state/",function(data) {
+    // 	    state = data;
+    // 	    parsestate();
+    // 	});
+    // }
 
-    function sendstate() {
-	$.getJSON("/state/",state);
-    }
+    // function sendstate() {
+    // 	$.getJSON("/state/",state);
+    // }
 
-    function syncstate() {
-    	$.getJSON("/state/",state,function(data) {
-    	    state = data;
-    	    parsestate();
-    	});
-    }
+    // function syncstate() {
+    // 	$.getJSON("/state/",state,function(data) {
+    // 	    state = data;
+    // 	    parsestate();
+    // 	});
+    // }
 
-    function parsestate() {
-	tools.clear()
-	sliceSelector.clear();
-	sliceSelector.add(tools.getProp('images'),tools.getProp('image'),tools.getProp('dataset'),state['width']*0.15,
-			  function(e) {
-			      workcanvas.loading();
-			      var c=$(this).attr('id');
-			      tools.setProp('image',parseInt(c));
-			      log.append("opening slice "+c);
-			      syncstate();
-			  });
+    // function parsestate() {
+    // 	tools.clear()
+    // 	sliceSelector.clear();
+    // 	sliceSelector.add(tools.getProp('images'),tools.getProp('image'),tools.getProp('dataset'),state['width']*0.15,
+    // 			  function(e) {
+    // 			      workcanvas.loading();
+    // 			      var c=$(this).attr('id');
+    // 			      tools.setProp('image',parseInt(c));
+    // 			      log.append("opening slice "+c);
+    // 			      syncstate();
+    // 			  });
 
-	workcanvas.init(state['width'],
-			state['height'],
-			$("#mainimg"));
+    // 	workcanvas.init(state['width'],
+    // 			state['height'],
+    // 			$("#mainimg"));
 
-	workcanvas.src('/' + tools.getImgPath() + '/' + tools.getProp('dataset') + '/'+pad(tools.getProp('image'),4)+'/?'+new Date().getTime())
+    // 	workcanvas.src('/' + tools.getImgPath() + '/' + tools.getProp('dataset') + '/'+pad(tools.getProp('image'),4)+'/?'+new Date().getTime())
 
-	if('response' in state) {
-	    log.append(state['response']);
-	}
-    }
+    // 	if('response' in state) {
+    // 	    log.append(state['response']);
+    // 	}
+    // }
 
     $(document).ready(function() {
 
@@ -83,16 +83,16 @@ var state = (function ($,log,workcanvas,tools) {
 		parent.append('<button type="button" class="dataset button" id="'+e[0]+'">'+e[1]+'</button>')
 	    });
 	    $('.dataset').button({icons: {primary: "ui-icon-document"}})
-		.click(function() {
-		    var dataset = $(this).attr('id');
-		    log.append("changing to "+dataset);
-		    $("#accordion").accordion("activate", 0);
-		    workcanvas.loading();
-		    state['command'] = 'dataset';
-		    state['dataset'] = dataset;
-		    tools.setProp('dataset',dataset)
-		    syncstate();
-		});
+		// .click(function() {
+		//     var dataset = $(this).attr('id');
+		//     log.append("changing to "+dataset);
+		//     $("#accordion").accordion("activate", 0);
+		//     workcanvas.loading();
+		//     state['command'] = 'dataset';
+		//     state['dataset'] = dataset;
+		//     tools.setProp('dataset',dataset)
+		//     syncstate();
+		// });
 	});
 
 	sliderCallback = (function( event, ui ) {
@@ -153,7 +153,7 @@ var state = (function ($,log,workcanvas,tools) {
 	$('#interactionset').buttonsetv();
 	$('#imgtypeset').buttonsetv();
 	$('#outputtabs').tabs();
-
+/*
 	$('.serversend').click(function() {
 	    var method = $(this).attr('id');
 	    if(method == 'local' && 
@@ -179,17 +179,6 @@ var state = (function ($,log,workcanvas,tools) {
 	    syncstate();
 	});
 
-	// $('.dataset').click(function() {
-	//     var dataset = $(this).attr('id');
-	//     log.append("changing to "+dataset);
-	//     $("#accordion").accordion("activate", 0);
-	//     workcanvas.loading();
-	//     state['command'] = 'dataset';
-	//     state['dataset'] = dataset;
-	//     // tools.setProp('dataset',dataset)
-	//     syncstate();
-	// });
-
 	$('.imgtype').click(function() {
 	    var m = $(this).attr('id');
 	    log.append(m+" view");
@@ -212,7 +201,7 @@ var state = (function ($,log,workcanvas,tools) {
 	    $('.output').children().remove();
 	    log.append("reset successful")
 	});
-
+*/
 	workcanvas.init(state['width'],
 			state['height'],
 			$("#mainimg"));
@@ -255,7 +244,7 @@ var state = (function ($,log,workcanvas,tools) {
 	    workcanvas.redraw();
 	    return false;
 	});
-
+/*
 	$('#mainimg').click(function(e) {
 	    if(tools.getTool() == 'none') return;
 	    var x = e.pageX - this.offsetLeft + $('.workingarea').scrollLeft();
@@ -268,7 +257,7 @@ var state = (function ($,log,workcanvas,tools) {
 	    workcanvas.redraw();	    
 	    log.append(tools.getTool() + ' at '+x+','+y);
 	});
-
+*/
 	$('#mainimg').bind('mousewheel', function(event, delta) {
             var dir = delta > 0 ? 'Up' : 'Down',
                 vel = Math.abs(delta);
@@ -352,13 +341,9 @@ var state = (function ($,log,workcanvas,tools) {
 	    var new_height = ($(window).height())-180;
 	    $('.workingarea').css(
 		{'height': new_height+'px'});
-	    // $('.navbar').css(
-	    // 	{'height': new_height+'px'});
-	    // $('.rawoutput').css(
-	    // 	{'height': new_height+'px'});
 	});
 
-	getstate();
+	// getstate();
     }); 
 
     return {}

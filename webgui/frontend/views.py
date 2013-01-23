@@ -1,97 +1,138 @@
 from django.http import HttpResponse, HttpResponseBadRequest
 from django.template import Context, loader
 from django.shortcuts import render_to_response
+from django.core.cache import cache
 import simplejson as json
-from webgui.settings import current_img, slices
 
 import scipy.ndimage.interpolation
 import scipy.misc
-from PIL import Image
 import numpy as np
-import matsci.gui
+from PIL import Image
+
 import cPickle as pickle
+
+from webgui.settings import current_img, slices
+from webgui.settings import datasets
+
+import render_labels
+import matsci.gui
 import matsci.gco
 
-from django.core.cache import cache
+def fetch_or_load(dataset,index):
+    # avoid using default value since it would be evaluated
+    v = cache.get(dataset+'_'+index)
+    if v is None:
+        print(str("Reloading from cache"))
+        v = matsci.gco.Slice.load(datasets[dataset][int(index)])
+        cache.set(dataset+'_'+index , v)
+    return v
+
+def retrieve_cached(fn):
+    def wrap(request):
+        if request.method != 'GET':
+            return HttpResponseBadRequest()
+        try:
+            v = fetch_or_load(request.GET['dataset'], request.GET['slice'])
+        except:
+            return HttpResponseBadRequest()
+        
+        return fn(request,v)
+    return wrap
+
+def retrieve_two_cached(fn):
+    def wrap(request):
+        if request.method != 'GET':
+            return HttpResponseBadRequest()
+        try:
+            v = fetch_or_load(request.GET['dataset'], request.GET['slice'])
+            u = fetch_or_load(request.GET['dataset'], request.GET['source'])
+        except:
+            return HttpResponseBadRequest()
+        return fn(request,v,u)
+    return wrap
+
+@retrieve_cached
+def img_raw(request,v):
+    http_output = Image.fromarray(np.uint8(v.img))
+    response = HttpResponse(mimetype="image/png")
+    http_output.save(response, "PNG")
+    return response
+
+@retrieve_cached
+def img_labeled(request,v):
+    output = matsci.gui.color_jet(matsci.gui.grey_to_rgb(v.img),v.labels.v)
+    http_output = Image.fromarray(np.uint8(output))
+    response = HttpResponse(mimetype="image/png")
+    http_output.save(response, "PNG")
+    return response
+
+@retrieve_cached
+def img_thumb(request,v):
+    http_output = Image.fromarray(np.uint8(v.img))
+    http_output.thumbnail((128,128), Image.ANTIALIAS)
+    response = HttpResponse(mimetype="image/png")
+    http_output.save(response, "PNG")
+    return response
+
+@retrieve_cached
+def img_edge(request,v):
+    im = v.img
+    im = np.dstack((im,im,im))
+    bmp = render_labels.label_to_bmp(v.labels.v)
+    output = render_labels.draw_on_img(im,bmp)
+    http_output = Image.fromarray(np.uint8(output))
+    response = HttpResponse(mimetype="image/png")
+    http_output.save(response, "PNG")
+    return response
 
 def index(req):
-    # t = loader.get_template('matsci.html')
-    # c = Context({})
     return render_to_response('matsci.html', {})
 
-def img_thumb(request,dataset,imgnum):
-    slicenum=int(imgnum)
-    if slicenum in slices:
-        output = scipy.misc.imresize(slices[slicenum].img,0.15)
-        http_output = Image.fromarray(np.uint8(output))
-        response = HttpResponse(mimetype="image/png")
-        http_output.save(response, "PNG")
-        return response
-    else:
+def load_dataset(request):
+    if not request.is_ajax():
         return HttpResponseBadRequest()
+    if request.method == 'GET':
+        try:
+            d = range(len(datasets[request.GET['dataset']]))
+            return HttpResponse(json.dumps(d),
+                                content_type='application/javascript; charset=utf8')
+        except:
+            return HttpResponseBadRequest()
+    return HttpResponseBadRequest()
 
-def img_full(request,dataset,imgnum):
-    slicenum=int(imgnum)
-    if slicenum in slices:
-        output = matsci.gui.color_jet(matsci.gui.grey_to_rgb(slices[slicenum].img),slices[slicenum].labels.v)
-        http_output = Image.fromarray(np.uint8(output))
-        response = HttpResponse(mimetype="image/png")
-        http_output.save(response, "PNG")
-        return response
-    else:
-        return HttpResponseBadRequest()
-
-def img_full_bare(request,dataset,imgnum):
-    slicenum=int(imgnum)
-    if slicenum in slices:
-        output = slices[slicenum].img
-        http_output = Image.fromarray(np.uint8(output))
-        response = HttpResponse(mimetype="image/png")
-        http_output.save(response, "PNG")
-        return response
-    else:
-        return HttpResponseBadRequest()
-
-def img_full_edge(request,dataset,imgnum):
-    import render_labels
-    slicenum=int(imgnum)
-    if slicenum in slices:
-        im = slices[slicenum].img
-        im = np.dstack((im,im,im))
-        bmp = render_labels.label_to_bmp(slices[slicenum].labels.v)
-        output = render_labels.draw_on_img(im,bmp)
-        http_output = Image.fromarray(np.uint8(output))
-        response = HttpResponse(mimetype="image/png")
-        http_output.save(response, "PNG")
-        return response
-    else:
-        return HttpResponseBadRequest()
-
-def datasets(request):
+def get_datasets(request):
     if not request.is_ajax():
         return HttpResponseBadRequest()
 
     if request.method == 'GET':
+        # labels = {
+        #     'ti.pkl'  : 'Ti-26 All', 
+        #     'ti2.pkl' : 'Ti-26 2', 
+        #     'ti4.pkl' : 'Ti-26 4', 
+        #     'c1a.pkl' : 'C1 Full', 
+        #     'c1b.pkl' : 'C1 Half', 
+        #     'c2a.pkl' : 'C2', 
+        #     'c3.pkl'  : 'C3'
+        #     }
+
         labels = {
-            'ti.pkl'  : 'Ti-26 All', 
-            'ti2.pkl' : 'Ti-26 2', 
-            'ti4.pkl' : 'Ti-26 4', 
-            'c1a.pkl' : 'C1 Full', 
-            'c1b.pkl' : 'C1 Half', 
-            'c2a.pkl' : 'C2', 
-            'c3.pkl'  : 'C3'
+            'ti' : 'Ti-26', 
+            'c1' : 'Crop1', 
+            'c2' : 'Crop2', 
+            'c3' : 'Crop3'
             }
 
-        import glob
-        import os
+        # import glob
+        # import os
 
-        files = glob.glob('*.pkl')
-        d = [ [ os.path.splitext(f)[0], labels[f] ] for f in files if f in labels ]
+        # files = glob.glob('*.pkl')
+        # d = [ [ os.path.splitext(f)[0], labels[f] ] for f in files if f in labels ]
+
+        d = [ [f,labels[f] ] for f in datasets.keys() ]
 
         return HttpResponse(json.dumps(d),
                             content_type='application/javascript; charset=utf8')
     return HttpResponseBadRequest()
-
 
 def cmd(request):
     if not request.is_ajax():
@@ -111,50 +152,31 @@ def cmd(request):
 #     print('Removal')
 #     return 'success'
 
-def handle_copyr(params):
-    global current_img, images, slices
-    l = sorted(slices.keys())
-    idx = l.index(current_img)
-    if idx == 0:
-        return 'error: no slice on left!'
-    old_img = slices[current_img].img;
-    slices[current_img] = matsci.gco.Slice(old_img,slices[current_img-1].labels.v)
-    return 'copyr successful'
 
-def handle_copyl(params):
-    global current_img, images, slices
-    l = sorted(slices.keys())
-    idx = l.index(current_img)
-    if idx == len(l)-1:
-        return 'error: no slice on right!'
-    old_img = slices[current_img].img;
-    slices[current_img] = matsci.gco.Slice(old_img,slices[current_img+1].labels.v)
-    return 'copyl successful'
+@retrieve_two_cached
+def copy(request,v,u):
+    cache.set(request.GET['dataset']+'_'+request.GET['slice'] , 
+              matsci.gco.Slice(v.img,u.labels.v))
+    return HttpResponse(json.dumps('copyr successful'),
+                        content_type='application/javascript; charset=utf8')
 
-def handle_dataset(params):
-    import pickle
-    global current_img, slices
-    print('opening dataset')
-    slices = pickle.load(open(params['dataset']+'.pkl','rb'))
-    current_img = min(slices.keys())
-    return 'dataset '+params['dataset']+' opened'
-
-def handle_global(params):
-    v = slices[current_img];
-    slices[current_img] = matsci.gco.Slice(v.img,v.labels.v)
-    slices[current_img].data.dilate_all(int(params['dilation']))
-    # slices[current_img].data.output_data_term()
-    slices[current_img].graph_cut(1)
-    return 'global graph cut successful'
+@retrieve_cached
+def globalgc(request,v):
+    dilation = int(request.GET['dilation'])    
+    v.data.dilate_all(dilation)
+    v.graph_cut(1)
+    return HttpResponse(json.dumps('global graph cut successful'),
+                        content_type='application/javascript; charset=utf8')
 
 def convert_string(s):
     return [tuple(map(int,i.split(','))) 
             for i in s.split(';')]
 
-def handle_local(params):
+@retrieve_cached
+def localgc(request,v):
+    params = request.GET
     global current_img, images, slices
     print('Local')
-    # print(str(params))
     addition = [];
     auto = [];
     removal = [];
@@ -175,26 +197,8 @@ def handle_local(params):
     removal = [(b,a) for a,b in removal]
     line = [(b,a,d,c,size,dilation) for a,b,c,d in 
             [l for l in line if len(l)==4]]
-    slices[current_img].edit_labels(addition,auto,removal,line)
-    return 'local graph cut successful'
-
-def handle_click(params):
-    print('Click')
-    return 'x:'+params['x']+',y:'+params['y']
-
-def load(request):
-    global current_img, slices 
-    l = [current_img]+sorted(slices.keys())
-    return HttpResponse(json.dumps(l),
-                        content_type='application/javascript; charset=utf8')
-
-def change_img(request):
-    global current_img, slices
-    print(response.GET['img'])
-    if not response.GET['img'] in sorted(slices.keys()):
-        return HttpResponseBadRequest()
-    current_img = int(response.GET['img'])
-    return HttpResponse(json.dumps({'response':'success'}),
+    v.edit_labels(addition,auto,removal,line)
+    return HttpResponse(json.dumps('local graph cut successful'),
                         content_type='application/javascript; charset=utf8')
 
 def state(request):
