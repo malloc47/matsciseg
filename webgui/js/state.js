@@ -31,11 +31,11 @@ var state = (function ($,log,workcanvas,tools) {
     function parsestate() {
 	tools.clear()
 	sliceSelector.clear();
-	sliceSelector.add(state['images'],state['image'],state['width']*0.15,
+	sliceSelector.add(tools.getProp('images'),tools.getProp('image'),tools.getProp('dataset'),state['width']*0.15,
 			  function(e) {
 			      workcanvas.loading();
 			      var c=$(this).attr('id');
-			      state['image'] = parseInt(c);
+			      tools.setProp('image',parseInt(c));
 			      log.append("opening slice "+c);
 			      syncstate();
 			  });
@@ -44,7 +44,7 @@ var state = (function ($,log,workcanvas,tools) {
 			state['height'],
 			$("#mainimg"));
 
-	workcanvas.src('/' + tools.getImgPath() + '/'+pad(state['image'],4)+'/?'+new Date().getTime())
+	workcanvas.src('/' + tools.getImgPath() + '/' + tools.getProp('dataset') + '/'+pad(tools.getProp('image'),4)+'/?'+new Date().getTime())
 
 	if('response' in state) {
 	    log.append(state['response']);
@@ -81,7 +81,6 @@ var state = (function ($,log,workcanvas,tools) {
 	    parent = $('#datasets');
 	    data.forEach(function (e) {
 		parent.append('<button type="button" class="dataset button" id="'+e[0]+'">'+e[1]+'</button>')
-		// $(e[0]).button({icons: {primary: "ui-icon-document"}});
 	    });
 	    $('.dataset').button({icons: {primary: "ui-icon-document"}})
 		.click(function() {
@@ -91,6 +90,7 @@ var state = (function ($,log,workcanvas,tools) {
 		    workcanvas.loading();
 		    state['command'] = 'dataset';
 		    state['dataset'] = dataset;
+		    tools.setProp('dataset',dataset)
 		    syncstate();
 		});
 	});
@@ -173,18 +173,22 @@ var state = (function ($,log,workcanvas,tools) {
 	    state['line'] = tools.getStr('line');
 	    state['size'] = tools.getProp('size');
 	    state['dilation'] = tools.getProp('dilation');
+	    state['image'] = tools.getProp('image');
+	    state['images'] = tools.getProp('images');
+	    state['dataset'] = tools.getProp('dataset');
 	    syncstate();
 	});
 
-	$('.dataset').click(function() {
-	    var dataset = $(this).attr('id');
-	    log.append("changing to "+dataset);
-	    $("#accordion").accordion("activate", 0);
-	    workcanvas.loading();
-	    state['command'] = 'dataset';
-	    state['dataset'] = dataset;
-	    syncstate();
-	});
+	// $('.dataset').click(function() {
+	//     var dataset = $(this).attr('id');
+	//     log.append("changing to "+dataset);
+	//     $("#accordion").accordion("activate", 0);
+	//     workcanvas.loading();
+	//     state['command'] = 'dataset';
+	//     state['dataset'] = dataset;
+	//     // tools.setProp('dataset',dataset)
+	//     syncstate();
+	// });
 
 	$('.imgtype').click(function() {
 	    var m = $(this).attr('id');
@@ -192,7 +196,7 @@ var state = (function ($,log,workcanvas,tools) {
 	    workcanvas.loading();
 	    tools.setProp('imgMode',m);
 	    $(this).css({"background":"#AAAACC"});
-	    workcanvas.src('/' + tools.getImgPath() + '/'+pad(state['image'],4)+'/?'+new Date().getTime());
+	    workcanvas.src('/' + tools.getImgPath() + '/' + tools.getProp('dataset') + '/'+ pad(tools.getProp('image'),4)+'/?'+new Date().getTime());
 	});
 
 	$('.interaction').click(function() {

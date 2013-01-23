@@ -1,4 +1,3 @@
-# Create your views here.
 from django.http import HttpResponse, HttpResponseBadRequest
 from django.template import Context, loader
 from django.shortcuts import render_to_response
@@ -20,7 +19,7 @@ def index(req):
     # c = Context({})
     return render_to_response('matsci.html', {})
 
-def img_thumb(request,imgnum):
+def img_thumb(request,dataset,imgnum):
     slicenum=int(imgnum)
     if slicenum in slices:
         output = scipy.misc.imresize(slices[slicenum].img,0.15)
@@ -31,7 +30,7 @@ def img_thumb(request,imgnum):
     else:
         return HttpResponseBadRequest()
 
-def img_full(request,imgnum):
+def img_full(request,dataset,imgnum):
     slicenum=int(imgnum)
     if slicenum in slices:
         output = matsci.gui.color_jet(matsci.gui.grey_to_rgb(slices[slicenum].img),slices[slicenum].labels.v)
@@ -42,7 +41,7 @@ def img_full(request,imgnum):
     else:
         return HttpResponseBadRequest()
 
-def img_full_bare(request,imgnum):
+def img_full_bare(request,dataset,imgnum):
     slicenum=int(imgnum)
     if slicenum in slices:
         output = slices[slicenum].img
@@ -53,7 +52,7 @@ def img_full_bare(request,imgnum):
     else:
         return HttpResponseBadRequest()
 
-def img_full_edge(request,imgnum):
+def img_full_edge(request,dataset,imgnum):
     import render_labels
     slicenum=int(imgnum)
     if slicenum in slices:
@@ -74,7 +73,7 @@ def datasets(request):
 
     if request.method == 'GET':
         labels = {
-            't1.pkl'  : 'Ti-26 All', 
+            'ti.pkl'  : 'Ti-26 All', 
             'ti2.pkl' : 'Ti-26 2', 
             'ti4.pkl' : 'Ti-26 4', 
             'c1a.pkl' : 'C1 Full', 

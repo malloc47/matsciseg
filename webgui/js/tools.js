@@ -22,7 +22,11 @@ var tools = (function () {
 
     var props = {'imgMode'	: 'img',
 		 'dilation'	: 15,
-		 'size'		: 5};
+		 'size'		: 5,
+		 'image'        : 90,
+		 'images'       : [90,91,92,93,94,95,96,97,98,99,100],
+		 'dataset'      : 'c2a',
+		};
     
     function init() {
 	toolMode = 'none';

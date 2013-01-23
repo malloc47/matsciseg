@@ -14,13 +14,15 @@ var sliceSelector = (function () {
 	ul = ul_in;
     };
 
-    function add(imglst,curimg,w,f) {
+    function add(imglst,curimg,dataset,w,f) {
 	for (var i = 0; i < imglst.length; i++) {
 	    ul.append('<li'
 		      + (imglst[i]==curimg ? ' class="selected" ' : '')
 		      + '><img class="thumb'
 		      + imglst[i]
 		      + '" src="/thumb/'
+		      + dataset
+		      + '/'
 		      + pad(imglst[i],4)
 		      + '/'
 		      +'?'+new Date().getTime()
