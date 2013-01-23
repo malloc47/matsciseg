@@ -66,7 +66,7 @@ def estimate_size(c,labels):
 class Slice(object):
     def __init__(self, img, labels, shifted={}, 
                  win=(0,0), mask=None, lightweight=False,
-                 nodata=False, center=None, bg=False):
+                 nodata=False, center=None, bg=False, adjin=None):
         """initialize fields and compute defaults"""
         # These values are created when the class is instantiated.
         self.img = img.copy()
@@ -83,8 +83,12 @@ class Slice(object):
             self.data = data.Data()
         else:
             self.data = data.Data(self.labels.v)
-            self.orig = self.data.copy() # potential slowdown
-        self.adj = adj.Adj(self.labels) # adjacent(self.labels)
+            # self.orig = self.data.copy() # potential slowdown
+        if adjin is None:
+            self.adj = adj.Adj(self.labels) # adjacent(self.labels)
+        else:
+            self.adj = adj.Adj()
+            self.adj.v = adjin
         self.shifted=shifted
         self.win=win
         self.mask=mask
@@ -94,19 +98,19 @@ class Slice(object):
     @classmethod
     def load(cls,in_file):
         npz = np.load(in_file)
-        c = cls(npz['img'], npz['label'], nodata=True, lightweight=True)
+        c = cls(npz['img'], npz['label'], nodata=True, lightweight=True, adjin=npz['adj'])
         c.data.regions = data.unstack_matrix(npz['data'])
         return c
 
     def save(self,out):
-        img,label,data = self.dump()
-        np.savez(out,img=img,label=label,data=data)
+        img,label,data,adj = self.dump()
+        np.savez(out,img=img,label=label,data=data,adj=adj)
         # np.save(img_path,self.img)
         # np.save(label_path,self.labels.v)
         # np.save(data_path,data.stack_matrix(self.data.regions))
 
     def dump(self):
-        return (self.img,self.labels.v,data.stack_matrix(self.data.regions))
+        return (self.img,self.labels.v,data.stack_matrix(self.data.regions),self.adj.v)
 
     def edit_labels_gui(self,d):
         import gui

@@ -72,11 +72,14 @@ def pairs(adj):
              if i > j ]
 
 class Adj(object):
-    def __init__(self,labels):
-        try:
-            self.v = gcoc.adjacent(np.array(labels.v).astype('int16'),labels.max()+1)
-        except:
-            self.v = gcoc.adjacent(np.array(labels).astype('int16'),labels.max()+1)
+    def __init__(self,labels=None):
+        if not labels is None:
+            try:
+                self.v = gcoc.adjacent(np.array(labels.v).astype('int16'),labels.max()+1)
+            except:
+                self.v = gcoc.adjacent(np.array(labels).astype('int16'),labels.max()+1)
+        else:
+            self.v = None
         # self.v = adjacent(labels.v)
     
     def get_adj(self,label_list):
