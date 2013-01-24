@@ -13,7 +13,7 @@ from webgui.settings import datasets
 
 import render_labels
 import matsci.gui
-import matsci.gco
+import matsci
 
 def fetch_or_load(dataset,index):
     # avoid using default value since it would be evaluated
@@ -123,8 +123,16 @@ def copy(request,v,u):
 
 @retrieve_cached
 def globalgc(request,v):
-    dilation = int(request.GET['dilation'])    
-    v.data.dilate_all(dilation)
+    dilation = int(request.GET['dilation'])
+    # the local operation doesn't regenerate the data term over the
+    # whole image to speed interaction (positing global is rare)
+    # if needed, regenerate here
+    try:
+        v.data.dilate_all(dilation)
+    except AttributeError:
+        v.data = matsci.data.Data(v.labels.v)
+        v.data.dilate_all(dilation)
+        
     v.graph_cut(1)
     return HttpResponse(json.dumps('global graph cut successful'),
                         content_type='application/javascript; charset=utf8')

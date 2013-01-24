@@ -63,7 +63,14 @@ var callbacks = (function ($,log,workcanvas,tools,sliceSelector,remote) {
     function global() {
 	log.append("starting global");
 	workcanvas.loading();
-        // ajax here
+	remote.global(tools.getProp('dataset'),
+		      tools.getProp('image'),
+		      tools.getProp('dilation'),
+		      function() {log.append("global successful");
+				  workcanvas.src(tools.getDataset());
+				  workcanvas.redraw();},
+		      function() {log.append("error: no response");
+				  workcanvas.redraw();});
     }
 
     function local() {
@@ -76,7 +83,36 @@ var callbacks = (function ($,log,workcanvas,tools,sliceSelector,remote) {
 	}
 	log.append("starting local");
 	workcanvas.loading();
-        // ajax here
+	remote.local(tools.getProp('dataset'),
+		      tools.getProp('image'),
+		      tools.getProp('dilation'),
+		      tools.getProp('size'),
+		      tools.getStr('addition'),
+		      tools.getStr('auto'),
+		      tools.getStr('removal'),
+		      tools.getStr('line'),
+		      function() {log.append("local successful");
+				  tools.clear();
+				  workcanvas.src(tools.getDataset());
+				  workcanvas.redraw();},
+		      function() {log.append("error: no response");
+				  workcanvas.redraw();});
+    }
+
+    function copyr() {copy('copyr',tools.getProp('image')-1);}
+    function copyl() {copy('copyl',tools.getProp('image')+1);}
+
+    function copy(dir,source) {
+	log.append("starting "+dir);
+	workcanvas.loading();
+	remote.copy(tools.getProp('dataset'),
+		      tools.getProp('image'),
+		      source,
+		      function() {log.append(dir+" successful");
+				  workcanvas.src(tools.getDataset());
+				  workcanvas.redraw();},
+		      function() {log.append("error: no source slice");
+				  workcanvas.redraw();});
     }
 
     function imgtype() {
@@ -168,6 +204,13 @@ var callbacks = (function ($,log,workcanvas,tools,sliceSelector,remote) {
         return false;
     }
 
+    function resize() {
+        if($(window).height() < 710) return;
+	var new_height = ($(window).height()) - $('.sliders').height() - $('.bottombar').height() - 50;
+	$('.workingarea').css(
+	    {'height': new_height+'px'});
+    }
+
     return {
         reload_slices  : reload_slices,
         update_slices  : update_slices,
@@ -177,6 +220,8 @@ var callbacks = (function ($,log,workcanvas,tools,sliceSelector,remote) {
         zoom           : zoom,
         global         : global,
         local          : local,
+        copyr          : copyr,
+        copyl          : copyl,
         imgtype        : imgtype,
         interaction    : interaction,
         reset          : reset,
@@ -184,5 +229,6 @@ var callbacks = (function ($,log,workcanvas,tools,sliceSelector,remote) {
         canvas_left    : canvas_left,
         canvas_right   : canvas_right,
         canvas_scroll  : canvas_scroll,
+        resize         : resize,
     }
 }($,log,workcanvas,tools,sliceSelector,remote));

@@ -99,6 +99,9 @@ var init = (function ($,log,workcanvas,tools,callbacks,remote) {
         $('#local').click(callbacks.local);
         $('#global').click(callbacks.global);
 
+	$('#copyr').click(callbacks.copyr);
+	$('#copyl').click(callbacks.copyl);
+
         $('.imgtype').click(callbacks.imgtype);
 
 	$('.interaction').click(callbacks.interaction);
@@ -175,12 +178,8 @@ var init = (function ($,log,workcanvas,tools,callbacks,remote) {
 			     }
 			 });
 
-	$(window).resize(function() {
-            if($(window).height() < 710) return;
-	    var new_height = ($(window).height()) - $('.sliders').height() - $('.bottombar').height() - 50;
-	    $('.workingarea').css(
-		{'height': new_height+'px'});
-	});
+	$(window).resize(callbacks.resize);
+	callbacks.resize();
     }); 
 
     return {}
