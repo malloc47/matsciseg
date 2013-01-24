@@ -63,7 +63,7 @@ ln -s ../../ground/image{2:04d}.label {7}/{0}/{4}/{1:d}/image{2:04d}.label
     """.format(name,rn,i,j,run,dilation,ws_exe,data_path,suppression)
 
     seq1_global = functools.partial(seq1_cmd,exe,data_path,'seq1','t','global',20,'image','cs-20')
-    seq1_dummy = functools.partial(seq1_2_cmd,exe,data_path,'seq1','e','global',20,12,'image','dummy')
+    seq1_dummy = functools.partial(seq1_2_cmd,exe,data_path,'seq1','e','global',20,15,'image','dummy')
     seq1_auto = functools.partial(seq1_cmd,exe,data_path,'seq1','e','auto',20,'image','auto-20')
     seq12_global = functools.partial(seq12_cmd,exe,data_path,'seq12','i','log',30,2,5,'image','log-30')
     seq12_cs = functools.partial(seq12_cmd,exe,data_path,'seq12','s','log',30,2,5,'image','cs-log-30')

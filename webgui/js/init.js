@@ -1,4 +1,4 @@
-var state = (function ($,log,workcanvas,tools,callbacks,remote) {
+var init = (function ($,log,workcanvas,tools,callbacks,remote) {
     "use strict"
 
 
@@ -41,7 +41,7 @@ var state = (function ($,log,workcanvas,tools,callbacks,remote) {
             // fetch first dataset's slices
             tools.setProp('dataset',data[0][0]);
             callbacks.update_slices(data[0][0]);
-	    parent = $('#datasets');
+	    var parent = $('#datasets');
 	    data.forEach(function (e) {
 		parent.append('<button type="button" class="dataset button" id="'+e[0]+'">'+e[1]+'</button>')
 	    });
@@ -176,8 +176,8 @@ var state = (function ($,log,workcanvas,tools,callbacks,remote) {
 			 });
 
 	$(window).resize(function() {
-            if($(window).height() < 600) return;
-	    var new_height = ($(window).height()) - $('.sliders').height() - $('.bottombar').height();
+            if($(window).height() < 710) return;
+	    var new_height = ($(window).height()) - $('.sliders').height() - $('.bottombar').height() - 50;
 	    $('.workingarea').css(
 		{'height': new_height+'px'});
 	});
