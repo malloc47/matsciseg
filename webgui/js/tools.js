@@ -8,8 +8,8 @@ var tools = (function () {
 		'removal'  : [],
 		'line'     : []};
 
-    var imgPaths = {'img'	: 'empty',
-		     'seg'	: 'output',
+    var imgPaths = {'img'	: 'raw',
+		     'seg'	: 'labeled',
 		     'edg'	: 'edge'};
 
     var cursorMode = {'none'		:{'cursor':'default'},
@@ -23,9 +23,9 @@ var tools = (function () {
     var props = {'imgMode'	: 'img',
 		 'dilation'	: 15,
 		 'size'		: 5,
-		 'image'        : 90,
-		 'images'       : [90,91,92,93,94,95,96,97,98,99,100],
-		 'dataset'      : 'c2a',
+		 'image'        : 0,
+		 'images'       : [0,1,2,3,4,5,6,7,8,9,10],
+		 'dataset'      : 'c2',
 		};
     
     function init() {
@@ -135,6 +135,17 @@ var tools = (function () {
 	return tuplesToStr(data[type]);
     };
 
+    function getDataset() {
+        return '/' 
+            + getImgPath() 
+            + '/?dataset=' 
+            + getProp('dataset') 
+            + '&slice='
+            + getProp('image')
+            + '&'
+            + new Date().getTime();
+    }
+
     return {
 	init		: init,
 	getTool		: getTool,
@@ -149,5 +160,6 @@ var tools = (function () {
 	get		: get,
 	getStr		: getStr,
 	remove		: removeClosest,
+	getDataset	: getDataset,
     }
 }());

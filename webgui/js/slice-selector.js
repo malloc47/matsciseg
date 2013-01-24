@@ -1,4 +1,4 @@
-var sliceSelector = (function () {
+var sliceSelector = (function ($) {
 
     var ul;
 
@@ -20,12 +20,12 @@ var sliceSelector = (function () {
 		      + (imglst[i]==curimg ? ' class="selected" ' : '')
 		      + '><img class="thumb'
 		      + imglst[i]
-		      + '" src="/thumb/'
+		      + '" src="/thumb/?dataset='
 		      + dataset
-		      + '/'
-		      + pad(imglst[i],4)
-		      + '/'
-		      +'?'+new Date().getTime()
+		      + '&slice='
+		      + imglst[i]
+		      + '&'
+		      + new Date().getTime()
 		      +'" '
 		      + 'id="' + imglst[i] + '" '
 		      + '/><p>'
@@ -40,10 +40,16 @@ var sliceSelector = (function () {
 	ul.children().remove();
     };
 
+    function update(curimg) {
+        ul.children().removeClass('selected');
+        $('#'+curimg).parent().addClass('selected');
+    }
+
     return {
 	init	: init,
 	add	: add,
-	clear	: clear
+	clear	: clear,
+        update  : update,
     }
 
-}());
+}($));

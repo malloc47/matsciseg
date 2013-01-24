@@ -1,34 +1,37 @@
 var workcanvas = (function () {
+    "use strict"
 
     var ctx;
     var canvas;
     var mainimg;
-    var width, height;
+    var img_width
+    var img_height;
     var zoom = 2;
 
-    function imgLoad() {
-	if(canvas.attr('width') != width*zoom)
-	    canvas.attr('width',width*zoom);
-	if(canvas.attr('height') != height*zoom)
-	    canvas.attr('height',height*zoom);
+    function redraw() {
+	if(canvas.attr('width') != img_width*zoom)
+	    canvas.attr('width',img_width*zoom);
+	if(canvas.attr('height') != img_height*zoom)
+	    canvas.attr('height',img_height*zoom);
 	ctx.globalAlpha = 1.0;
-	drawImg(mainimg);
-	ctx.redraw();
+        drawImg(mainimg);
+        ctx.redraw();
+    }
+
+    function imgLoad() {
+        var w = this.width;
+        var h = this.height;
+        img_width = w;
+        img_height = h;
+        redraw();
     };
 
-    function init(w,h,c){
-	width = w;
-	height = h;
+    function init(c,s){
 	canvas = c;
 	ctx = canvas[0].getContext('2d');
-	if(canvas.attr('width') != width*zoom)
-	    canvas.attr('width',width*zoom);
-	if(canvas.attr('height') != height*zoom)
-	    canvas.attr('height',height*zoom);
-	mainimg = new Image();
-	// mainimg.src = "/img/image0090.png"; // static img default
+        mainimg = new Image();
 	mainimg.onload = imgLoad;
-
+        mainimg.src = s;
     };
 
     function getZoom() {return zoom;};
@@ -37,12 +40,15 @@ var workcanvas = (function () {
     function setSrc(src) {mainimg.src = src;};
 
     function drawImg(img) {
-	ctx.drawImage(img,0,0,width,height,0,0,width*zoom,height*zoom);
+	ctx.drawImage(img,0,0,
+                      img_width,img_height,
+                      0,0,
+                      img_width*zoom,img_height*zoom);
     };
 
     function loading() {
 	ctx.fillStyle = '#FFFFFF';
-	ctx.fillRect(0,0,width*zoom,height*zoom);
+	ctx.fillRect(0,0,img_width*zoom,img_height*zoom);
 	ctx.globalAlpha = 0.25;
 	drawImg(mainimg);
     };
@@ -98,6 +104,6 @@ var workcanvas = (function () {
 	fillLine	: fillLine,
 	fillX		: fillX,
 	onredraw	: onredraw,
-	redraw		: imgLoad
+	redraw		: redraw,
     }
 }());

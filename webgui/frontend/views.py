@@ -9,9 +9,6 @@ import scipy.misc
 import numpy as np
 from PIL import Image
 
-import cPickle as pickle
-
-from webgui.settings import current_img, slices
 from webgui.settings import datasets
 
 import render_labels
@@ -35,7 +32,6 @@ def retrieve_cached(fn):
             v = fetch_or_load(request.GET['dataset'], request.GET['slice'])
         except:
             return HttpResponseBadRequest()
-        
         return fn(request,v)
     return wrap
 
@@ -105,53 +101,18 @@ def get_datasets(request):
         return HttpResponseBadRequest()
 
     if request.method == 'GET':
-        # labels = {
-        #     'ti.pkl'  : 'Ti-26 All', 
-        #     'ti2.pkl' : 'Ti-26 2', 
-        #     'ti4.pkl' : 'Ti-26 4', 
-        #     'c1a.pkl' : 'C1 Full', 
-        #     'c1b.pkl' : 'C1 Half', 
-        #     'c2a.pkl' : 'C2', 
-        #     'c3.pkl'  : 'C3'
-        #     }
-
         labels = {
             'ti' : 'Ti-26', 
             'c1' : 'Crop1', 
             'c2' : 'Crop2', 
-            'c3' : 'Crop3'
+            'c3' : 'Crop3',
+            'c4' : 'Crop4'
             }
-
-        # import glob
-        # import os
-
-        # files = glob.glob('*.pkl')
-        # d = [ [ os.path.splitext(f)[0], labels[f] ] for f in files if f in labels ]
-
         d = [ [f,labels[f] ] for f in datasets.keys() ]
 
         return HttpResponse(json.dumps(d),
                             content_type='application/javascript; charset=utf8')
     return HttpResponseBadRequest()
-
-def cmd(request):
-    if not request.is_ajax():
-        return HttpResponseBadRequest()
-
-    if request.method == 'GET':
-        data = handlers[request.GET['method']](request.GET)
-        return HttpResponse(json.dumps(data),
-                            content_type='application/javascript; charset=utf8')
-    return HttpResponseBadRequest()
-
-# def handle_addition(params):
-#     print('Addition')
-#     return 'success'
-
-# def handle_removal(params):
-#     print('Removal')
-#     return 'success'
-
 
 @retrieve_two_cached
 def copy(request,v,u):
@@ -199,36 +160,4 @@ def localgc(request,v):
             [l for l in line if len(l)==4]]
     v.edit_labels(addition,auto,removal,line)
     return HttpResponse(json.dumps('local graph cut successful'),
-                        content_type='application/javascript; charset=utf8')
-
-def state(request):
-    global current_img, slices
-    data = None;
-    if('image' in request.GET):
-        current_img = int(request.GET['image']);
-    # if('images' in request.GET):
-    #     images = request.GET['images'];
-    if('command' in request.GET):
-        handlers = {
-            'global'   : handle_global,
-            'local'    : handle_local,
-            'copyr'    : handle_copyr,
-            'copyl'    : handle_copyl,
-            'dataset'    : handle_dataset,
-            }
-        data = handlers[request.GET['command']](request.GET)
-
-        slices[int(current_img)].img.shape[0]
-
-    state_output = {
-        'image' : current_img,
-        'images': sorted(slices.keys()),
-        'height': slices[int(current_img)].img.shape[0],
-        'width' : slices[int(current_img)].img.shape[1],
-        }
-
-    if not data is None:
-        state_output['response'] = data;
-
-    return HttpResponse(json.dumps(state_output),
                         content_type='application/javascript; charset=utf8')
