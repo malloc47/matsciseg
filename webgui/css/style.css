@@ -33,7 +33,7 @@
 
 .overflow-wrap {
     overflow:auto;
-    height: 580px;
+    height: 510px;
 }
 
 .bottombar {
@@ -68,6 +68,8 @@
 
 .selected {
     border:1px solid;
+    border-color: red;
+    border-width: 2px;
 }
 
 h3 {
