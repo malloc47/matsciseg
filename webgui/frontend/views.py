@@ -1,7 +1,7 @@
 from django.http import HttpResponse, HttpResponseBadRequest
 from django.template import Context, loader
 from django.shortcuts import render_to_response
-from django.core.cache import cache
+from django.core.cache import get_cache
 import simplejson as json
 
 import scipy.ndimage.interpolation
@@ -15,6 +15,10 @@ import render_labels
 import matsci.gui
 import matsci
 
+cache = get_cache('default')
+thumbnail_cache = get_cache('thumbnails')
+
+
 def fetch_or_load(dataset,index):
     # avoid using default value since it would be evaluated
     v = cache.get(dataset+'_'+index)
@@ -23,6 +27,17 @@ def fetch_or_load(dataset,index):
         v = matsci.gco.Slice.load(datasets[dataset][int(index)])
         cache.set(dataset+'_'+index , v)
     return v
+
+def fetch_or_load_thumbnail(dataset,index):
+    thumb = thumbnail_cache.get(dataset+'_'+index)
+    if thumb is None:
+        print(str("Reloading thumbnail from cache"))
+        # this could be pulled from a the 1st layer of cache...
+        v = matsci.gco.Slice.load(datasets[dataset][int(index)])
+        thumb = Image.fromarray(np.uint8(v.img))
+        thumb.thumbnail((128,128), Image.ANTIALIAS)
+        thumbnail_cache.set(dataset+'_'+index , thumb,timeout=31536000)
+    return thumb
 
 def retrieve_cached(fn):
     def wrap(request):
@@ -62,10 +77,13 @@ def img_labeled(request,v):
     http_output.save(response, "PNG")
     return response
 
-@retrieve_cached
-def img_thumb(request,v):
-    http_output = Image.fromarray(np.uint8(v.img))
-    http_output.thumbnail((128,128), Image.ANTIALIAS)
+def img_thumb(request):
+    if request.method != 'GET':
+        return HttpResponseBadRequest()
+    try:
+        http_output = fetch_or_load_thumbnail(request.GET['dataset'], request.GET['slice'])
+    except:
+        return HttpResponseBadRequest()
     response = HttpResponse(mimetype="image/png")
     http_output.save(response, "PNG")
     return response

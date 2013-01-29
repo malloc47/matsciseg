@@ -125,6 +125,15 @@ CACHES = {
             'MAX_ENTRIES' : 30,
             'CULL_FREQUENCY' : 4,
         },
+    },
+    'thumbnails': {
+        'BACKEND': 'common.cache.LocMemRawCache',
+        'TIMEOUT': 31536000,    # cache for a year
+        'OPTIONS': {
+            'MAX_ENTRIES' : 3000,
+            'CULL_FREQUENCY' : 4,
+        },
+        'LOCATION' : 'thumbnails',
     }
 }
 
