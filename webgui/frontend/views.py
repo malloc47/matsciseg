@@ -62,6 +62,20 @@ def retrieve_two_cached(fn):
         return fn(request,v,u)
     return wrap
 
+def reset_cache(dataset,index):
+    print(str("Reloading from cache"))
+    v = matsci.gco.Slice.load(datasets[dataset][int(index)])
+    cache.set(dataset+'_'+index , v)
+    return v
+
+def reset(request):
+    try:
+        reset_cache(request.GET['dataset'],request.GET['slice'])
+        return HttpResponse(json.dumps('reset cache successful'),
+                            content_type='application/javascript; charset=utf8')
+    except:
+        return HttpResponseBadRequest()
+
 @retrieve_cached
 def img_raw(request,v):
     http_output = Image.fromarray(np.uint8(v.img))

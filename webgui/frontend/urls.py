@@ -13,4 +13,5 @@ urlpatterns = patterns('frontend.views',
     url(r'^copy/$', 'copy'),
     url(r'^global/$', 'globalgc'),
     url(r'^local/$', 'localgc'),
+    url(r'^reset/$', 'reset'),
 )
