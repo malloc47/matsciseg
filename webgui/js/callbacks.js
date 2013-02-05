@@ -28,6 +28,7 @@ var callbacks = (function ($,log,workcanvas,tools,sliceSelector,remote) {
 	workcanvas.loading();
         tools.setProp('dataset',dataset);
         tools.setProp('images', $(this).data('slices'));
+        tools.setProp('image', $(this).data('slices')[0]);
         workcanvas.src(tools.getDataset());
         workcanvas.redraw();
         reload_slices();
