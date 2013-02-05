@@ -15,6 +15,20 @@ var remote = (function ($,log) {
 		  }, f).error(err);
     }
 
+    function reload(dataset,slice,f,err) {
+        $.getJSON("/reset/", 
+		  {'dataset'	: dataset,
+		   'slice'	: slice,
+		  }, f).error(err);
+    }
+
+    function save(dataset,slice,f,err) {
+        $.getJSON("/save/", 
+		  {'dataset'	: dataset,
+		   'slice'	: slice,
+		  }, f).error(err);
+    }
+
     function local(dataset,slice,dilation,size,
 		   addition,auto,removal,line,
 		   f,err) {
@@ -42,10 +56,12 @@ var remote = (function ($,log) {
 
     return {
         datasets : datasets,
-        slices : slices,
-        global : global,
-        local : local,
-        copy : copy,
+        slices   : slices,
+        global   : global,
+        local    : local,
+        reload   : reload,
+        save     : save,
+        copy     : copy,
     }
 
 }($,log));

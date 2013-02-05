@@ -138,9 +138,12 @@ def get_datasets(request):
             'c1' : 'Crop1', 
             'c2' : 'Crop2', 
             'c3' : 'Crop3',
-            'c4' : 'Crop4'
+            'c4' : 'Crop4',
+            'c3-demo' : 'RemDemo',
+            'c2-demo' : 'AddDemo',
             }
-        d = [ [f,labels[f] ] for f in datasets.keys() ]
+
+        d = [ [f,labels[f],datasets[f].keys() ] for f in datasets.keys() ]
 
         return HttpResponse(json.dumps(d),
                             content_type='application/javascript; charset=utf8')
@@ -167,6 +170,15 @@ def globalgc(request,v):
         
     v.graph_cut(1)
     return HttpResponse(json.dumps('global graph cut successful'),
+                        content_type='application/javascript; charset=utf8')
+
+@retrieve_cached
+def save(request,v):
+    output = datasets[request.GET['dataset']][int(request.GET['slice'])]
+    # reload data term, in case it wasn't defined
+    v.data = matsci.data.Data(v.labels.v)
+    v.save(output)
+    return HttpResponse(json.dumps('data save successful'),
                         content_type='application/javascript; charset=utf8')
 
 def convert_string(s):

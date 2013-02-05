@@ -27,6 +27,7 @@ var callbacks = (function ($,log,workcanvas,tools,sliceSelector,remote) {
 	$("#accordion").accordion("activate", 0);
 	workcanvas.loading();
         tools.setProp('dataset',dataset);
+        tools.setProp('images', $(this).data('slices'));
         workcanvas.src(tools.getDataset());
         workcanvas.redraw();
         reload_slices();
@@ -139,6 +140,25 @@ var callbacks = (function ($,log,workcanvas,tools,sliceSelector,remote) {
 	log.append("reset successful")
     }
 
+    function reload() {
+	tools.clear();
+	workcanvas.redraw();
+	remote.reload(tools.getProp('dataset'),
+		      tools.getProp('image'),
+		      function() {log.append("reload successful");
+				  workcanvas.src(tools.getDataset());
+				  workcanvas.redraw();},
+		      function() {log.append("error: no response");
+				  workcanvas.redraw();});
+    }
+
+    function save() {
+	remote.save(tools.getProp('dataset'),
+		    tools.getProp('image'),
+		    function() {log.append("save successful");},
+		    function() {log.append("error: unable to save");});
+    }
+
     function canvas_redraw() {
 	addition = tools.get('addition');
 	auto = tools.get('auto');
@@ -225,6 +245,8 @@ var callbacks = (function ($,log,workcanvas,tools,sliceSelector,remote) {
         imgtype        : imgtype,
         interaction    : interaction,
         reset          : reset,
+        reload         : reload,
+        save           : save,
         canvas_redraw  : canvas_redraw,
         canvas_left    : canvas_left,
         canvas_right   : canvas_right,

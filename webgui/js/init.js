@@ -44,6 +44,7 @@ var init = (function ($,log,workcanvas,tools,callbacks,remote) {
 	    var parent = $('#datasets');
 	    data.forEach(function (e) {
 		parent.append('<button type="button" class="dataset button" id="'+e[0]+'">'+e[1]+'</button>')
+                $('#'+e[0]).data('slices',e[2]);
 	    });
 	    $('.dataset').button({icons: {primary: "ui-icon-document"}})
                 .click(callbacks.change_dataset);
@@ -90,6 +91,8 @@ var init = (function ($,log,workcanvas,tools,callbacks,remote) {
 	$('#copyr').button({icons: {primary: "ui-icon-triangle-1-e"}});
 	$('#copyl').button({icons: {primary: "ui-icon-triangle-1-w"}});
 	$('#reset').button({icons: {primary: "ui-icon-cancel"}});
+	$('#reload').button({icons: {primary: "ui-icon-cancel"}});
+	$('#save').button({icons: {primary: "ui-icon-document"}});
 	$('.dataset').button({icons: {primary: "ui-icon-document"}});
 
 	$('#interactionset').buttonsetv();
@@ -107,6 +110,8 @@ var init = (function ($,log,workcanvas,tools,callbacks,remote) {
 	$('.interaction').click(callbacks.interaction);
 
 	$('#reset').click(callbacks.reset);
+	$('#reload').click(callbacks.reload);
+	// $('#save').click(callbacks.save);
 
 	$('#mainimg').bind('contextmenu', callbacks.canvas_left);
 	$('#mainimg').click(callbacks.canvas_right);
