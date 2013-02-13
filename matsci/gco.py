@@ -497,6 +497,8 @@ class Slice(object):
                       , lightweight=lite
                       , nodata=lite
                       , center=self.center)
+        if(max(self.labels.num_components()) > 1):
+            print('ERROR: Inconsistent inter-segment topology')
         return self.labels.v
 
     def copy(self):

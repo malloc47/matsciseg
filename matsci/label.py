@@ -86,6 +86,10 @@ def largest_connected_component(im):
     sizes = [ ((labels==l).sum(),l) for l in range(1,num+1) ]
     return labels==max(sizes,key=lambda x:x[0])[1]
 
+def num_components(labels):
+    return [ ndimage.label(labels==l)[1] 
+             for l in range(labels.max()+1) ]
+
 def boundary_connected_component(im,boundary):
     labels,num = ndimage.label(im)
     if num < 1:
@@ -193,6 +197,9 @@ class Label(object):
 
     def region_boundary_intensity(self,img,l,t):
         return region_boundary_intensity(self.v,img,l,t)
+
+    def num_components(self):
+        return num_components(self.v)
 
     def clean(self):
         self.v = region_clean(region_shift(self.v
