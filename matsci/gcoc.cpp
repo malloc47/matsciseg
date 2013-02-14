@@ -61,7 +61,7 @@ int smoothFnI(int s1, int s2, int l1, int l2, void *extraData) {
 	if(!(*((npy_int16*)PyArray_GETPTR2(adj,l1,l2)))) { return INF; };
 
 	// use this for intensity image
-	return int((1.0/double((abs(sites[s1]-sites[s2]) < LTHRESH ? LTHRESH : abs(sites[s1]-sites[s2]))+1)) * N);
+	return int((1.0/double((abs(sites[s1]-sites[s2]) < LTHRESH ? LTHRESH : abs(sites[s1]-sites[s2]))+1)) * N + extra->bias);
 }
 
 int smoothFnE(int s1, int s2, int l1, int l2, void *extraData) {
@@ -75,7 +75,7 @@ int smoothFnE(int s1, int s2, int l1, int l2, void *extraData) {
 	if(!(*((npy_int16*)PyArray_GETPTR2(adj,l1,l2)))) { return INF; };
 
 	// use this for edge image
-	return int( 1/(std::max(double(sites[s1]),double(sites[s2]))+1) * N );
+	return int( 1/(std::max(double(sites[s1]),double(sites[s2]))+1) * N + extra->bias);
 }
 
 int smoothFnM(int s1, int s2, int l1, int l2, void *extraData) {
@@ -89,7 +89,7 @@ int smoothFnM(int s1, int s2, int l1, int l2, void *extraData) {
 	if(!(*((npy_int16*)PyArray_GETPTR2(adj,l1,l2)))) { return INF; };
 
 	// use this for minimums in image
-	return int( 1/(256-std::min(double(sites[s1]),double(sites[s2]))) * N );
+	return int( 1/(256-std::min(double(sites[s1]),double(sites[s2]))) * N + extra->bias);
 }
 
 int smoothFnS(int s1, int s2, int l1, int l2, void *extraData) {
@@ -100,7 +100,7 @@ int smoothFnS(int s1, int s2, int l1, int l2, void *extraData) {
 	if(l1 == l2) { return 0; }
 	if(!(*((npy_int16*)PyArray_GETPTR2(adj,l1,l2)))) { return INF; };
 
-	return int( exp( -1 * ((pow(double(sites[s1]) - double(sites[s2]),2.0))/(2.0*pow(sigma,2.0)))  )  * N );
+	return int( exp( -1 * ((pow(double(sites[s1]) - double(sites[s2]),2.0))/(2.0*pow(sigma,2.0)))  )  * N + extra->bias);
 }
 
 int smoothFnSE(int s1, int s2, int l1, int l2, void *extraData) {
@@ -111,7 +111,7 @@ int smoothFnSE(int s1, int s2, int l1, int l2, void *extraData) {
 	if(l1 == l2) { return 0; }
 	if(!(*((npy_int16*)PyArray_GETPTR2(adj,l1,l2)))) { return INF; };
 
-	return int( exp( -1 * ((pow(std::max(double(sites[s1]),double(sites[s2])),2.0))/(2.0*pow(sigma,2.0)))  )  * N );
+	return int( exp( -1 * ((pow(std::max(double(sites[s1]),double(sites[s2])),2.0))/(2.0*pow(sigma,2.0)))  )  * N + extra->bias);
 }
 
 void GridGraph_DArraySArray(int width,int height,int num_pixels,int num_labels);
@@ -122,11 +122,12 @@ static PyObject *graph_cut(PyObject *self, PyObject *args) {
   int num_labels;
   int mode = MODE_I;
   double sigma = 10.0;
+  int bias = 0;
   int d[3];
   bool has_func = false;
   // rediculous amount of typechecking, as it makes for fewer
   // headaches later
-  if (!PyArg_ParseTuple(args, "O!O!O!O!i|idO:set_callback", 
+  if (!PyArg_ParseTuple(args, "O!O!O!O!i|idiO:set_callback", 
 			&PyArray_Type, &data_p,
 			&PyArray_Type, &img_p, 
 			&PyArray_Type, &seedimg_p, 
@@ -134,6 +135,7 @@ static PyObject *graph_cut(PyObject *self, PyObject *args) {
 			&num_labels,
 			&mode,
 			&sigma,
+			&bias,
 			&func)) {
     PyErr_SetString(PyExc_ValueError, "Parameters not right");
     return NULL;
@@ -141,6 +143,7 @@ static PyObject *graph_cut(PyObject *self, PyObject *args) {
 
   printf("mode %i\n",mode);
   printf("sigma %f\n",sigma);
+  printf("bias %i\n",bias);
 
   // check that the objects were successfully assigned
   if (NULL == data_p    ||
@@ -261,6 +264,7 @@ static PyObject *graph_cut(PyObject *self, PyObject *args) {
     toFn.func = func;
   toFn.num_labels = num_labels;
   toFn.sites = sites;
+  toFn.bias = bias;
 
   // set the smooth function pointer
   if(has_func) {
