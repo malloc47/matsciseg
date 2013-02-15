@@ -3,10 +3,6 @@ import numpy as np
 from collections import namedtuple
 import inspect
 
-_Cmd = namedtuple('Cmd', 'name type default help')
-def Cmd(name, type, default=None, help=None):
-  return _Cmd(name, type, default, help)
-
 binary_types = {
     'i' : 0,
     'e' : 1,
@@ -81,7 +77,7 @@ def dummy_cmd(arg,im,im_gray,im_prev,seed):
         return m
     v.data.regions = map(functools.partial(boost_val,1)
                          ,v.data.regions[:-1]) \
-        + [boost_val(0,v.data.regions[-1])]
+                         + [boost_val(0,v.data.regions[-1])]
     # v.data.output_data_term()
     print("Dilated")
     v.graph_cut(arg['gctype'],lite=True)
@@ -281,7 +277,7 @@ def color_cmd(arg,im,im_gray,im_prev,labels):
     d = [ np.min(np.dstack((gauss(*rn)(normalize(im[:,:,0]))
                             , gauss(*gn)(normalize(im[:,:,1]))
                             , gauss(*bn)(normalize(im[:,:,2]))))
-                  ,axis=2)
+                 ,axis=2)
           for (rn,gn,bn) in norms ]
 
     m = max([x.max() for x in d])
@@ -304,36 +300,34 @@ default = [Cmd('dilation',int,10,'size of dilation (unary) term'),]
 # contains the parameters to `add_argument` plus 'name' which is
 # removed before adding
 argtypes = {
-  'dilation' : {
-    'name' : ['-d','--dilation'],
-    'type' : int,
-    'default' : 10,
-    'help' : 'size of dilation (unary) term',
-    },
-  'binary' : {
-    'name' : ['-b','--binary'],
-    'action': 'store',
-    'choices' : binary_types.keys(),
-    'default' : 'e',
-    'help' : 'Type of edges (binary term)',
-    },
-  }
-
-cmds = {}
+    'dilation' : {
+        'name' : ['-d','--dilation'],
+        'type' : int,
+        'default' : 10,
+        'help' : 'size of dilation (unary) term',
+        },
+    'binary' : {
+        'name' : ['-b','--binary'],
+        'action': 'store',
+        'choices' : binary_types.keys(),
+        'default' : 'e',
+        'help' : 'type of edges (binary term)',
+        },
+    }
 
 # go through the functions above and match their parameters with
 # argtypes to automatically expose these functions to the CLI
 cmds = { 
-  f : {
-    'fn' : globals()[f+'_cmd'],
-    'args' : {f : argtypes[f] 
-              for f in inspect.getargspec(globals()[f+'_cmd']).args 
-              if f in argtypes} # make this a regex match
+    f : {
+        'fn' : globals()[f+'_cmd'],
+        'args' : {f : argtypes[f] 
+                  for f in inspect.getargspec(globals()[f+'_cmd']).args 
+                  if f in argtypes} # make this a regex match
+        }
+    for f in [ s[:-4] for s in 
+               filter(lambda s: 
+                      not (s.startswith('_') or 
+                           s.endswith('_')) 
+                      and s.endswith('_cmd'), 
+                      globals())] 
     }
-  for f in [ s[:-4] for s in 
-             filter(lambda s: 
-                    not (s.startswith('_') or 
-                         s.endswith('_')) 
-                    and s.endswith('_cmd'), 
-                    globals())] 
-  }
