@@ -37,6 +37,16 @@ def global_cmd(arg,im,im_gray,im_prev,seed,dilation,binary):
     print("Graph Cut Complete")
     return v.labels.v
 
+def global_fixed_cmd(arg,im,im_gray,im_prev,seed):
+    v = matsci.gco.Slice(im_gray,seed)
+    print("Initialized")
+    v.data.dilate_fixed_center(arg['d'],rel_size=0.5,min_size=2,first=True)
+    print("Dilated")
+    labels = v.graph_cut(arg['gctype'])
+    print("Graph Cut Complete")
+    # import code; code.interact(local=locals())
+    return v.labels.v
+
 def matrix_cmd(arg,im,im_gray,im_prev,seed):
     v = matsci.gco.Slice(im_gray,seed,bg=True,lightweight=True)
     print("Initialized")

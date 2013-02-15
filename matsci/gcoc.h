@@ -13,6 +13,7 @@ struct ForSmoothFn {
   PyObject *func;
   int *sites;
   double sigma;
+  int bias;
 };
 
 PyMODINIT_FUNC initgcot();

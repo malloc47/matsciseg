@@ -454,7 +454,7 @@ class Slice(object):
                 # self.adj.set_adj_new(shifted_labels)
                 new_label+=1
 
-    def graph_cut(self,mode=0,lite=False):
+    def graph_cut(self,mode=0,lite=False,bias=1,sigma=None):
         """run graph cut on this volume (mode specifies V(p,q) term"""
         # if self.win != (0,0):
         # self.output_data_term()
@@ -474,9 +474,8 @@ class Slice(object):
         # print(str(np.array(self.labels.v).shape))
         # print(str(self.adj.v.shape))
 
-        sigma = 10
-        if mode > 2:
-            sigma = np.std(self.img)
+        if sigma is None:
+            sigma = np.std(self.img) if mode > 2 else 10
 
         output = gcoc.graph_cut(self.data.matrix()
                                 , self.img
@@ -487,7 +486,10 @@ class Slice(object):
                                 , self.data.length()
                                 , mode
                                 , sigma
+                                , bias
                                 )
+        if(max(label.num_components(output)) > 1):
+            print('ERROR: Inconsistent inter-segment topology')
         # fully reinitialize self (recompute adj, data, etc.)
         self.__init__(self.img
                       , output
@@ -497,9 +499,8 @@ class Slice(object):
                       , lightweight=lite
                       , nodata=lite
                       , center=self.center)
-        if(max(self.labels.num_components()) > 1):
-            print('ERROR: Inconsistent inter-segment topology')
         return self.labels.v
+        # return output
 
     def copy(self):
         from copy import deepcopy
