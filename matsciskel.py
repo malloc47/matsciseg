@@ -3,7 +3,7 @@ import sys,os,cv,cv2
 import numpy as np
 import scipy
 from scipy import ndimage
-import recipes
+import recipes_old
 
 def display(im):
     cv2.namedWindow("tmp",cv2.CV_WINDOW_AUTOSIZE)
@@ -46,13 +46,13 @@ def get_recipes():
     """pull in functions from the recipes module, ignoring builtins,
     and strip off the _cmd to get a string equivalent, and then build
     dict of functions"""
-    return {k : getattr(recipes, k+'_cmd') for k in 
+    return {k : getattr(recipes_old, k+'_cmd') for k in 
             [ s[:-4] for s in 
               filter(lambda s: 
                      not (s.startswith('_') or 
                           s.endswith('_')) 
                      and s.endswith('_cmd'), 
-                     dir(recipes))]}
+                     dir(recipes_old))]}
 
 def main(*args):
     if(len(args) < 8):

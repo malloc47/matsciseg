@@ -1,40 +1,17 @@
 import matsci
 import numpy as np
-from collections import namedtuple
-import inspect
 
-_Cmd = namedtuple('Cmd', 'name type default help')
-def Cmd(name, type, default=None, help=None):
-  return _Cmd(name, type, default, help)
-
-binary_types = {
-    'i' : 0,
-    'e' : 1,
-    'm' : 2,
-    's' : 3,
-    't' : 4,
-    }
-
-# def global_cmd(arg,im,im_gray,im_prev,seed):
-#     v = matsci.gco.Slice(im_gray,seed)
-#     print("Initialized")
-#     v.data.dilate_all(arg['d'])
-#     # v.data.output_data_term()
-#     print("Dilated")
-#     # v.set_adj_label_all(0);
-#     # print("Adjacent")
-#     v.graph_cut(arg['gctype'])
-#     print("Graph Cut Complete")
-#     # import code; code.interact(local=locals())
-#     return v.labels.v
-
-def global_cmd(arg,im,im_gray,im_prev,seed,dilation,binary):
+def global_cmd(arg,im,im_gray,im_prev,seed):
     v = matsci.gco.Slice(im_gray,seed)
     print("Initialized")
-    v.data.dilate_all(dilation)
+    v.data.dilate_all(arg['d'])
+    # v.data.output_data_term()
     print("Dilated")
-    v.graph_cut(binary_types[binary])
+    # v.set_adj_label_all(0);
+    # print("Adjacent")
+    v.graph_cut(arg['gctype'])
     print("Graph Cut Complete")
+    # import code; code.interact(local=locals())
     return v.labels.v
 
 def matrix_cmd(arg,im,im_gray,im_prev,seed):
@@ -289,41 +266,3 @@ def color_cmd(arg,im,im_gray,im_prev,labels):
     # return v.clique_swap(0)
     return v.graph_cut(arg['gctype'])
 
-default = [Cmd('dilation',int,10,'size of dilation (unary) term'),]
-
-# contains the parameters to `add_argument` plus 'name' which is
-# removed before adding
-argtypes = {
-  'dilation' : {
-    'name' : ['-d','--dilation'],
-    'type' : int,
-    'default' : 10,
-    'help' : 'size of dilation (unary) term',
-    },
-  'binary' : {
-    'name' : ['-b','--binary'],
-    'action': 'store',
-    'choices' : binary_types.keys(),
-    'default' : 'e',
-    'help' : 'Type of edges (binary term)',
-    },
-  }
-
-cmds = {}
-
-# go through the functions above and match their parameters with
-# argtypes to automatically expose these functions to the CLI
-cmds = { 
-  f : {
-    'fn' : globals()[f+'_cmd'],
-    'args' : {f : argtypes[f] 
-              for f in inspect.getargspec(globals()[f+'_cmd']).args 
-              if f in argtypes} # make this a regex match
-    }
-  for f in [ s[:-4] for s in 
-             filter(lambda s: 
-                    not (s.startswith('_') or 
-                         s.endswith('_')) 
-                    and s.endswith('_cmd'), 
-                    globals())] 
-  }
