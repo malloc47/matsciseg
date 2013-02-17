@@ -7,6 +7,12 @@
 #define MODE_M 2
 #define MODE_S 3
 #define MODE_T 4
+//#define DEBUG
+#ifdef DEBUG
+#define VPRINTF(...) printf(__VA_ARGS__)
+#else
+#define VPRINTF(...) 
+#endif
 
 static PyMethodDef gcocMethods[] = { 
   {"graph_cut", graph_cut, METH_VARARGS, "Graph Cut Optimization wrapper"},
@@ -141,9 +147,9 @@ static PyObject *graph_cut(PyObject *self, PyObject *args) {
     return NULL;
   }
 
-  printf("mode %i\n",mode);
-  printf("sigma %f\n",sigma);
-  printf("bias %i\n",bias);
+  VPRINTF("mode %i\n",mode);
+  VPRINTF("sigma %f\n",sigma);
+  VPRINTF("bias %i\n",bias);
 
   // check that the objects were successfully assigned
   if (NULL == data_p    ||
@@ -167,7 +173,7 @@ static PyObject *graph_cut(PyObject *self, PyObject *args) {
 
   // CORNER CASE HERE: if data term is dimension 2, we should not fail, but instead just do nothing
   if(data_p->nd == 2) {
-    printf("Warning: No Graph Cut work to do! Data term is 2D.\n");
+    printf("WARNING: No Graph Cut work to do! Data term is 2D.\n");
   	return PyArray_Return(seedimg_p);
   }
   
@@ -269,29 +275,29 @@ static PyObject *graph_cut(PyObject *self, PyObject *args) {
   // set the smooth function pointer
   if(has_func) {
     gc->setSmoothCost(&smoothFnCb,&toFn);
-    printf("custom function\n");
+    VPRINTF("custom function\n");
   }
   else if(mode==MODE_I) {
     gc->setSmoothCost(&smoothFnI,&toFn);
-    printf("intensity function\n");
+    VPRINTF("intensity function\n");
   }
   else if(mode==MODE_E) {
     gc->setSmoothCost(&smoothFnE,&toFn);
-    printf("edge function\n");
+    VPRINTF("edge function\n");
   }
   else if(mode==MODE_M) {
     gc->setSmoothCost(&smoothFnM,&toFn);
-    printf("min function\n");
+    VPRINTF("min function\n");
   }
   else if(mode==MODE_S) {
     toFn.sigma = sigma;
     gc->setSmoothCost(&smoothFnS,&toFn);
-    printf("contrast-sensitive function\n");
+    VPRINTF("contrast-sensitive function\n");
   }
   else if(mode==MODE_T) {
     toFn.sigma = sigma;
     gc->setSmoothCost(&smoothFnSE,&toFn);
-    printf("max contrast-sensitive function\n");
+    VPRINTF("max contrast-sensitive function\n");
   }
   else { 
     PyErr_SetString(PyExc_ValueError, "Invalid mode specified");
