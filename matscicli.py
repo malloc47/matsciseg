@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from __future__ import print_function
 import sys,os,cv,cv2
 import numpy as np
 import scipy
@@ -6,6 +7,7 @@ from scipy import ndimage
 import recipes
 import argparse
 import inspect
+import matsciskel
 
 edge_types = {
     'i' : 0,
@@ -15,24 +17,36 @@ edge_types = {
     't' : 4,
     }
 
-def run_jobs(pargs):
+def run_jobs(pargs,fn):
     for f in range(0,len(pargs.files),4):        
-        im,im_gray = read_img(pargs.files[f])
-        im2,im2_gray = read_img(pargs.files[f+2])
-        labels1 = np.genfromtxt(pargs.files[f+1],dtype='int16')
-        labels2 = np.genfromtxt(pargs.files[f+3],dtype='int16')
-        # todo: wrap these in dict, use inspect to determine which
-        # args to pass, and then pass all the arguments from pargs
-        # plus these args to the function
+        im,im_gray =  matsciskel.read_img(pargs.files[f])
+        im2,im2_gray =  matsciskel.read_img(pargs.files[f+2])
+        labels =  np.genfromtxt(pargs.files[f+1],dtype='int16')
+        labels2 = pargs.files[f+3]
+        param = {
+            'im' : im,
+            'im_gray' : im_gray,
+            'im2' : im2,
+            'im2_gray' : im2_gray,
+            'labels' :  labels,
+            'labels2' : labels2,
+            'vp' : print if pargs.verbose else lambda *a, **k: None
+            }
+        param.update(vars(pargs))
+        output = fn(**{k:v for k,v in param.iteritems() if k in inspect.getargspec(fn).args})
+        np.savetxt(labels2,output,fmt='%1d')
+        if not pargs.output_image is None:
+            cv2.imwrite(pargs.output_image,
+                        matsciskel.draw_on_img(im,
+                                               matsciskel.label_to_bmp(output)))
 
 def main(*args):
     parser = argparse.ArgumentParser(
         description='CLI for materials image segmentation propagation')
-    # parser.add_argument('-b','--binary',
-    #                     action='store',dest='binary_type',
-    #                     choices=edge_types.keys(), default='e', 
-    #                     help='Type of edges (binary term)')
     subparsers = parser.add_subparsers(dest='subcmd')
+
+    parser.add_argument('-v', '--verbose', action='count',
+                        default=0, dest='verbose')
 
     cmds = recipes.cmds
 
@@ -45,17 +59,18 @@ def main(*args):
                 *namelst,
                  **{k:v for k,v in argval.iteritems() if k!='name'})
 
+        cmd_parser.add_argument('-o','--output-image',
+                                action='store',dest='output_image',
+                                help='output image path to store visualization of segmentation')
         cmd_parser.add_argument('files', nargs='+', help='im1, labels1, im2, labels2_output files')
 
     pargs = parser.parse_args(args[1:])
 
-    print(str(inspect.getargspec(cmds[pargs.subcmd]['fn'])))
-
-    # complain if not all four input/output args
+    # complain if not given all four input/output args
     if len(pargs.files) % 4 != 0:
         parser.error( 'must specify input and output image and labels' )
 
-    run_jobs(pargs)
+    run_jobs(pargs, cmds[pargs.subcmd]['fn'])
 
 if __name__ == '__main__':
     sys.exit(main(*sys.argv))
