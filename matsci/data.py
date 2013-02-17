@@ -183,13 +183,13 @@ def dilate(img,d):
     return cv2.morphologyEx(convert_to_uint8(img),
                             cv2.MORPH_DILATE,
                             cv2.getStructuringElement(cv2.MORPH_ELLIPSE,
-                                                      (d,d))).astype(bool)
+                                                      (int(d),int(d)))).astype(bool)
 
 def erode(img,d):
     return cv2.morphologyEx(convert_to_uint8(img),
                             cv2.MORPH_ERODE,
                             cv2.getStructuringElement(cv2.MORPH_ELLIPSE,
-                                                      (d,d))).astype(bool)
+                                                      (int(d),int(d)))).astype(bool)
 
 def erode_to(img,d=3,rel_size=0.5,min_size=15):
     """erode to structure to specified relative size"""
@@ -359,7 +359,7 @@ class Data(object):
                 zip(self.regions[1:],combine))
 
         # fetch the largest component (remove unconnected straggling pixels)
-        from gco import largest_connected_component
+        from label import largest_connected_component
         self.regions = [self.regions[0]] + \
             map(largest_connected_component,self.regions[1:])
 
