@@ -105,9 +105,6 @@ class Slice(object):
     def save(self,out):
         img,label,data,adj = self.dump()
         np.savez(out,img=img,label=label,data=data,adj=adj)
-        # np.save(img_path,self.img)
-        # np.save(label_path,self.labels.v)
-        # np.save(data_path,data.stack_matrix(self.data.regions))
 
     def dump(self):
         return (self.img,self.labels.v,data.stack_matrix(self.data.regions),self.adj.v)
