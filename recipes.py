@@ -11,21 +11,8 @@ binary_types = {
     't' : 4,
     }
 
-# def global_cmd(arg,im,im_gray,im_prev,seed):
-#     v = matsci.gco.Slice(im_gray,seed)
-#     print("Initialized")
-#     v.data.dilate_all(arg['d'])
-#     # v.data.output_data_term()
-#     print("Dilated")
-#     # v.set_adj_label_all(0);
-#     # print("Adjacent")
-#     v.graph_cut(arg['gctype'])
-#     print("Graph Cut Complete")
-#     # import code; code.interact(local=locals())
-#     return v.labels.v
-
-def global_cmd(arg,im,im_gray,im_prev,seed,dilation,binary):
-    v = matsci.gco.Slice(im_gray,seed)
+def global_cmd(im_gray,labels,dilation,binary):
+    v = matsci.gco.Slice(im_gray,labels)
     print("Initialized")
     v.data.dilate_all(dilation)
     print("Dilated")
@@ -33,44 +20,45 @@ def global_cmd(arg,im,im_gray,im_prev,seed,dilation,binary):
     print("Graph Cut Complete")
     return v.labels.v
 
-def global_fixed_cmd(arg,im,im_gray,im_prev,seed):
-    v = matsci.gco.Slice(im_gray,seed)
+def global_fixed_cmd(im_gray,labels,dilation,binary):
+    v = matsci.gco.Slice(im_gray,labels)
     print("Initialized")
-    v.data.dilate_fixed_center(arg['d'],rel_size=0.5,min_size=2,first=True)
+    v.data.dilate_fixed_center(dilation,rel_size=0.5,min_size=2,first=True)
     print("Dilated")
-    labels = v.graph_cut(arg['gctype'])
+    v.graph_cut(binary_types[binary])
     print("Graph Cut Complete")
     # import code; code.interact(local=locals())
     return v.labels.v
 
-def matrix_cmd(arg,im,im_gray,im_prev,seed):
-    v = matsci.gco.Slice(im_gray,seed,bg=True,lightweight=True)
+def matrix_cmd(im_gray,labels,dilation,binary):
+    v = matsci.gco.Slice(im_gray,labels,bg=True,lightweight=True)
     print("Initialized")
-    v.data.dilate_fixed_center(arg['d'],rel_size=0.2,min_size=5,first=False)
-    v.data.dilate_first(arg['d'])
+    v.data.dilate_fixed_center(dilation,rel_size=0.2,min_size=5,first=False)
+    v.data.dilate_first(dilation)
     print("Dilated")
     v.adj.set_adj_bg()
-    v.graph_cut(arg['gctype'],lite=True)
-    prinnnnnt("Graph Cut Complete")
-    return v.labels.v
-
-def matrix_unfixed_cmd(arg,im,im_gray,im_prev,seed):
-    v = matsci.gco.Slice(im_gray,seed,bg=True,lightweight=True)
-    print("Initialized")
-    v.data.dilate_all(arg['d'])
-    print("Dilated")
-    v.adj.set_adj_bg()
-    v.graph_cut(arg['gctype'],lite=True)
+    v.graph_cut(binary_types[binary],lite=True)
     print("Graph Cut Complete")
     return v.labels.v
 
-def dummy_cmd(arg,im,im_gray,im_prev,seed):
+def matrix_unfixed_cmd(im_gray,labels,dilation,binary):
+    v = matsci.gco.Slice(im_gray,labels,bg=True,lightweight=True)
+    print("Initialized")
+    v.data.dilate_all(dilation)
+    print("Dilated")
+    v.adj.set_adj_bg()
+    v.graph_cut(binary_types[binary],lite=True)
+    print("Graph Cut Complete")
+    return v.labels.v
+
+def dummy_cmd(arg,im,im_gray,labels,dilation,dilation2,binary):
     import functools
-    v = matsci.gco.Slice(im_gray,seed,bg=True,lightweight=True)
+    v = matsci.gco.Slice(im_gray,labels,bg=True,lightweight=True)
     print("Initialized")
     l = v.new_dummy_label()
-    v.data.dilate_all(arg['d'])
-    v.data.regions[-1] = matsci.data.dilate(matsci.data.labels_to_edges(v.labels.v),arg['d2'])
+    v.data.dilate_all(dilation)
+    v.data.regions[-1] = matsci.data.dilate(matsci.data.labels_to_edges(v.labels.v)
+                                            ,dilation2)
     v.data.convert_to_int16()
     def boost_val(n,m):
         m[m==0] = n
@@ -80,7 +68,7 @@ def dummy_cmd(arg,im,im_gray,im_prev,seed):
                          + [boost_val(0,v.data.regions[-1])]
     # v.data.output_data_term()
     print("Dilated")
-    v.graph_cut(arg['gctype'],lite=True)
+    v.graph_cut(binary_types[binary],lite=True)
     print("Graph Cut Complete")
     # import scipy
     # scipy.misc.imsave("d.png",matsci.data.bool_to_uint8(v.labels.v==l))
@@ -90,82 +78,82 @@ def dummy_cmd(arg,im,im_gray,im_prev,seed):
     v.labels.clean()
     return v.labels.v
 
-def auto_cmd(arg,im,im_gray,im_prev,seed):
-    v = matsci.gco.Slice(im_gray,seed)
+def auto_cmd(im_gray,labels,binary,dilation):
+    v = matsci.gco.Slice(im_gray,labels)
     print("Initialized")
-    v.data.dilate_auto(v.img,v.labels,arg['d'])
+    v.data.dilate_auto(v.img,v.labels,dilation)
     # v.data.output_data_term()
     print("Dilated")
-    v.graph_cut(arg['gctype'])
+    v.graph_cut(binary_types[binary])
     print("Graph Cut Complete")
     return v.labels.v
 
-def globalgui_cmd(arg,im,im_gray,im_prev,seed):
-    v = matsci.gco.Slice(im_gray,seed)
+def globalgui_cmd(im_gray,labels,binary,dilation):
+    v = matsci.gco.Slice(im_gray,labels)
     print("Initialized")
-    v.data.dilate_all(arg['d'])
+    v.data.dilate_all(dilation)
     print("Dilated")
-    v.graph_cut(arg['gctype'])
+    v.graph_cut(binary_types[binary])
     v.edit_labels_gui(5)
     # import code; code.interact(local=locals())
     return v.labels.v
 
-def gui_cmd(arg,im,im_gray,im_prev,seed):
-    v = matsci.gco.Slice(im_gray,seed)
+def gui_cmd(arg,im_gray,labels,binary):
+    v = matsci.gco.Slice(im_gray,labels)
     print("Initialized")
     v.edit_labels_gui(5)
     return v.labels.v
 
-def skel_cmd(arg,im,im_gray,im_prev,seed):
-    v = matsci.gco.Slice(im_gray,seed)
+def skel_cmd(arg,im_gray,labels,dilation,binary):
+    v = matsci.gco.Slice(im_gray,labels)
     print("Initialized")
-    v.data.dilate(arg['d'])
-    v.data.dilate_first(arg['d'])
+    v.data.dilate(dilation)
+    v.data.dilate_first(dilation)
     print("Dilated")
     v.data.skel(v.orig)
-    return v.graph_cut(arg['gctype'])
+    return v.graph_cut(binary_types[binary])
 
-def log_cmd(arg,im,im_gray,im_prev,seed):
-    v = matsci.gco.Slice(im_gray,seed)
+def log_cmd(arg,im_gray,labels,binary,dilation,dilation2,dilation3):
+    v = matsci.gco.Slice(im_gray,labels)
     print("Initialized")
-    v.data.dilate_first(int(arg['d3']))
-    v.data.fit_log(v.img,arg['d'],arg['d2'])
-    return v.graph_cut(arg['gctype'])
+    v.data.dilate_first(int(dilation3))
+    v.data.fit_log(v.img,dilation,dilation2)
+    return v.graph_cut(binary_types[binary])
 
-def gauss_cmd(arg,im,im_gray,im_prev,seed):
-    v = matsci.gco.Slice(im_gray,seed)
+def gauss_cmd(arg,im_gray,labels,dilation,dilation2,dilation3,binary):
+    v = matsci.gco.Slice(im_gray,labels)
     print("Initialized")
     # v.dilate_first(arg['d']/10)
-    v.data.fit_gaussian(v.img,arg['d'],arg['d2'],arg['d3'])
-    return v.graph_cut(arg['gctype'])
+    v.data.fit_gaussian(v.img,dilation,dilation2,dilation3)
+    return v.graph_cut(binary_types[binary])
 
-def filtergui_cmd(arg,im,im_gray,im_prev,seed):
+def filtergui_cmd(arg,im_gray,labels,binary):
     """opens gui without doing a cleaning first"""
-    v = matsci.gco.Slice(im_gray,seed,lightweight=True)
+    v = matsci.gco.Slice(im_gray,labels,lightweight=True)
     v.edit_labels_gui(5)
-    return v.graph_cut(arg['gctype'])
+    return v.graph_cut(binary_types[binary])
 
-def clique_cmd(arg,im,im_gray,im_prev,seed):
-    v = matsci.gco.Slice(im_gray,seed)
-    v.clique_swap(arg['d'],f=None)
+def clique_cmd(arg,im_gray,labels,dilation,binary):
+    v = matsci.gco.Slice(im_gray,labels)
+    v.clique_swap(dilation,f=None)
     return v.labels.v
 
-def clique2_cmd(arg,im,im_gray,im_prev,seed):
-    v = matsci.gco.Slice(im_gray,seed)
-    v.clique_swap(arg['d'],
+def clique2_cmd(arg,im_gray,labels,dilation,binary):
+    v = matsci.gco.Slice(im_gray,labels)
+    v.clique_swap(dilation,
                   lambda x: max(x.adj.degs(ignore_bg=True, 
                                            ignore=[x.rev_shift(x.center)]),
                                 key=lambda y: y[1])[1] > 3)
     return v.labels.v
 
-def clique_compare_cmd(arg,im,im_gray,im_prev,seed):
-    v2 = matsci.gco.Slice(im_gray,seed)
-    v2.data.dilate_fixed_center(arg['d'], rel_size=0.1, min_size=15, first=True)
+def clique_compare_cmd(arg,im,im_gray,labels,dilation,binary):
+    v2 = matsci.gco.Slice(im_gray,labels)
+    v2.data.dilate_fixed_center(dilation, rel_size=0.1, min_size=15, first=True)
     # v2.non_homeomorphic_remove(10,50)
     # v2.data.dilate_all(arg['d'])
     v2.graph_cut(1)
-    v = matsci.gco.Slice(im_gray,seed)
-    v.clique_swap(arg['d'])
+    v = matsci.gco.Slice(im_gray,labels)
+    v.clique_swap(dilation)
     import matsciskel
     import cv2
     cv2.imwrite('cliquetest.png',matsciskel.draw_on_img(matsciskel.draw_on_img(im,matsciskel.label_to_bmp(v2.labels.v)),matsciskel.label_to_bmp(v.labels.v),color=(0,0,255)))
@@ -173,14 +161,14 @@ def clique_compare_cmd(arg,im,im_gray,im_prev,seed):
     cv2.imwrite('cliquetest_local.png',matsciskel.draw_on_img(im,matsciskel.label_to_bmp(v.labels.v),color=(0,0,255)))
     return v.labels.v
 
-def clique_compare2_cmd(arg,im,im_gray,im_prev,seed):
-    v2 = matsci.gco.Slice(im_gray,seed)
-    v2.clique_swap(arg['d'],
+def clique_compare2_cmd(arg,im,im_gray,dilation,labels):
+    v2 = matsci.gco.Slice(im_gray,labels)
+    v2.clique_swap(dilation,
                    lambda x: max(x.adj.degs(ignore_bg=True, 
                                             ignore=[x.rev_shift(x.center)]),
                                  key=lambda y: y[1])[1] > 3)
-    v = matsci.gco.Slice(im_gray,seed)
-    v.clique_swap(arg['d'])
+    v = matsci.gco.Slice(im_gray,labels)
+    v.clique_swap(dilation)
     import matsciskel
     import cv2
     cv2.imwrite('cliquetest.png',matsciskel.draw_on_img(matsciskel.draw_on_img(im,matsciskel.label_to_bmp(v2.labels.v)),matsciskel.label_to_bmp(v.labels.v),color=(0,0,255)))
@@ -188,22 +176,22 @@ def clique_compare2_cmd(arg,im,im_gray,im_prev,seed):
     cv2.imwrite('cliquetest_local.png',matsciskel.draw_on_img(im,matsciskel.label_to_bmp(v.labels.v),color=(0,0,255)))
     return v.labels.v
 
-def compare_cmd(arg,im,im_gray,im_prev,seed):
-    v = matsci.gco.Slice(im_gray,seed)
+def compare_cmd(arg,im,im_gray,labels,binary):
+    v = matsci.gco.Slice(im_gray,labels)
     # v.data.dilate_fixed_center(arg['d'], rel_size=0.1, min_size=15, first=True)
     # v.data.dilate_all(arg['d'])
     # v.graph_cut(1)
     # v.clique_swap(arg['d'])
     # v.non_homeomorphic_remove(arg['d'],arg['d'])
-    v.non_homeomorphic_yjunction(arg['d'],r3=7)
+    v.non_homeomorphic_yjunction(dilation,r3=7)
     import matsciskel
     import cv2
     cv2.imwrite('cliquetest_local.png',matsciskel.draw_on_img(im,matsciskel.label_to_bmp(v.labels.v),color=(0,0,255)))
     return v.labels.v
 
-def local_stats_cmd(arg,im,im_gray,im_prev,seed):
+def local_stats_cmd(arg,im_gray,labels,binary):
     import pylab
-    v = matsci.gco.Slice(im_gray,seed)
+    v = matsci.gco.Slice(im_gray,labels)
     adj = v.local_adj()
     center = []
     maxdeg = []
@@ -234,7 +222,7 @@ def local_stats_cmd(arg,im,im_gray,im_prev,seed):
     print('Avg Min Deg: ' + str(np.mean(mindeg)))
     return v.labels.v
 
-def color_cmd(arg,im,im_gray,im_prev,labels):
+def color_cmd(arg,im,im_gray,im_prev,labels,binary):
     import scipy
     from scipy.stats import norm
     from scipy.ndimage.filters import gaussian_filter
@@ -293,9 +281,7 @@ def color_cmd(arg,im,im_gray,im_prev,labels):
     v.data.regions = d
     # v.adj.set_adj_all()
     # return v.clique_swap(0)
-    return v.graph_cut(arg['gctype'])
-
-default = [Cmd('dilation',int,10,'size of dilation (unary) term'),]
+    return v.graph_cut(binary_types[binary])
 
 # contains the parameters to `add_argument` plus 'name' which is
 # removed before adding
@@ -315,13 +301,21 @@ argtypes = {
         },
     }
 
+for l in range(2,4):
+    argtypes['dilation'+str(l)] = {
+        'name' : ['-d'+str(l),'--dilation'+str(l)],
+        'type' : int,
+        'default' : 10,
+        'help' : 'size of dilation'+str(l)+' term',
+        }
+
 # go through the functions above and match their parameters with
 # argtypes to automatically expose these functions to the CLI
-cmds = { 
+cmds = {
     f : {
         'fn' : globals()[f+'_cmd'],
         'args' : {f : argtypes[f] 
-                  for f in inspect.getargspec(globals()[f+'_cmd']).args 
+                  for f in inspect.getargspec(globals()[f+'_cmd']).args
                   if f in argtypes} # make this a regex match
         }
     for f in [ s[:-4] for s in 
