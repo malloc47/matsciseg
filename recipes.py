@@ -283,6 +283,11 @@ def color_cmd(vp,im,im_gray,im_prev,labels,binary):
     # return v.clique_swap(0)
     return v.graph_cut(binary_types[binary])
 
+def test_cmd(vp,im_gray,labels,dilation,binary):
+    v = matsci.gco.Slice(im_gray,labels)
+    import code; code.interact(local=locals())
+    return v.labels.v
+
 # contains the parameters to `add_argument` plus 'name' which is
 # removed before adding
 argtypes = {
