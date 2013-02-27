@@ -111,6 +111,11 @@ class Adj(object):
         """remove all topology constraints (everything adjacent)"""
         self.v[:,:] = True
 
+    def set_unadj_bg(self):
+        """make nothing adj to background"""
+        self.v[0,:] = False
+        self.v[:,0] = False
+
     def set_adj_bg(self):
         """make everything adj to background"""
         self.v[0,:] = True

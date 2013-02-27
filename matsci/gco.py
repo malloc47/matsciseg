@@ -399,6 +399,8 @@ class Slice(object):
         """fork off subwindow volume"""
         if extended:
             new_label_list = self.adj.get_adj(label_list)
+        else:
+            new_label_list = label_list
         if len(new_label_list) < 2:
             return None
         mask = self.labels.create_mask(new_label_list)
@@ -451,6 +453,14 @@ class Slice(object):
                 # self.adj.set_adj_new(shifted_labels)
                 new_label+=1
 
+    def alpha_beta_swap(self):
+        for i,j in [ (i,j) for i,j, in self.adj.pairs() if i>=0 and j>=0]:
+            print(str((i,j)))
+            v = self.crop([i,j],extended=False)
+            v.adj.set_unadj_bg()
+            v.graph_cut(1)
+            self.merge(v)
+
     def graph_cut(self,mode=0,lite=False,bias=1,sigma=None):
         """run graph cut on this volume (mode specifies V(p,q) term"""
         # if self.win != (0,0):
@@ -485,7 +495,10 @@ class Slice(object):
                                 , sigma
                                 , bias
                                 )
-        if(max(label.num_components(output)) > 1):
+        # ignore bg if mask is defined
+        if( (max(label.num_components(output)) > 1) 
+            if self.mask is None else 
+            (max(label.num_components(output)[1:]) > 1) ):
             print('ERROR: Inconsistent inter-segment topology')
         # fully reinitialize self (recompute adj, data, etc.)
         self.__init__(self.img
