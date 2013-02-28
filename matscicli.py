@@ -19,22 +19,22 @@ edge_types = {
 
 def run_jobs(pargs,fn):
     for f in range(0,len(pargs.files),4):        
-        im,im_gray =  matsciskel.read_img(pargs.files[f])
-        im2,im2_gray =  matsciskel.read_img(pargs.files[f+2])
-        labels =  np.genfromtxt(pargs.files[f+1],dtype='int16')
-        labels2 = pargs.files[f+3]
+        im_prev,im_prev_gray =  matsciskel.read_img(pargs.files[f])
+        im,im_gray =  matsciskel.read_img(pargs.files[f+2])
+        labels_prev =  np.genfromtxt(pargs.files[f+1],dtype='int16')
+        labels_out = pargs.files[f+3]
         param = {
             'im' : im,
             'im_gray' : im_gray,
-            'im2' : im2,
-            'im2_gray' : im2_gray,
-            'labels' :  labels,
-            'labels2' : labels2,
+            'im_prev' : im_prev,
+            'im_prev_gray' : im_prev_gray,
+            'labels' :  labels_prev,
+            'labels_out' : labels_out,
             'vp' : print if pargs.verbose else lambda *a, **k: None
             }
         param.update(vars(pargs))
         output = fn(**{k:v for k,v in param.iteritems() if k in inspect.getargspec(fn).args})
-        np.savetxt(labels2,output,fmt='%1d')
+        np.savetxt(labels_out,output,fmt='%1d')
         if not pargs.output_image is None:
             cv2.imwrite(pargs.output_image,
                         matsciskel.draw_on_img(im,
@@ -62,7 +62,7 @@ def main(*args):
         cmd_parser.add_argument('-o','--output-image',
                                 action='store',dest='output_image',
                                 help='output image path to store visualization of segmentation')
-        cmd_parser.add_argument('files', nargs='+', help='im1, labels1, im2, labels2_output files')
+        cmd_parser.add_argument('files', nargs='+', help='im_prev, labels_prev, im, labels_output files')
 
     pargs = parser.parse_args(args[1:])
 
