@@ -453,12 +453,15 @@ class Slice(object):
                 # self.adj.set_adj_new(shifted_labels)
                 new_label+=1
 
-    def alpha_beta_swap(self):
+    def alpha_beta_swap(self, dilation=10, mode=1, bias=1):
+        """alpha-beta swap method, written in python and using existing
+        crop/merge algorithm to carry it out in an efficient manner"""
         for i,j in [ (i,j) for i,j, in self.adj.pairs() if i>=0 and j>=0]:
-            print(str((i,j)))
-            v = self.crop([i,j],extended=False)
+            v = self.crop([i,j], extended=False)
             v.adj.set_unadj_bg()
-            v.graph_cut(1)
+            v.data.dilate(dilation)
+            v.data.convert_to_int16()
+            v.graph_cut(mode=mode, bias=bias)
             self.merge(v)
 
     def graph_cut(self,mode=0,lite=False,bias=1,sigma=None):

@@ -283,7 +283,15 @@ def color_cmd(vp,im,im_gray,im_prev,labels,binary):
     # return v.clique_swap(0)
     return v.graph_cut(binary_types[binary])
 
-def test_cmd(vp,im_gray,labels,dilation,binary):
+def pyswap_cmd(vp,im_gray,labels,dilation,binary,bias):
+    v = matsci.gco.Slice(im_gray,labels)
+    vp("alpha-beta swap")
+    v.alpha_beta_swap(dilation=dilation, 
+               mode=binary_types[binary],
+               bias=bias)
+    return v.labels.v
+
+def repl_cmd(vp,im_gray,labels,dilation,binary,bias):
     v = matsci.gco.Slice(im_gray,labels)
     import code; code.interact(local=locals())
     return v.labels.v
@@ -303,6 +311,12 @@ argtypes = {
         'choices' : binary_types.keys(),
         'default' : 'e',
         'help' : 'type of edges (binary term)',
+        },
+    'bias' : {
+        'name' : ['--bias'],
+        'type' : int,
+        'default' : 1,
+        'help' : 'bias for the binary term',
         },
     }
 
