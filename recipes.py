@@ -291,6 +291,14 @@ def pyswap_cmd(vp,im_gray,labels,dilation,binary,bias):
                bias=bias)
     return v.labels.v
 
+def pyexp_cmd(vp,im_gray,labels,dilation,binary,bias):
+    v = matsci.gco.Slice(im_gray,labels)
+    vp("alpha-expansion")
+    v.alpha_expansion(dilation=dilation, 
+                  mode=binary_types[binary],
+                  bias=bias)
+    return v.labels.v
+
 def repl_cmd(vp,im_gray,labels,dilation,binary,bias):
     v = matsci.gco.Slice(im_gray,labels)
     import code; code.interact(local=locals())

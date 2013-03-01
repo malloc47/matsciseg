@@ -34,10 +34,11 @@ def region_boundary_intensity(labels,img,l,t):
     total = len(boundary)
     return float(thresh)/float(total)
 
-def fit_region(im):
+def fit_region(im, padding=0):
     """return coordinates of box that fits around a binary region"""
-    mask_win = np.argwhere(im)
-    (y0, x0), (y1, x1) = mask_win.min(0), mask_win.max(0) + 1 
+    mask_win = np.argwhere(data.dilate(im,padding)) if padding > 0 \
+        else np.argwhere(im)
+    (y0, x0), (y1, x1) = mask_win.min(0), mask_win.max(0) + 1
     return (x0,y0,x1,y1)
 
 def label_max(labels):
@@ -212,6 +213,9 @@ class Label(object):
 
     def num_components(self):
         return num_components(self.v)
+
+    def list(self):
+        return np.unique(self.v)
 
     def clean(self):
         self.v = region_clean(region_shift(self.v

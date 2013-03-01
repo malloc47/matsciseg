@@ -395,16 +395,20 @@ class Slice(object):
     def rev_shift(self,l):
         return dict((v,k) for k,v in self.shifted.items())[l]
 
-    def crop(self,label_list,blank=[],extended=True):
+    def crop(self, label_list, blank=[], extended=True, padding=0, no_bg=False):
         """fork off subwindow volume"""
         if extended:
             new_label_list = self.adj.get_adj(label_list)
         else:
             new_label_list = label_list
-        if len(new_label_list) < 2:
+        # if len(new_label_list) < 2: # Regression warning: untested
+        if len(new_label_list) < 1:
             return None
         mask = self.labels.create_mask(new_label_list)
-        box = label.fit_region(mask)
+        try:
+            box = label.fit_region(mask, padding)
+        except:
+            return None
         # crop out everything with the given window
         mask_cropped = crop_box(mask,box)
         cropped_seed = crop_box(self.labels.v,box)
@@ -421,6 +425,8 @@ class Slice(object):
                 new_label += 1
             else:
                 new_seed[cropped_seed==l] = 0
+        if no_bg:
+            new_seed = label.small_filter(new_seed,0)
         # new_seed[np.logical_not(mask_cropped)] = 0
         return Slice(new_img
                      , new_seed
@@ -430,7 +436,7 @@ class Slice(object):
                      , lightweight=True
                      , center = label_list[0] if len(label_list) < 2 else None)
 
-    def merge(self,v):
+    def merge(self,v,no_mask=False):
         """merge another subwindow volume into this volume"""
         u = self.labels.v[v.win[0]:v.win[0]+v.labels.v.shape[0],
                         v.win[1]:v.win[1]+v.labels.v.shape[1]] # view into array
@@ -446,22 +452,49 @@ class Slice(object):
         for l in [x for x in old_labels if x>0]:
             if l in v.shifted:
                 # print("Shifting "+str(l)+" to "+str(v.shifted[l]))
-                u[np.logical_and(v.labels.v==l,v.mask)]=v.shifted[l]
+                if not no_mask:
+                    u[np.logical_and(v.labels.v==l,v.mask)]=v.shifted[l]
+                else:
+                    u[v.labels.v==l]=v.shifted[l]
             else:
                 # print("Shifting "+str(l)+" to "+str(new_label))
                 u[v.labels.v==l]=new_label
                 # self.adj.set_adj_new(shifted_labels)
                 new_label+=1
 
+    def alpha_expansion(self, dilation=10, mode=1, bias=1):
+        for i in self.labels.list():
+            print(str(i))
+            v = self.crop([i], extended=False, padding=dilation+5)
+            if v is None:
+                print('Label '+str(i)+' is empty')
+                continue
+            v.data.dilate(dilation)
+            v.graph_cut(mode=mode, bias=bias)
+            self.merge(v,no_mask=True)
+
     def alpha_beta_swap(self, dilation=10, mode=1, bias=1):
         """alpha-beta swap method, written in python and using existing
         crop/merge algorithm to carry it out in an efficient manner"""
+
+        # def remove_bg(v):
+        #     labels = label.small_filter(v.labels.v,0)
+        #     return data.Data(v.labels.v)
+
         for i,j in [ (i,j) for i,j, in self.adj.pairs() if i>=0 and j>=0]:
+            print(str((i,j)))
             v = self.crop([i,j], extended=False)
             v.adj.set_unadj_bg()
             v.data.dilate(dilation)
             v.data.convert_to_int16()
             v.graph_cut(mode=mode, bias=bias)
+            # if max(label.num_components(output)) > 1:
+            #     print('Rerunning')
+            #     v = self.crop([i,j], extended=False, no_bg=True)
+            #     v.adj.set_unadj_bg()
+            #     v.data.dilate(dilation)
+            #     v.data.convert_to_int16()
+            #     v.graph_cut(mode=mode, bias=bias)
             self.merge(v)
 
     def graph_cut(self,mode=0,lite=False,bias=1,sigma=None):
@@ -516,7 +549,6 @@ class Slice(object):
         # return output
 
     def copy(self):
-        from copy import deepcopy
         cp = Slice(self.img.copy()
                    , self.labels.v.copy()
                    , self.shifted
