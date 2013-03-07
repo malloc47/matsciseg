@@ -497,7 +497,7 @@ class Slice(object):
             #     v.graph_cut(mode=mode, bias=bias)
             self.merge(v)
 
-    def graph_cut(self,mode=0,lite=False,bias=1,sigma=None):
+    def graph_cut(self,mode=0,lite=False,bias=1,sigma=None,replace=None):
         """run graph cut on this volume (mode specifies V(p,q) term"""
         # if self.win != (0,0):
         # self.output_data_term()
@@ -520,6 +520,10 @@ class Slice(object):
         if sigma is None:
             sigma = np.std(self.img) if mode > 2 else 10
 
+        # assume int if not bool
+        if replace is None:
+            replace = 0 if (self.data.regions[0].dtype.kind == 'b') else -1
+
         output = gcoc.graph_cut(self.data.matrix()
                                 , self.img
                                 , np.array(self.labels.v)#.astype('int16')
@@ -530,6 +534,7 @@ class Slice(object):
                                 , mode
                                 , sigma
                                 , bias
+                                , replace
                                 )
         # ignore bg if mask is defined
         if( (max(label.num_components(output)) > 1) 

@@ -129,11 +129,12 @@ static PyObject *graph_cut(PyObject *self, PyObject *args) {
   int mode = MODE_I;
   double sigma = 10.0;
   int bias = 0;
+  int replace = 0;
   int d[3];
   bool has_func = false;
   // rediculous amount of typechecking, as it makes for fewer
   // headaches later
-  if (!PyArg_ParseTuple(args, "O!O!O!O!i|idiO:set_callback", 
+  if (!PyArg_ParseTuple(args, "O!O!O!O!i|idiiO:set_callback", 
 			&PyArray_Type, &data_p,
 			&PyArray_Type, &img_p, 
 			&PyArray_Type, &seedimg_p, 
@@ -142,6 +143,7 @@ static PyObject *graph_cut(PyObject *self, PyObject *args) {
 			&mode,
 			&sigma,
 			&bias,
+			&replace,
 			&func)) {
     PyErr_SetString(PyExc_ValueError, "Parameters not right");
     return NULL;
@@ -233,13 +235,13 @@ static PyObject *graph_cut(PyObject *self, PyObject *args) {
       for(j=0;j<d[1]; j++)
 	for(k=0;k<num_labels; k++)
 	  data[ ( j+i*d[1]) * num_labels + k ] = 
-	    *((npy_bool*)PyArray_GETPTR3(data_p,i,j,k)) == 1 ? 0 : INF;
+	    *((npy_bool*)PyArray_GETPTR3(data_p,i,j,k)) == replace ? INF : 0;
   else
     for(i=0;i<d[0]; i++)
       for(j=0;j<d[1]; j++)
 	for(k=0;k<num_labels; k++)
 	  data[ ( j+i*d[1]) * num_labels + k ] = 
-	    *((npy_int16*)PyArray_GETPTR3(data_p,i,j,k)) < 0 ? 
+	    *((npy_int16*)PyArray_GETPTR3(data_p,i,j,k)) == replace ? 
                INF : *((npy_int16*)PyArray_GETPTR3(data_p,i,j,k));
 
   // load up segmentation sites
