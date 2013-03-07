@@ -463,13 +463,20 @@ class Slice(object):
                 new_label+=1
 
     def alpha_expansion(self, dilation=10, mode=1, bias=1):
+        # import gui
         for i in self.labels.list():
             print(str(i))
             v = self.crop([i], extended=False, padding=dilation+5)
             if v is None:
                 print('Label '+str(i)+' is empty')
                 continue
-            v.data.dilate(dilation)
+            if not ( (v.labels.v==0).any() or (v.labels.v==1).any() ):
+                print('Label '+str(i)+' is empty')
+                continue
+            # output = gui.color_jet(gui.grey_to_rgb(v.img),v.labels.v)
+            # cv2.imwrite('vtest_'+str(i)+'.png',output)
+            v.data.dilate_fixed_center(dilation, rel_size=0.1, min_size=2, first=True)
+            # v.data.dilate(dilation)
             v.graph_cut(mode=mode, bias=bias)
             self.merge(v,no_mask=True)
 
