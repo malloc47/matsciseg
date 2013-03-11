@@ -285,6 +285,12 @@ def bool_to_uint8(b):
     output[b>0] = 255
     return output
 
+def bool_to_float(b,inf=255):
+    output = np.zeros(b.shape,dtype='float64')
+    output[b==0] = inf
+    output[b>0] = 0
+    return output
+
 class Data(object):
     def __init__(self,labels=None):
         if not labels is None:
@@ -293,6 +299,9 @@ class Data(object):
     def convert_to_int16(self):
         self.regions = map(bool_to_int16 
                            , self.regions)
+
+    def convert_to_x(self,f=bool_to_int16):
+        self.regions = map(f, self.regions)
         
     def skel(self,d=None,erode_size=1):
         """run skeletonization and integrate to data term"""

@@ -477,7 +477,7 @@ class Slice(object):
             # cv2.imwrite('vtest_'+str(i)+'.png',output)
             v.data.dilate_fixed_center(dilation, rel_size=0.1, min_size=2, first=True)
             # v.data.dilate(dilation)
-            v.graph_cut(mode=mode, bias=bias)
+            v.graph_cut(mode=mode, bias=bias, topocut=True)
             self.merge(v,no_mask=True)
 
     def alpha_beta_swap(self, dilation=10, mode=1, bias=1):
@@ -504,7 +504,7 @@ class Slice(object):
             #     v.graph_cut(mode=mode, bias=bias)
             self.merge(v)
 
-    def graph_cut(self,mode=0,lite=False,bias=1,sigma=None,replace=None):
+    def graph_cut(self,mode=0,lite=False,bias=1,sigma=None,replace=None,topocut=False):
         """run graph cut on this volume (mode specifies V(p,q) term"""
         # if self.win != (0,0):
         # self.output_data_term()
@@ -543,8 +543,24 @@ class Slice(object):
                                 , bias
                                 , replace
                                 )
+
+        if topocut and \
+                len(self.data.regions) == 2 and \
+                max(label.num_components(output)) > 1:
+            # print('running topocut')
+            sys.path.insert(0,'../pytopocut/')
+            import topocut.topofix
+            self.data.convert_to_x(data.bool_to_float)  # topocut requires float
+            (ubg, ufg, phi, num_comp, num_hole) = topocut.topofix.fix(self.data.regions[0].astype('float64'),self.data.regions[1].astype('float64'),output,1,1)
+            # convert back to ints
+            self.data.regions[0] = ubg.astype('int16')
+            self.data.regions[1] = ufg.astype('int16')
+            new_data = self.data.matrix()
+            # make "infinity" value unused by setting it to max + 1
+            output = gcoc.graph_cut(new_data , self.img , np.array(self.labels.v) , self.adj.v , self.data.length() , mode , sigma , bias , new_data.max()+1)
+
         # ignore bg if mask is defined
-        if( (max(label.num_components(output)) > 1) 
+        if( (max(label.num_components(output)) > 1)
             if self.mask is None else 
             (max(label.num_components(output)[1:]) > 1) ):
             print('ERROR: Inconsistent inter-segment topology')
