@@ -463,7 +463,6 @@ class Slice(object):
                 new_label+=1
 
     def alpha_expansion(self, dilation=10, mode=1, bias=1):
-        # import gui
         for i in self.labels.list():
             print(str(i))
             v = self.crop([i], extended=False, padding=dilation+5)
@@ -473,11 +472,9 @@ class Slice(object):
             if not ( (v.labels.v==0).any() or (v.labels.v==1).any() ):
                 print('Label '+str(i)+' is empty')
                 continue
-            # output = gui.color_jet(gui.grey_to_rgb(v.img),v.labels.v)
-            # cv2.imwrite('vtest_'+str(i)+'.png',output)
-            v.data.dilate_fixed_center(dilation, rel_size=0.1, min_size=2, first=True)
-            # v.data.dilate(dilation)
-            v.graph_cut(mode=mode, bias=bias, topocut=True)
+            v.data.dilate_fixed_center(dilation, rel_size=0.1, min_size=2, 
+                                       first=True,single=True)
+            v.graph_cut(mode=mode, bias=bias, tc_iter=5)
             self.merge(v,no_mask=True)
 
     def alpha_beta_swap(self, dilation=10, mode=1, bias=1):
@@ -504,7 +501,7 @@ class Slice(object):
             #     v.graph_cut(mode=mode, bias=bias)
             self.merge(v)
 
-    def graph_cut(self,mode=0,lite=False,bias=1,sigma=None,replace=None,topocut=False):
+    def graph_cut(self,mode=0,lite=False,bias=1,sigma=None,replace=None,tc_iter=0):
         """run graph cut on this volume (mode specifies V(p,q) term"""
         # if self.win != (0,0):
         # self.output_data_term()
@@ -544,25 +541,100 @@ class Slice(object):
                                 , replace
                                 )
 
-        if topocut and \
+        if tc_iter >= 1 and \
                 len(self.data.regions) == 2 and \
-                max(label.num_components(output)) > 1:
-            # print('running topocut')
-            sys.path.insert(0,'../pytopocut/')
-            import topocut.topofix
+                max(label.num_components(output,full=False)) > 1:
+
+            # import matplotlib.pyplot as plt
+            # import matplotlib.image as mpimg
+            # import matplotlib.cm as cm
+
+            sys.path.insert(0,'./pytopocut/')
+            import topocut
+
+            num_hole = label.num_components(output,full=False)[0] - 1
+            num_comp = label.num_components(output,full=False)[1]
+            num_iter = 0
+
             self.data.convert_to_x(data.bool_to_float)  # topocut requires float
-            (ubg, ufg, phi, num_comp, num_hole) = topocut.topofix.fix(self.data.regions[0].astype('float64'),self.data.regions[1].astype('float64'),output,1,1)
-            # convert back to ints
-            self.data.regions[0] = ubg.astype('int16')
-            self.data.regions[1] = ufg.astype('int16')
-            new_data = self.data.matrix()
-            # make "infinity" value unused by setting it to max + 1
-            output = gcoc.graph_cut(new_data , self.img , np.array(self.labels.v) , self.adj.v , self.data.length() , mode , sigma , bias , new_data.max()+1)
+
+            # plt.figure(1)
+            # plt.subplot(221)
+            # plt.imshow(self.data.regions[0], cmap=cm.Greys_r)
+            # plt.subplot(222)
+            # plt.imshow(self.data.regions[1], cmap=cm.Greys_r)
+            # plt.subplot(223)
+            # plt.imshow(output, cmap=cm.Greys_r)
+            # plt.show()
+
+            while ((num_comp > 1 or num_hole > 0) and num_iter < tc_iter):
+                print('before num_comp: '+str(num_comp))
+                print('before num_hole: '+str(num_hole))
+                num_iter += 1
+                print('running topocut iteration '+str(num_iter))
+
+                # first round takes care of components reliably
+                # without encountering a degenerate case
+                # (non-stocastic)
+                ubg, ufg, phi, num_comp, num_hole = \
+                    topocut.topofix.fix(self.data.regions[0].astype('float64')
+                                        , self.data.regions[1].astype('float64')
+                                        , output,1,-1, stocastic=False)
+
+                # # not 100% sure about this escape clause...
+                # if (num_comp <= 1) and ( num_hole <= 0):
+                #     output = (phi < 0)
+                #     break
+
+                print('mid num_comp: '+str(num_comp))
+                print('mid num_hole: '+str(num_hole))
+                # convert back to ints
+                self.data.regions[0] = ubg.astype('int16')
+                self.data.regions[1] = ufg.astype('int16')
+
+                new_data = self.data.matrix()
+                # make "infinity" value unused by setting it to max + 1
+                output = gcoc.graph_cut(new_data , self.img
+                                        , np.array(self.labels.v) 
+                                        , self.adj.v , self.data.length() 
+                                        , mode , sigma , bias , new_data.max()+1)
+
+                # second round takes care of holes with with
+                # stochastic algorithm, since hole filling fails with
+                # a non-stochastic process
+                ubg, ufg, phi, num_comp, num_hole = \
+                    topocut.topofix.fix(self.data.regions[0].astype('float64')
+                                        , self.data.regions[1].astype('float64')
+                                        , output,-1,0, stocastic=True)
+
+                self.data.regions[0] = ubg.astype('int16')
+                self.data.regions[1] = ufg.astype('int16')
+
+                new_data = self.data.matrix()
+
+                output = gcoc.graph_cut(new_data , self.img
+                                        , np.array(self.labels.v) 
+                                        , self.adj.v , self.data.length()
+                                        , mode , sigma , bias , new_data.max()+1)
+
+                num_hole = label.num_components(output,full=False)[0] - 1
+                num_comp = label.num_components(output,full=False)[1]
+                print('after num_comp: '+str(num_comp))
+                print('after num_hole: '+str(num_hole))
+
+            # plt.figure(1)
+            # plt.subplot(221)
+            # plt.imshow(self.data.regions[0], cmap=cm.Greys_r)
+            # plt.subplot(222)
+            # plt.imshow(self.data.regions[1], cmap=cm.Greys_r)
+            # plt.subplot(223)
+            # plt.imshow(output, cmap=cm.Greys_r)
+            # plt.show()
 
         # ignore bg if mask is defined
-        if( (max(label.num_components(output)) > 1)
+        if( (max(label.num_components(output,full=False)) > 1)
             if self.mask is None else 
-            (max(label.num_components(output)[1:]) > 1) ):
+            (max(label.num_components(output,full=False)[1:]) > 1) ):
             print('ERROR: Inconsistent inter-segment topology')
         # fully reinitialize self (recompute adj, data, etc.)
         self.__init__(self.img

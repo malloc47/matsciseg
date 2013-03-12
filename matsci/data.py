@@ -191,7 +191,7 @@ def erode(img,d):
                             cv2.getStructuringElement(cv2.MORPH_ELLIPSE,
                                                       (int(d),int(d)))).astype(bool)
 
-def erode_to(img,d=3,rel_size=0.5,min_size=15):
+def erode_to(img,d=3,rel_size=0.5,min_size=15, single=False):
     """erode to structure to specified relative size"""
     prev_size = np.count_nonzero(img)
     if(prev_size <= 0):
@@ -211,6 +211,9 @@ def erode_to(img,d=3,rel_size=0.5,min_size=15):
         img2[center] = True
         return img2
     else:
+        if single:
+            from label import largest_connected_component
+            return largest_connected_component(img)
         return img
 
 def erode_by(img, iterations=3, min_size=15, d=3):
@@ -413,15 +416,15 @@ class Data(object):
                         dilate(img,clamp(find_max_dist(edges,pre(img)))),
                         self.regions)
 
-    def dilate_fixed_center(self,d,rel_size=0.25,min_size=15,first=False):
+    def dilate_fixed_center(self,d,rel_size=0.25,min_size=15,first=False,single=False):
         if first:
-            tmp = [erode_to(img,3,rel_size,min_size) for img in self.regions]
+            tmp = [erode_to(img,3,rel_size,min_size,single) for img in self.regions]
             self.regions = [ dilate(img,d) for img in self.regions ]
             for x in zip(range(len(self.regions)),tmp):
                 self.label_exclusive(*x)
         else:
             tmp = [np.zeros_like(self.regions[0])] + \
-                [erode_to(img,3,rel_size,min_size) for img in self.regions[1:]]
+                [erode_to(img,3,rel_size,min_size,single) for img in self.regions[1:]]
             self.regions = [self.regions[0]] + \
                 [ dilate(img,d) for img in self.regions[1:] ]
             for x in zip(range(len(self.regions)),tmp):

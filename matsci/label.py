@@ -87,7 +87,7 @@ def largest_connected_component(im):
     sizes = [ ((labels==l).sum(),l) for l in range(1,num+1) ]
     return labels==max(sizes,key=lambda x:x[0])[1]
 
-def num_components(labels):
+def num_components(labels,full=True):
     # import scipy.misc
     # test = [ ndimage.label(labels==l
     #                        ,structure=[[1,1,1],[1,1,1],[1,1,1]])[1] 
@@ -100,7 +100,9 @@ def num_components(labels):
     #         scipy.misc.imsave("comp"+str(i)+".png",output)
     return [ ndimage.label(
             labels==l,
-            structure=[[1,1,1],[1,1,1],[1,1,1]])[1] 
+            structure=[[1,1,1],[1,1,1],[1,1,1]] 
+            if full else
+            [[0,1,0],[1,1,1],[0,1,0]])[1] 
              for l in range(labels.max()+1) ]
 
 def boundary_connected_component(im,boundary):
@@ -211,8 +213,8 @@ class Label(object):
     def region_boundary_intensity(self,img,l,t):
         return region_boundary_intensity(self.v,img,l,t)
 
-    def num_components(self):
-        return num_components(self.v)
+    def num_components(self,full=True):
+        return num_components(self.v,full)
 
     def list(self):
         return np.unique(self.v)
