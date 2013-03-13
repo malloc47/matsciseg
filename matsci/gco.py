@@ -459,7 +459,7 @@ class Slice(object):
                 # self.adj.set_adj_new(shifted_labels)
                 new_label+=1
 
-    def alpha_expansion(self, dilation=10, mode=1, bias=1):
+    def alpha_expansion(self, dilation=10, mode=1, bias=1, iterations=5):
         for i in self.labels.list():
             print(str(i))
             v = self.crop([i], extended=False, padding=dilation+5)
@@ -471,7 +471,7 @@ class Slice(object):
                 continue
             v.data.dilate_fixed_center(dilation, rel_size=0.1, min_size=2, 
                                        first=True,single=True)
-            v.graph_cut(mode=mode, bias=bias, tc_iter=5)
+            v.graph_cut(mode=mode, bias=bias, tc_iter=iterations)
             v.mask = np.ones_like(v.data.regions[0])
             self.merge(v)
 
@@ -602,10 +602,10 @@ class Slice(object):
                 num_comp = label.num_components(output,full=False)[1]
 
         # ignore bg if mask is defined
-        if( (max(label.num_components(output,full=False)) > 1)
-            if self.mask is None else 
-            (max(label.num_components(output,full=False)[1:]) > 1) ):
-            print('ERROR: Inconsistent inter-segment topology')
+        # if( (max(label.num_components(output,full=False)) > 1)
+        #     if self.mask is None else 
+        #     (max(label.num_components(output,full=False)[1:]) > 1) ): # throwing a fit
+        #     print('ERROR: Inconsistent inter-segment topology')
         # fully reinitialize self (recompute adj, data, etc.)
         self.__init__(self.img
                       , output

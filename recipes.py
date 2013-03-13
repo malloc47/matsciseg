@@ -291,12 +291,13 @@ def pyswap_cmd(vp,im_gray,labels,dilation,binary,bias):
                bias=bias)
     return v.labels.v
 
-def pyexp_cmd(vp,im_gray,labels,dilation,binary,bias):
+def pyexp_cmd(vp,im_gray,labels,dilation,binary,bias,iterations):
     v = matsci.gco.Slice(im_gray,labels)
     vp("alpha-expansion")
     v.alpha_expansion(dilation=dilation, 
                   mode=binary_types[binary],
-                  bias=bias)
+                  bias=bias,
+                  iterations=iterations)
     return v.labels.v
 
 def repl_cmd(vp,im_gray,labels,dilation,binary,bias):
@@ -325,6 +326,12 @@ argtypes = {
         'type' : int,
         'default' : 1,
         'help' : 'bias for the binary term',
+        },
+    'iterations' : {
+        'name' : ['-i','--iterations'],
+        'type' : int,
+        'default' : 5,
+        'help' : 'number of iterations',
         },
     }
 
