@@ -436,7 +436,7 @@ class Slice(object):
                      , lightweight=True
                      , center = label_list[0] if len(label_list) < 2 else None)
 
-    def merge(self,v,no_mask=False):
+    def merge(self,v):
         """merge another subwindow volume into this volume"""
         u = self.labels.v[v.win[0]:v.win[0]+v.labels.v.shape[0],
                         v.win[1]:v.win[1]+v.labels.v.shape[1]] # view into array
@@ -452,10 +452,7 @@ class Slice(object):
         for l in [x for x in old_labels if x>0]:
             if l in v.shifted:
                 # print("Shifting "+str(l)+" to "+str(v.shifted[l]))
-                if not no_mask:
-                    u[np.logical_and(v.labels.v==l,v.mask)]=v.shifted[l]
-                else:
-                    u[v.labels.v==l]=v.shifted[l]
+                u[np.logical_and(v.labels.v==l,v.mask)]=v.shifted[l]
             else:
                 # print("Shifting "+str(l)+" to "+str(new_label))
                 u[v.labels.v==l]=new_label
@@ -475,7 +472,8 @@ class Slice(object):
             v.data.dilate_fixed_center(dilation, rel_size=0.1, min_size=2, 
                                        first=True,single=True)
             v.graph_cut(mode=mode, bias=bias, tc_iter=5)
-            self.merge(v,no_mask=True)
+            v.mask = np.ones_like(v.data.regions[0])
+            self.merge(v)
 
     def alpha_beta_swap(self, dilation=10, mode=1, bias=1):
         """alpha-beta swap method, written in python and using existing
@@ -545,10 +543,6 @@ class Slice(object):
                 len(self.data.regions) == 2 and \
                 max(label.num_components(output,full=False)) > 1:
 
-            # import matplotlib.pyplot as plt
-            # import matplotlib.image as mpimg
-            # import matplotlib.cm as cm
-
             sys.path.insert(0,'./pytopocut/')
             import topocut
 
@@ -558,20 +552,9 @@ class Slice(object):
 
             self.data.convert_to_x(data.bool_to_float)  # topocut requires float
 
-            # plt.figure(1)
-            # plt.subplot(221)
-            # plt.imshow(self.data.regions[0], cmap=cm.Greys_r)
-            # plt.subplot(222)
-            # plt.imshow(self.data.regions[1], cmap=cm.Greys_r)
-            # plt.subplot(223)
-            # plt.imshow(output, cmap=cm.Greys_r)
-            # plt.show()
-
             while ((num_comp > 1 or num_hole > 0) and num_iter < tc_iter):
-                print('before num_comp: '+str(num_comp))
-                print('before num_hole: '+str(num_hole))
                 num_iter += 1
-                print('running topocut iteration '+str(num_iter))
+                # print('running topocut iteration '+str(num_iter))
 
                 # first round takes care of components reliably
                 # without encountering a degenerate case
@@ -586,8 +569,6 @@ class Slice(object):
                 #     output = (phi < 0)
                 #     break
 
-                print('mid num_comp: '+str(num_comp))
-                print('mid num_hole: '+str(num_hole))
                 # convert back to ints
                 self.data.regions[0] = ubg.astype('int16')
                 self.data.regions[1] = ufg.astype('int16')
@@ -619,17 +600,6 @@ class Slice(object):
 
                 num_hole = label.num_components(output,full=False)[0] - 1
                 num_comp = label.num_components(output,full=False)[1]
-                print('after num_comp: '+str(num_comp))
-                print('after num_hole: '+str(num_hole))
-
-            # plt.figure(1)
-            # plt.subplot(221)
-            # plt.imshow(self.data.regions[0], cmap=cm.Greys_r)
-            # plt.subplot(222)
-            # plt.imshow(self.data.regions[1], cmap=cm.Greys_r)
-            # plt.subplot(223)
-            # plt.imshow(output, cmap=cm.Greys_r)
-            # plt.show()
 
         # ignore bg if mask is defined
         if( (max(label.num_components(output,full=False)) > 1)
