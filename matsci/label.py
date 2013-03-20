@@ -125,23 +125,31 @@ def boundary_connected_component(im,boundary):
 
 def small_filter(labels,label_num):
     """cover small label region with the nearest label"""
-    mask     = create_mask(labels,[label_num]);
-    mask_err = np.argwhere(mask);
+    mask     = create_mask(labels,[label_num])
+    mask_err = np.argwhere(mask)
 
-    (x0,y0) = (0,0);
-    (y1,x1) = mask.shape;
-    x1 -= 1;
-    y1 -= 1;
+    (x0,y0) = (0,0)
+    (y1,x1) = mask.shape
+    x1 -= 1
+    y1 -= 1
 
     inds = scipy.ndimage.morphology.distance_transform_edt(mask,
                                                            return_distances=False,
-                                                           return_indices=True);
+                                                           return_indices=True)
 
     for err in mask_err:
-        y = err[0];
-        x = err[1];
-        labels[y,x] = labels[inds[0][y,x],inds[1][y,x]];
+        y = err[0]
+        x = err[1]
+        labels[y,x] = labels[inds[0][y,x],inds[1][y,x]]
 
+    return labels
+
+def pts_to_label(pts):
+    """take a boolean matrix of disjoint regions and convert it to a
+    label matrix"""
+    labels,_ = ndimage.label(pts)
+    labels = small_filter(labels,0)
+    labels -= 1  # labels start at 0
     return labels
 
 def region_clean(regions, boundary=None,bg=False):
@@ -182,6 +190,7 @@ def edge_list(labels):
                 binary_dilation(labels==i),
                 binary_dilation(labels==j)) 
                       for (i,j) in pairs ])
+
 
 class Label(object):
     def __init__(self,labels=None, boundary=None, bg=False):

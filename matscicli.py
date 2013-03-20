@@ -21,7 +21,11 @@ def run_jobs(pargs,fn):
     for f in range(0,len(pargs.files),4):        
         im_prev,im_prev_gray =  matsciskel.read_img(pargs.files[f])
         im,im_gray =  matsciskel.read_img(pargs.files[f+2])
-        labels_prev =  np.genfromtxt(pargs.files[f+1],dtype='int16')
+        if pargs.files[f+1].endswith(('.png','.jpg')):
+            from matsci.label import pts_to_label
+            labels_prev = pts_to_label(scipy.misc.imread(pargs.files[f+1],flatten=True).astype('bool'))
+        else:
+            labels_prev =  np.genfromtxt(pargs.files[f+1],dtype='int16')
         labels_out = pargs.files[f+3]
         param = {
             'im' : im,
