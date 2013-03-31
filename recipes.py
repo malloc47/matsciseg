@@ -11,21 +11,21 @@ binary_types = {
     't' : 4,
     }
 
-def global_cmd(vp,im_gray,labels,dilation,binary):
+def global_cmd(vp,im_gray,labels,dilation,binary,bias):
     v = matsci.gco.Slice(im_gray,labels)
     vp("Initialized")
     v.data.dilate_all(dilation)
     vp("Dilated")
-    v.graph_cut(binary_types[binary])
+    v.graph_cut(binary_types[binary],bias=bias)
     vp("Graph Cut Complete")
     return v.labels.v
 
-def global_fixed_cmd(vp,im_gray,labels,dilation,binary):
+def global_fixed_cmd(vp,im_gray,labels,dilation,binary,bias):
     v = matsci.gco.Slice(im_gray,labels)
     vp("Initialized")
     v.data.dilate_fixed_center(dilation,rel_size=0.5,min_size=2,first=True)
     vp("Dilated")
-    v.graph_cut(binary_types[binary])
+    v.graph_cut(binary_types[binary],bias=bias)
     vp("Graph Cut Complete")
     # import code; code.interact(local=locals())
     return v.labels.v
@@ -134,8 +134,25 @@ def filtergui_cmd(vp,im_gray,labels,binary):
     return v.graph_cut(binary_types[binary])
 
 def clique_cmd(vp,im_gray,labels,dilation,binary):
-    v = matsci.gco.Slice(im_gray,labels)
+    v = matsci.gco.Slice(im_gray,labels) 
     v.clique_swap(dilation,f=None)
+    return v.labels.v
+
+def clique_iter_cmd(vp,im_gray,labels,dilation,binary):
+    def dump_energy(l):
+        v_test = matsci.gco.Slice(im_gray,l)
+        v_test.graph_cut(binary_types[binary],max_iter=0)
+
+    dump_energy(labels)
+    v = matsci.gco.Slice(im_gray,labels) 
+    print('--- cliques starting ---')
+    v.clique_swap(dilation,f=None)
+    print('--- cliques complete ---')
+    dump_energy(v.labels.v)
+    for i in range(1,5):
+        v = matsci.gco.Slice(im_gray,v.labels.v) 
+        v.clique_swap(dilation,f=None)
+        dump_energy(v.labels.v)
     return v.labels.v
 
 def clique2_cmd(vp,im_gray,labels,dilation,binary):

@@ -130,11 +130,12 @@ static PyObject *graph_cut(PyObject *self, PyObject *args) {
   double sigma = 10.0;
   int bias = 0;
   int replace = 0;
+  int iter = 1;
   int d[3];
   bool has_func = false;
   // rediculous amount of typechecking, as it makes for fewer
   // headaches later
-  if (!PyArg_ParseTuple(args, "O!O!O!O!i|idiiO:set_callback", 
+  if (!PyArg_ParseTuple(args, "O!O!O!O!i|idiiiO:set_callback", 
 			&PyArray_Type, &data_p,
 			&PyArray_Type, &img_p, 
 			&PyArray_Type, &seedimg_p, 
@@ -144,6 +145,7 @@ static PyObject *graph_cut(PyObject *self, PyObject *args) {
 			&sigma,
 			&bias,
 			&replace,
+			&iter,
 			&func)) {
     PyErr_SetString(PyExc_ValueError, "Parameters not right");
     return NULL;
@@ -311,8 +313,13 @@ static PyObject *graph_cut(PyObject *self, PyObject *args) {
   for(i=0;i<d[0]*d[1]; i++)
     result[i] = gc->whatLabel(i);
 
+  printf("Energy before: %lld\n",(long long)gc->compute_energy());
+
   // do the graph cut
-  gc->swap(1,adj);
+  if(iter>0) {
+    gc->swap(iter,adj);
+    printf("Energy after: %lld\n",(long long)gc->compute_energy());
+  }
 
   // retrieve labeling
   for(i=0;i<d[0]*d[1]; i++)

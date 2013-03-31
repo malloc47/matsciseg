@@ -499,13 +499,14 @@ class Slice(object):
             #     v.graph_cut(mode=mode, bias=bias)
             self.merge(v)
 
-    def graph_cut(self,mode=0,lite=False,bias=1,sigma=None,replace=None,tc_iter=0):
+    def graph_cut(self,mode=0,lite=False,bias=1,sigma=None,replace=None, \
+                      tc_iter=0, max_iter=1):
         """run graph cut on this volume (mode specifies V(p,q) term"""
         # if self.win != (0,0):
         # self.output_data_term()
         # w=gui.Window(self.img,self.labels)
 
-        # if not data.check_data_term(self.data.regions):
+        # if not data.check_data_term(self.nndata.regions):
         #     print("Not all pixels have a label")
         # else:
         #     print("All pixels have a label")
@@ -537,6 +538,7 @@ class Slice(object):
                                 , sigma
                                 , bias
                                 , replace
+                                , max_iter
                                 )
 
         if tc_iter >= 1 and \
