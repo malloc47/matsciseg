@@ -149,6 +149,7 @@ class Slice(object):
 
 # lut = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,0,0,1,1,0,0]
     def clique_swap(self,d,f=None):
+        # print("start: " + str(self.energy()))
         for l in range(0,self.labels.max()):
             v = self.crop([l])
             if v is None:
@@ -166,6 +167,7 @@ class Slice(object):
                 )
             v.graph_cut(1,lite=False)
             self.merge(v)
+            # print(str(self.energy()))
         return self.labels.v
 
     def local_adj(self):
@@ -499,6 +501,27 @@ class Slice(object):
             #     v.graph_cut(mode=mode, bias=bias)
             self.merge(v)
 
+    def energy(self,mode=0,bias=1,sigma=None,replace=None):
+        v = type(self)(self.img,self.labels.v)
+        # import code; code.interact(local=locals())
+        if sigma is None:
+            sigma = np.std(v.img) if mode > 2 else 10
+        if replace is None:
+            replace = 0 if (v.data.regions[0].dtype.kind == 'b') else -1
+        output, energy = gcoc.graph_cut( v.data.matrix()
+            # np.ones(self.data.regions[0].shape+(len(self.data.regions),),dtype=bool)
+                                        , v.img
+                                        , np.array(v.labels.v)
+                                        , v.adj.v
+                                        , v.data.length()
+                                        , mode
+                                        , sigma
+                                        , bias
+                                        , replace
+                                        , 0 # no actual minimization
+                                        )
+        return energy
+
     def graph_cut(self,mode=0,lite=False,bias=1,sigma=None,replace=None, \
                       tc_iter=0, max_iter=1):
         """run graph cut on this volume (mode specifies V(p,q) term"""
@@ -527,7 +550,7 @@ class Slice(object):
         if replace is None:
             replace = 0 if (self.data.regions[0].dtype.kind == 'b') else -1
 
-        output = gcoc.graph_cut(self.data.matrix()
+        output, energy = gcoc.graph_cut(self.data.matrix()
                                 , self.img
                                 , np.array(self.labels.v)#.astype('int16')
                                 # , self.labels.v,
@@ -577,7 +600,7 @@ class Slice(object):
 
                 new_data = self.data.matrix()
                 # make "infinity" value unused by setting it to max + 1
-                output = gcoc.graph_cut(new_data , self.img
+                output, energy = gcoc.graph_cut(new_data , self.img
                                         , np.array(self.labels.v) 
                                         , self.adj.v , self.data.length() 
                                         , mode , sigma , bias , new_data.max()+1)
@@ -595,7 +618,7 @@ class Slice(object):
 
                 new_data = self.data.matrix()
 
-                output = gcoc.graph_cut(new_data , self.img
+                output, energy = gcoc.graph_cut(new_data , self.img
                                         , np.array(self.labels.v) 
                                         , self.adj.v , self.data.length()
                                         , mode , sigma , bias , new_data.max()+1)

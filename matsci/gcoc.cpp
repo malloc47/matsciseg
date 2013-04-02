@@ -313,12 +313,12 @@ static PyObject *graph_cut(PyObject *self, PyObject *args) {
   for(i=0;i<d[0]*d[1]; i++)
     result[i] = gc->whatLabel(i);
 
-  printf("Energy before: %lld\n",(long long)gc->compute_energy());
+  // printf("Energy before: %lld\n",(long long)gc->compute_energy());
 
   // do the graph cut
   if(iter>0) {
     gc->swap(iter,adj);
-    printf("Energy after: %lld\n",(long long)gc->compute_energy());
+    // printf("Energy after: %lld\n",(long long)gc->compute_energy());
   }
 
   // retrieve labeling
@@ -358,7 +358,10 @@ static PyObject *graph_cut(PyObject *self, PyObject *args) {
 
   Py_INCREF(output);
 
-  return PyArray_Return(output);
+  return Py_BuildValue("(O,L)",output,
+                       (long long)gc->compute_energy());
+
+  // return PyArray_Return(output);
 }
 
 inline int min(int a, int b) {return a>b ? b : a;}
