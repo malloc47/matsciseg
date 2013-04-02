@@ -150,7 +150,7 @@ def pts_to_label(pts):
     labels,_ = ndimage.label(pts)
     labels = small_filter(labels,0)
     labels -= 1  # labels start at 0
-    return labels
+    return labels.astype('int16')
 
 def region_clean(regions, boundary=None,bg=False):
     out = np.ones(regions.shape,dtype=regions.dtype)*-1
