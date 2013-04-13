@@ -5,7 +5,7 @@ import scipy
 from scipy import ndimage
 
 import matplotlib as mpl
-mpl.use('pdf')
+mpl.use('svg')
 import matplotlib.pyplot as plt
 # import pylab as plt
 
@@ -17,6 +17,16 @@ from matsci.adj import Adj
 def main(*args):
     if(len(args) < 3):
         return 1
+
+    try:
+        markersize = args[4]
+    except:
+        markersize = 25
+
+    try:
+        linewidth = args[5]
+    except:
+        linewidth = 5
 
     im,im_gray =  matsciskel.read_img(args[1])
     pts = scipy.misc.imread(args[2],flatten=True).astype('bool')
@@ -39,9 +49,9 @@ def main(*args):
     for p in adj:
         x = [ centers[p[0]][0] , centers[p[1]][0] ]
         y = [ centers[p[0]][1] , centers[p[1]][1] ]
-        plt.plot(x,y,color='r',ls='-',linewidth=5)
+        plt.plot(x,y,color='r',ls='--',linewidth=linewidth)
     # plot points
-    ax.plot(*zip(*centers),marker='o', color='r', ls='', markersize=25)
+    ax.plot(*zip(*centers),marker='o', color='r', ls='', markersize=markersize)
 
     fig.savefig(args[3],bbox_inches='tight',pad_inches=0)
     
