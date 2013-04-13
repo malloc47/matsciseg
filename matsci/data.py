@@ -216,6 +216,55 @@ def erode_to(img,d=3,rel_size=0.5,min_size=15, single=False):
             return largest_connected_component(img)
         return img
 
+def erode_to_connected(img,d=3,shape=3,rel_size=0.5,min_size=15, single=False):
+    """
+    erode to structure to specified relative size; safe version, which
+    won't collapse to a single pixel with connectivity constraints
+
+    """
+    orig_size = np.count_nonzero(img)
+    new_size = orig_size
+    _,comp = ndimage.label(img)
+    if(orig_size <= 0 or comp > 1):
+        return img
+    prev_img = img.copy()
+    count = 0
+
+    # run for d times, but terminate early if the size (relative or
+    # absolute) is too small, or the image breaks into multiple pieces
+    while new_size > rel_size * orig_size \
+          and new_size > min_size \
+          and comp < 2 \
+          and count < d:
+        prev_img = img.copy()
+        img = erode(img,shape)
+        new_size = np.count_nonzero(img)
+        _,comp = ndimage.label(img)
+        count += 1
+    return prev_img
+
+def erode_to_safe(img,d=3,rel_size=0.5,min_size=15, single=False):
+    """
+    erode to structure to specified relative size; safe version, which
+    won't collapse to a single pixel
+
+    """
+    orig_size = np.count_nonzero(img)
+    new_size = orig_size
+    if(orig_size <= 0):
+        return img
+    prev_img = img.copy()
+    count = 0
+
+    # run for d times, but terminate early if the size (relative or
+    # absolute) is too small, or the image breaks into multiple pieces
+    while new_size > rel_size * orig_size \
+          and new_size > min_size:
+        prev_img = img.copy()
+        img = erode(img,d)
+        new_size = np.count_nonzero(img)
+    return prev_img
+
 def erode_by(img, iterations=3, min_size=15, d=3):
     """erode to structure by numiterations or min size"""
     prev_size = np.count_nonzero(img)
