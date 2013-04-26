@@ -1,3 +1,6 @@
 [submodule "pytopocut"]
 	path = pytopocut
 	url = ../pytopocut/
+[submodule "gco"]
+	path = gco
+	url = git@bitbucket.org:malloc47/gco.git

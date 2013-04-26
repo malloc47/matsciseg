@@ -4,7 +4,7 @@ import numpy as np
 setup(name = "gcoc",
       version = "1.0",
       ext_modules = [Extension("gcoc", ["gcoc.cpp"],
-                               include_dirs=[np.get_include(),"/home/malloc47/src/programs/gco"],
-                               library_dirs=['/home/malloc47/src/programs/gco'],
+                               include_dirs=[np.get_include(),"../gco"],
+                               library_dirs=['../gco'],
                                libraries=['gco'],
                                language='c++')])
