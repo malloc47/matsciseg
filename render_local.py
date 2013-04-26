@@ -4,7 +4,7 @@ import numpy as np
 import scipy
 from scipy import ndimage
 import matsci
-from matsci.gui import jet_colors, randmap
+from matsci.draw import jet_colors, randmap
 import matsciskel
 import random
 

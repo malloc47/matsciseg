@@ -12,7 +12,7 @@ from PIL import Image
 from webgui.settings import datasets
 
 import render_labels
-import matsci.gui
+import matsci.draw
 import matsci
 
 cache = get_cache('default')
@@ -85,7 +85,7 @@ def img_raw(request,v):
 
 @retrieve_cached
 def img_labeled(request,v):
-    output = matsci.gui.color_jet(matsci.gui.grey_to_rgb(v.img),v.labels.v)
+    output = matsci.draw.color_jet(matsci.draw.grey_to_rgb(v.img),v.labels.v)
     http_output = Image.fromarray(np.uint8(output))
     response = HttpResponse(mimetype="image/png")
     http_output.save(response, "PNG")

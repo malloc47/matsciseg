@@ -6,7 +6,7 @@ import scipy
 import cPickle as pickle
 import matsciskel
 import matsci
-import matsci.gui
+import matsci.draw
 
 def highlight_label(img,labels,h):
     img = img.astype('float')
@@ -56,7 +56,7 @@ def main(*args):
                 scipy.misc.imsave('deg/'+str(counter)+'.png',
                                   np.dstack((
                                   highlight_label(
-                        matsciskel.draw_on_img(matsci.gui.grey_to_rgb(x.img),
+                        matsciskel.draw_on_img(matsci.draw.grey_to_rgb(x.img),
                                                matsciskel.label_to_bmp(x.labels.v))
                         , x.labels.v,
                         # center in red, deg>3 in blue
