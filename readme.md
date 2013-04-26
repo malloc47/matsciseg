@@ -56,22 +56,22 @@ Techniques used in this package are described in:
 
 - Jarrell Waggoner, Youjie Zhou, Jeff Simmons, Ayman Salem, Marc De
   Graef, Song
-  Wang. [Interactive Grain Image Segmentation using Graph Cut Algorithms][22],
+  Wang. [Interactive Grain Image Segmentation using Graph Cut Algorithms][2],
   *Proceedings of SPIE Volume 8657 (Computational Imaging XI)*,
   Burlingame, CA, 2013
 
 - Jarrell Waggoner, Jeff Simmons, Marc De Graef, and Song Wang.
-  [Graph Cut Approaches for Materials Segmentation Preserving Shape, Appearance, and Topology][20].
+  [Graph Cut Approaches for Materials Segmentation Preserving Shape, Appearance, and Topology][3].
   *International Conference on 3D Materials Science (3DMS)*, 147-152,
   Seven Springs, PA, 2012.
 
 - Jarrell Waggoner, Jeff Simmons, and Song Wang.
-  [Combining global labeling and local relabeling for metallic image segmentation][8].
+  [Combining global labeling and local relabeling for metallic image segmentation][4].
   In *Proceedings of SPIE (Computational Imaging X)*, volume 8296,
   Burlingame, CA, 2012.
   
 - Song Wang, Jarrell Waggoner, and Jeff Simmons.
-  [Graph-cut methods for grain boundary segmentation][9].  *JOM
+  [Graph-cut methods for grain boundary segmentation][5].  *JOM
   Journal of the Minerals, Metals and Materials Society*, 63(7):49–51,
   2011.
 
@@ -81,3 +81,7 @@ Jarrell Waggoner
 /-/ [malloc47.com](http://www.malloc47.com)
 
 [1]: http://www.malloc47.com/pythonbrew-opencv-debian/
+[2]: http://www.cse.sc.edu/~songwang/document/spie13.pdf
+[3]: http://cse.sc.edu/~songwang/document/3dms.pdf
+[4]:  http://cse.sc.edu/~songwang/document/spie12.pdf
+[5]:  http://cse.sc.edu/~songwang/document/jom11.pdf
