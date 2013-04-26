@@ -36,7 +36,10 @@ which can be easily customized as needed.  Its arguments are
 documented upon invocation.  The "label" files are plain text files
 with rows (separated by newlines) of integers (separated by
 whitespace) for each row of pixels in the corresponding image.  Sample
-invocations are shown in `tests/tests.sh`.
+invocations are shown in `tests/tests.sh`.  The `sample.sh` script
+will run the `global` algorithm on the data found in `sample/` to
+produce a file `sample/0001-output.png`, which is a good sanity check
+that all is working as it should be.
 
 The web interface requires volumes made of sequences of images each
 with a label initialization (same format as above) converted into
