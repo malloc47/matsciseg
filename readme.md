@@ -15,6 +15,10 @@ materials science image segmentation algorithms
 * (optional) wxWidgets (must be manually compiled and installed into
   virtualenv) to use the now-deprecated graphical interface
   
+* [GCO][6] compiled as a static library--patches for specific files,
+  as well as a makefile that will build the shared library on linux
+  are available under `gco_extra`.
+  
 * Tested on Debian Stable (Squeeze), Fedora 15, Arch Linux
 
 # Setup
@@ -86,5 +90,6 @@ Jarrell Waggoner
 [1]: http://www.malloc47.com/pythonbrew-opencv-debian/
 [2]: http://www.cse.sc.edu/~songwang/document/spie13.pdf
 [3]: http://cse.sc.edu/~songwang/document/3dms.pdf
-[4]:  http://cse.sc.edu/~songwang/document/spie12.pdf
-[5]:  http://cse.sc.edu/~songwang/document/jom11.pdf
+[4]: http://cse.sc.edu/~songwang/document/spie12.pdf
+[5]: http://cse.sc.edu/~songwang/document/jom11.pdf
+[6]: http://vision.csd.uwo.ca/code/
