@@ -1,0 +1,103 @@
+--- ../gco-source/GCoptimization.cpp	2012-11-15 17:28:04.000000000 -0500
++++ GCoptimization.cpp	2012-06-28 09:11:44.000000000 -0400
+@@ -7,6 +7,9 @@
+ #include <stdlib.h>
+ #include <vector>
+ #include <algorithm>
++#include <iostream>
++#include <fstream>
++#include <sstream>
+ 
+ // will leave this one just for the laughs :)
+ //#define olga_assert(expr) assert(!(expr))
+@@ -1010,7 +1013,6 @@
+ 				
+ 				printStatus1(cycle++,false,ticks0);
+ 			} while ( !queueSizes.empty() );
+-			new_energy = compute_energy();
+ 		}
+ 		else
+ 		{
+@@ -1192,9 +1194,6 @@
+ //
+ bool GCoptimization::alpha_expansion(LabelID alpha_label)
+ {
+-	if (alpha_label < 0)
+-		return false; // label was disabled due to setLabelOrder on subset of labels
+-
+ 	finalizeNeighbors();
+ 	gcoclock_t ticks0 = gcoclock();
+ 
+@@ -1273,7 +1272,8 @@
+ //                  METHODS for SWAP MOVES                           //  
+ //-------------------------------------------------------------------//
+ 
+-GCoptimization::EnergyType GCoptimization::swap(int max_num_iterations)
++GCoptimization::EnergyType GCoptimization::swap(int max_num_iterations
++						, bool *adj=NULL)
+ {
+ 	EnergyType new_energy,old_energy;
+ 	if ( (this->*m_solveSpecialCases)(new_energy) )
+@@ -1293,7 +1293,7 @@
+ 		{
+ 			gcoclock_t ticks0 = gcoclock();
+ 			old_energy = new_energy;
+-			new_energy = oneSwapIteration();
++			new_energy = oneSwapIteration(adj);
+ 			printStatus1(curr_cycle,true,ticks0);
+ 			curr_cycle++;
+ 		}
+@@ -1310,7 +1310,7 @@
+ 
+ //--------------------------------------------------------------------------------
+ 
+-GCoptimization::EnergyType GCoptimization::oneSwapIteration()
++GCoptimization::EnergyType GCoptimization::oneSwapIteration(bool *adj=NULL)
+ {
+ 	LabelID next,next1;
+ 	permuteLabelTable();
+@@ -1320,7 +1320,26 @@
+ 		for (next1 = m_num_labels - 1;  next1 >= 0;  next1-- )
+ 			if ( m_labelTable[next] < m_labelTable[next1] )
+ 			{
++			        // skip iterations if labels are not adjacent
++			        if (adj != NULL && 
++				    !adj[int(m_labelTable[next]) *
++					 m_num_labels+int(m_labelTable[next1])]) {
++				  // printf("skipping %d , %d \n",m_labelTable[next],m_labelTable[next1]);
++				  continue;
++				}
++
+ 				alpha_beta_swap(m_labelTable[next],m_labelTable[next1]); 
++				if ( m_verbosity > 2 ) {
++				  std::ofstream outfile;
++				  std::stringstream ss;
++				  ss << "label" << m_stepsThisCycle << "-" << m_labelTable[next] << "-" << m_labelTable[next1] << ".linearlabel";
++				  outfile.open (ss.str().c_str());
++				  for (int i = 0; i < m_num_sites; i++ ) {
++				    outfile << m_labeling[i] << " ";
++				  }
++				  outfile.close();
++				}
++
+ 				m_stepsThisCycle++;
+ 			}
+ 
+@@ -1671,7 +1690,7 @@
+ 		handleError("Already set up neighborhood system.");
+ 	m_numNeighbors     = numNeighbors;
+ 	m_numNeighborsTotal = 0;
+-	for (int site = 0; site < m_num_sites; site++ ) m_numNeighborsTotal += m_numNeighbors[site];
++	for (unsigned int site = 0; site < m_num_sites; site++ ) m_numNeighborsTotal += m_numNeighbors[site];
+ 	m_neighborsIndexes = neighborsIndexes;
+ 	m_neighborsWeights = neighborsWeights;
+ }
+@@ -1854,7 +1873,7 @@
+ 			return GCO_MAX_ENERGYTERM;
+ 	}
+ 	if ( (size_t)b.end - (size_t)b.begin == cSitesPerBucket*sizeof(SparseDataCost) )
+-		return b.begin[s-b.begin->site].cost; // special case: this particular bucket is actually dense!
++		return b.begin[s & ~cDataCostPtrMask].cost; // special case: this particular bucket is actually dense!
+ 
+ 	return search(b,s);
+ }

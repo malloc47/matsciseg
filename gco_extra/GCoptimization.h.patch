@@ -1,0 +1,46 @@
+--- ../gco-source/GCoptimization.h	2012-11-15 17:28:24.000000000 -0500
++++ GCoptimization.h	2012-06-28 00:53:49.000000000 -0400
+@@ -105,7 +105,6 @@
+ #error Requires Visual C++ 2005 (VC8) compiler or later.
+ #endif
+ 
+-#include <cstddef>
+ #include "energy.h"
+ #include "graph.cpp"
+ #include "maxflow.cpp"
+@@ -178,7 +177,7 @@
+ 
+ 	// Peforms swap algorithm. Runs it the specified number of iterations. If no  
+ 	// input is specified,runs until convergence                                  
+-	EnergyType swap(int max_num_iterations=-1);
++        EnergyType swap(int max_num_iterations=-1, bool *adj=NULL);
+ 
+ 	// Peforms  swap on a pair of labels, specified by the input parameters alpha_label, beta_label 
+ 	void alpha_beta_swap(LabelID alpha_label, LabelID beta_label);
+@@ -387,7 +386,7 @@
+ 		static const int cLogSitesPerBucket = 9;
+ 		static const int cSitesPerBucket = (1 << cLogSitesPerBucket); 
+ 		static const size_t    cDataCostPtrMask = ~(sizeof(SparseDataCost)-1);
+-		static const ptrdiff_t cLinearSearchSize = 64/sizeof(SparseDataCost);
++		static const std::ptrdiff_t cLinearSearchSize = 64/sizeof(SparseDataCost);
+ 
+ 		struct DataCostBucket {
+ 			const SparseDataCost* begin;
+@@ -412,7 +411,7 @@
+ 			OLGA_INLINE EnergyTermType cost() const { return m_ptr->cost; }
+ 			OLGA_INLINE bool      operator==(const iterator& b) const { return m_ptr == b.m_ptr; }
+ 			OLGA_INLINE bool      operator!=(const iterator& b) const { return m_ptr != b.m_ptr; }
+-			OLGA_INLINE ptrdiff_t operator- (const iterator& b) const { return m_ptr  - b.m_ptr; }
++			OLGA_INLINE std::ptrdiff_t operator- (const iterator& b) const { return m_ptr  - b.m_ptr; }
+ 		private:
+ 			OLGA_INLINE iterator(const SparseDataCost* ptr): m_ptr(ptr) { }
+ 			const SparseDataCost* m_ptr;
+@@ -458,7 +457,7 @@
+ private:
+ 	// Peforms one iteration (one pass over all pairs of labels) of expansion/swap algorithm
+ 	EnergyType oneExpansionIteration();
+-	EnergyType oneSwapIteration();
++	EnergyType oneSwapIteration(bool *adj=NULL);
+ 	void printStatus1(const char* extraMsg=0);
+ 	void printStatus1(int cycle, bool isSwap, gcoclock_t ticks0);
+ 	void printStatus2(int alpha, int beta, int numVars, gcoclock_t ticks0);
