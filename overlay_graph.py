@@ -29,11 +29,18 @@ def main(*args):
         linewidth = 5
 
     im,im_gray =  matsciskel.read_img(args[1])
-    pts = scipy.misc.imread(args[2],flatten=True).astype('bool')
-    lbl,num = ndimage.label(pts)
-    labels = pts_to_label(pts)
-    centers = [ (t[1],t[0]) for t in 
-                ndimage.measurements.center_of_mass(pts,lbl,range(1,num+1))]
+    if args[2].endswith('.label'):
+        labels = np.genfromtxt(args[2],dtype='int16')
+        centers = [ (t[1],t[0]) for t in
+                    ndimage.measurements.center_of_mass(labels,
+                                                        labels,
+                                                        range(0,labels.max()+1))]
+    else:
+        pts = scipy.misc.imread(args[2],flatten=True).astype('bool')
+        lbl,num = ndimage.label(pts)
+        labels = pts_to_label(pts)
+        centers = [ (t[1],t[0]) for t in 
+                    ndimage.measurements.center_of_mass(pts,lbl,range(1,num+1))]
     adj = Adj(labels).pairs()
 
     fig = plt.figure()
