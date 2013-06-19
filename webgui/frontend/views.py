@@ -141,6 +141,7 @@ def get_datasets(request):
             'c4' : 'Crop4',
             'c3-demo' : 'RemDemo',
             'c2-demo' : 'AddDemo',
+            'syn1' : 'Synthetic',
             }
 
         d = [ [f,labels[f],datasets[f].keys() ] for f in datasets.keys() ]
