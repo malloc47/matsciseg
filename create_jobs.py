@@ -107,6 +107,12 @@ def main(*args):
 
     dilation = 10
 
+    names = [ 'd1s20' ]
+    stdlen = range(0,20)
+    ground_slices = [0,10]
+    rng = None
+    datasets += [ (n,'global-'+str(dilation),stdlen,ground_slices,global_cmd,rng) for n in names]
+
     def watershed_cmd(n,rn,i,j,r):
         if rn==i:
             return """mkdir -p {7}/{0}/{4}/{1:d}/
