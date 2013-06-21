@@ -91,28 +91,52 @@ def main(*args):
     # plt.savefig('interactive_r.pdf')
 
     syn_clicks = { 'magic' : [210, 148, 146, 123, 182, 170, 164, 122, 131, 137, 149, 143, 160, 135, 171, 145, 131, 120, 129, 127],
+                   'magicprop' : [0,13, 14, 21, 36, 20, 26, 28, 38, 47, 40, 45, 50, 38, 46, 40, 52, 31, 31, 32],
                    'proposed' : [0, 1, 1, 4, 7, 5, 6, 5, 4, 8, 8, 13, 8, 14, 21, 13, 9, 21, 19, 12],
                    'propagation' : [0,0,0,0,0,0,0,0,0,0,13,5,11,0,0,0,0,0,0,0],
+
                    }
 
-    syn_time = { 'magic' : [415, 306, 307, 247, 289, 403, 337, 188, 227, 267, 245, 225, 244, 202, 214, 225, 205, 172, 182, 196],
-                 'proposed' : [0, 7, 7, 16, 14, 14, 20, 16, 17, 29, 20, 40, 23, 40, 61, 42, 32, 70, 66, 48],
-                 'propagation' : [0,0,0,0,0,0,0,0,0,0,42,29,33,0,0,0,0,0,0,0]}
+    syn_time = { 'magic' : map(to_minutes,[415, 306, 307, 247, 289, 403, 337, 188, 227, 267, 245, 225, 244, 202, 214, 225, 205, 172, 182, 196]),
+                 'magicprop' : map(to_minutes,[0,45, 37, 36, 64, 38, 45, 46, 49, 71, 46, 68, 104, 70, 72, 67, 88, 48, 57, 49]),
+
+                 'proposed' : map(to_minutes,[0, 7, 7, 16, 14, 14, 20, 16, 17, 29, 20, 40, 23, 40, 61, 42, 32, 70, 66, 48]),
+                 'propagation' : map(to_minutes,[0,0,0,0,0,0,0,0,0,0,42,29,33,0,0,0,0,0,0,0])}
 
     plt.figure()
     plt.xlim(0,19)
     plt.ylim(0,220)
     # plt.yscale('log')
     # plt.plot(range(0, len(proposed)), proposed, '-ro', label='Proposed')
-    plt.plot(range(0, len(syn_clicks['proposed'])), syn_clicks['proposed'], '-mo', label='Proposed + Parameter Estimation')
-    plt.plot(range(0, len(syn_clicks['propagation'])), syn_clicks['propagation'], '-bo', label='Proposed + Repropagation')
+    plt.plot(range(0, len(syn_clicks['proposed'])), syn_clicks['proposed'], '-ro', label='Proposed + Parameter Estimation')
+    plt.plot(range(0, len(syn_clicks['propagation'])), syn_clicks['propagation'], '-mo', label='Proposed + Repropagation')
     plt.plot(range(0, len(syn_clicks['magic'])), syn_clicks['magic'], '-go', label='Intelligent Scissors')
+    plt.plot(range(0, len(syn_clicks['magicprop'])), syn_clicks['magicprop'], '-bo', label='Intelligent Scissors + Propagation')
 
     # plt.plot(range(0, len(hybrid)), hybrid, '-bo', label='Intelligent Scissors + Propagation')
     plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.13))
     plt.xlabel('Synthetic Slice Number')
     plt.ylabel('Number of Clicks')
     plt.savefig('interactive_eval_syn.pdf')
+
+    plt.figure()
+    plt.xlim(0,19)
+    plt.ylim(0,8)
+
+    plt.plot(range(0, len(syn_time['proposed'])), syn_time['proposed'], '-ro', label='Proposed + Parameter Estimation')
+    plt.plot(range(0, len(syn_time['propagation'])), syn_time['propagation'], '-mo', label='Proposed + Repropagation')
+    plt.plot(range(0, len(syn_time['magic'])), syn_time['magic'], '-go', label='Intelligent Scissors')
+    plt.plot(range(0, len(syn_time['magicprop'])), syn_time['magicprop'], '-bo', label='Intelligent Scissors + Propagation')
+
+    # plt.plot(range(0, len(proposed_time)), proposed_time, '-ro', label='Proposed')
+    # plt.plot(range(0, len(auto_time)), auto_time, '-mo', label='Proposed + Parameter Estimation')
+    # plt.plot(range(0, len(magic_scissors_time)), magic_scissors_time, '-go', label='Intelligent Scissors')
+    # plt.plot(range(0, len(hybrid_time)), hybrid_time, '-bo', label='Intelligent Scissors + Propagation')
+
+    plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.13))
+    plt.xlabel('Slice')
+    plt.ylabel('Time (Minutes)')
+    plt.savefig('interactive_eval_time_syn.pdf')
 
 if __name__ == '__main__':
     sys.exit(main(*sys.argv))
