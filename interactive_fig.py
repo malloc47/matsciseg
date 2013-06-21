@@ -90,5 +90,29 @@ def main(*args):
     # plt.ylabel('Recall')
     # plt.savefig('interactive_r.pdf')
 
+    syn_clicks = { 'magic' : [210, 148, 146, 123, 182, 170, 164, 122, 131, 137, 149, 143, 160, 135, 171, 145, 131, 120, 129, 127],
+                   'proposed' : [0, 1, 1, 4, 7, 5, 6, 5, 4, 8, 8, 13, 8, 14, 21, 13, 9, 21, 19, 12],
+                   'propagation' : [0,0,0,0,0,0,0,0,0,0,13,5,11,0,0,0,0,0,0,0],
+                   }
+
+    syn_time = { 'magic' : [415, 306, 307, 247, 289, 403, 337, 188, 227, 267, 245, 225, 244, 202, 214, 225, 205, 172, 182, 196],
+                 'proposed' : [0, 7, 7, 16, 14, 14, 20, 16, 17, 29, 20, 40, 23, 40, 61, 42, 32, 70, 66, 48],
+                 'propagation' : [0,0,0,0,0,0,0,0,0,0,42,29,33,0,0,0,0,0,0,0]}
+
+    plt.figure()
+    plt.xlim(0,19)
+    plt.ylim(0,220)
+    # plt.yscale('log')
+    # plt.plot(range(0, len(proposed)), proposed, '-ro', label='Proposed')
+    plt.plot(range(0, len(syn_clicks['proposed'])), syn_clicks['proposed'], '-mo', label='Proposed + Parameter Estimation')
+    plt.plot(range(0, len(syn_clicks['propagation'])), syn_clicks['propagation'], '-bo', label='Proposed + Repropagation')
+    plt.plot(range(0, len(syn_clicks['magic'])), syn_clicks['magic'], '-go', label='Intelligent Scissors')
+
+    # plt.plot(range(0, len(hybrid)), hybrid, '-bo', label='Intelligent Scissors + Propagation')
+    plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.13))
+    plt.xlabel('Synthetic Slice Number')
+    plt.ylabel('Number of Clicks')
+    plt.savefig('interactive_eval_syn.pdf')
+
 if __name__ == '__main__':
     sys.exit(main(*sys.argv))
