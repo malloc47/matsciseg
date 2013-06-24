@@ -15,6 +15,7 @@
 #endif
 
 static PyMethodDef gcocMethods[] = { 
+  {"yjunctions", yjunctions, METH_VARARGS, "Find y-junctions in label matrix"},
   {"graph_cut", graph_cut, METH_VARARGS, "Graph Cut Optimization wrapper"},
   {"adjacent", adjacent, METH_VARARGS, "Calculate adjacency matrix"},
   {NULL, NULL, 0, NULL}};
@@ -121,6 +122,59 @@ int smoothFnSE(int s1, int s2, int l1, int l2, void *extraData) {
 }
 
 void GridGraph_DArraySArray(int width,int height,int num_pixels,int num_labels);
+
+static PyObject *yjunctions(PyObject *self, PyObject *args) {
+  PyArrayObject *seg_p, *output;
+  int d[2];
+
+  if (!PyArg_ParseTuple(args, "O!", 
+			&PyArray_Type, &seg_p)) {
+    PyErr_SetString(PyExc_ValueError, "Parameters not right");
+    return NULL;
+  }
+
+  if (NULL == seg_p) {
+    PyErr_SetString(PyExc_ValueError, "No data in input");
+    return NULL; 
+  }
+
+  if(seg_p->nd != 2) {
+    PyErr_SetString(PyExc_ValueError, "Wrong input matrix depth");
+    return NULL;
+  }
+
+  if(!PyArray_ISINTEGER(seg_p)) {
+    PyErr_SetString(PyExc_ValueError, "Wrong intput matrix property");
+    return NULL;
+  }
+
+  if(seg_p->descr->type_num != NPY_INT16) {
+    PyErr_SetString(PyExc_ValueError, "Wrong intput matrix type");
+    return NULL;
+  }
+
+  d[0] = seg_p->dimensions[0];
+  d[1] = seg_p->dimensions[1];
+
+  npy_intp d_out[2];
+  d_out[0] = d[0];
+  d_out[1] = d[1];
+
+  output = (PyArrayObject *) PyArray_SimpleNew(2,d_out,NPY_BOOL);
+
+  for(int i=0;i<d[0]-1;i++) 
+    for(int j=0;j<d[1]-1;j++) {
+      std::set<int> win;
+      win.insert(*((npy_int16*)PyArray_GETPTR2(seg_p,i,j)));
+      win.insert(*((npy_int16*)PyArray_GETPTR2(seg_p,i+1,j)));
+      win.insert(*((npy_int16*)PyArray_GETPTR2(seg_p,i,j+1)));
+      win.insert(*((npy_int16*)PyArray_GETPTR2(seg_p,i+1,j+1)));
+      *((npy_int16*)PyArray_GETPTR2(output,i,j)) = (win.size() == 3);
+    }
+
+  Py_INCREF(output);
+  return Py_BuildValue("O",output);  
+}
 
 static PyObject *graph_cut(PyObject *self, PyObject *args) {
   PyArrayObject *data_p, *img_p, *seedimg_p, *adj_p, *output;

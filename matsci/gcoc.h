@@ -3,6 +3,7 @@
 #include "GCoptimization.h"
 #include <algorithm>
 #include <math.h>
+#include <set>
 
 #define INF 10000000
 #define N 255
@@ -19,6 +20,7 @@ struct ForSmoothFn {
 PyMODINIT_FUNC initgcot();
 int smoothFn(int s1, int s2, int l1, int l2, void *extraData);
 extern "C" {
+static PyObject *yjunctions(PyObject *self, PyObject *args);
 static PyObject *graph_cut(PyObject *self, PyObject *args);
 static PyObject *adjacent(PyObject *self, PyObject *args);
 }
