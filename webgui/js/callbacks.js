@@ -75,46 +75,96 @@ var callbacks = (function ($,log,workcanvas,tools,sliceSelector,remote) {
 				  workcanvas.redraw();});
     }
 
-    function local() {
-	if(!(tools.getStr('addition').length > 0 ||
-	     tools.getStr('auto').length > 0 ||
-	     tools.getStr('removal').length > 0 ||
-	     tools.getStr('line').length > 0)) {
-	    log.append("error: no annotations");
-	    return;
-	}
-	log.append("starting local");
-	workcanvas.loading();
-	remote.local(tools.getProp('dataset'),
-		      tools.getProp('image'),
-		      tools.getProp('dilation'),
-		      tools.getProp('size'),
-		      tools.getStr('addition'),
-		      tools.getStr('auto'),
-		      tools.getStr('removal'),
-		      tools.getStr('line'),
-		      function() {log.append("local successful");
-				  tools.clear();
-				  workcanvas.src(tools.getDataset());
-				  workcanvas.redraw();},
-		      function() {log.append("error: no response");
-				  workcanvas.redraw();});
+    function local_annotations(success) {
+	    if(!(tools.getStr('addition').length > 0 ||
+	         tools.getStr('auto').length > 0 ||
+	         tools.getStr('removal').length > 0 ||
+	         tools.getStr('line').length > 0)) {
+	        log.append("error: no annotations");
+	        return;
+	    }
+	    log.append("starting local");
+	    workcanvas.loading();
+	    remote.local(tools.getProp('dataset'),
+		             tools.getProp('image'),
+		             tools.getProp('dilation'),
+		             tools.getProp('size'),
+		             tools.getStr('addition'),
+		             tools.getStr('auto'),
+		             tools.getStr('removal'),
+		             tools.getStr('line'),
+                     success,
+		             function() {log.append("error: no response");
+				                 workcanvas.redraw();});
     }
 
-    function copyr() {copy('copyr',tools.getProp('image')-1);}
-    function copyl() {copy('copyl',tools.getProp('image')+1);}
+    function local(after) {
+        local_annotations(function() {log.append("local successful");
+				                      tools.clear();
+				                      workcanvas.src(tools.getDataset());
+				                      workcanvas.redraw();})
+    }
 
-    function copy(dir,source) {
-	log.append("starting "+dir);
-	workcanvas.loading();
-	remote.copy(tools.getProp('dataset'),
-		      tools.getProp('image'),
-		      source,
-		      function() {log.append(dir+" successful");
-				  workcanvas.src(tools.getDataset());
-				  workcanvas.redraw();},
-		      function() {log.append("error: no source slice");
-				  workcanvas.redraw();});
+    function prop() {
+        local_annotations(function () {
+			tools.clear();
+			workcanvas.src(tools.getDataset());
+			workcanvas.redraw();
+
+            var current = tools.getProp('image')
+            var before = tools.getProp('images')
+                .filter(function (a) { return a<=current;});
+            var after = tools.getProp('images')
+                .filter(function (a) { return a>=current;});
+
+            log.append('propagation in progress...')
+
+            remote.prop(tools.getProp('dataset'),
+		                tools.getProp('dilation'),
+                        before.reverse(),
+                   	    function() {log.append("propl successful");
+				                    workcanvas.src(tools.getDataset());
+				                    workcanvas.redraw();},
+		                function() {log.append("error: no source slice");
+				                    workcanvas.redraw();});
+
+            remopte.prop(tools.getProp('dataset'),
+		                tools.getProp('dilation'),
+                        after,
+                   	    function() {log.append("propr successful");
+				                    workcanvas.src(tools.getDataset());
+				                    workcanvas.redraw();},
+		                function() {log.append("error: no source slice");
+				                    workcanvas.redraw();});
+
+            // for (var i=before.length-1; i > 0; i--){
+            //     copy('propr',before[i],before[i-1]);
+            // }
+
+            // for (var i=0; i < after.length-1; i++){
+            //     copy('propl',after[i],after[i+1]);
+            // }
+        });
+    }
+
+    function copyr() {copy('copyr',
+                           tools.getProp('image'),
+                           tools.getProp('image')-1);}
+    function copyl() {copy('copyl',
+                           tools.getProp('image'),
+                           tools.getProp('image')+1);}
+
+    function copy(dir,slice,source) {
+	    log.append("starting "+dir);
+	    workcanvas.loading();
+	    remote.copy(tools.getProp('dataset'),
+                    slice,
+		            source,
+		            function() {log.append(dir+" successful");
+				                workcanvas.src(tools.getDataset());
+				                workcanvas.redraw();},
+		            function() {log.append("error: no source slice");
+				                workcanvas.redraw();});
     }
 
     function imgtype() {
@@ -241,6 +291,7 @@ var callbacks = (function ($,log,workcanvas,tools,sliceSelector,remote) {
         zoom           : zoom,
         global         : global,
         local          : local,
+        prop           : prop,
         copyr          : copyr,
         copyl          : copyl,
         imgtype        : imgtype,

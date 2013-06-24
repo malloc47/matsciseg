@@ -126,7 +126,7 @@ class Slice(object):
 
     def process_annotations(self,create=[],auto=[],remove=[],line=[]):
         new_volumes = []
-        print(str(auto))
+        # print(str(auto))
         for r in remove:
             (x0,y0,x1,y1) = label.fit_region(self.labels.create_mask([r]))
             new_volumes.append(self.remove_label(r,max(x1-x0,y1-y0)+5))

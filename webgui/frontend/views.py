@@ -20,12 +20,16 @@ thumbnail_cache = get_cache('thumbnails')
 
 
 def fetch_or_load(dataset,index):
+    if isinstance(index, basestring):
+        index = int(index)
+
     # avoid using default value since it would be evaluated
-    v = cache.get(dataset+'_'+index)
+    v = cache.get(dataset+'_'+str(index))
     if v is None:
         print(str("Reloading from cache"))
-        v = matsci.gco.Slice.load(datasets[dataset][int(index)])
-        cache.set(dataset+'_'+index , v)
+        v = matsci.gco.Slice.load(datasets[dataset][index])
+        v.idx = index
+        cache.set(dataset+'_'+str(index) , v)
     return v
 
 def fetch_or_load_thumbnail(dataset,index):
@@ -34,6 +38,7 @@ def fetch_or_load_thumbnail(dataset,index):
         print(str("Reloading thumbnail from cache"))
         # this could be pulled from a the 1st layer of cache...
         v = matsci.gco.Slice.load(datasets[dataset][int(index)])
+        v.idx = index
         thumb = Image.fromarray(np.uint8(v.img))
         thumb.thumbnail((128,128), Image.ANTIALIAS)
         thumbnail_cache.set(dataset+'_'+index , thumb,timeout=31536000)
@@ -62,9 +67,35 @@ def retrieve_two_cached(fn):
         return fn(request,v,u)
     return wrap
 
+def retrieve_many_cached(fn):
+    def wrap(request):
+        if request.method != 'GET':
+            return HttpResponseBadRequest()
+        try:
+            vs = [fetch_or_load(request.GET['dataset'], u)
+                  for u in request.GET['slices'].split(',')]
+        except:
+            return HttpResponseBadRequest()
+        return fn(request,vs)
+    return wrap
+
+def retrieve_one_and_many_cached(fn):
+    def wrap(request):
+        if request.method != 'GET':
+            return HttpResponseBadRequest()
+        try:
+            u = fetch_or_load(request.GET['dataset'], request.GET['slice'])
+            vs = [fetch_or_load(request.GET['dataset'], u)
+                  for u in request.GET['slices']]
+        except:
+            return HttpResponseBadRequest()
+        return fn(request,u,vs)
+    return wrap
+
 def reset_cache(dataset,index):
     print(str("Reloading from cache"))
     v = matsci.gco.Slice.load(datasets[dataset][int(index)])
+    v.idx = index
     cache.set(dataset+'_'+index , v)
     return v
 
@@ -190,7 +221,7 @@ def convert_string(s):
 def localgc(request,v):
     params = request.GET
     global current_img, images, slices
-    print('Local')
+    # print('Local')
     addition = [];
     auto = [];
     removal = [];
@@ -213,4 +244,30 @@ def localgc(request,v):
             [l for l in line if len(l)==4]]
     v.edit_labels(addition,auto,removal,line)
     return HttpResponse(json.dumps('local graph cut successful'),
+                        content_type='application/javascript; charset=utf8')
+
+def prop_copy(request):
+    vs = [int(v) for v in request.GET['slices'].split(',')]
+    dilation = int(request.GET['dilation'])
+    # walk through pairs of indices
+    for uidx, vidx in zip(vs[:-1], vs[1:]):
+        # print(str(uidx) + ' -> ' + str(vidx))
+        # fetch each pair anew
+        u = fetch_or_load(request.GET['dataset'],uidx)
+        v = fetch_or_load(request.GET['dataset'],vidx)
+        v_new = matsci.gco.Slice(v.img,u.labels.v)
+        v_new.idx = v.idx
+        try:
+            v_new.data.dilate_all(dilation)
+        except AttributeError:
+            v_new.data = matsci.data.Data(v_new.labels.v)
+            v_new.data.dilate_all(dilation)
+
+        v_new.graph_cut(1)
+
+        # override v in cache so it is available in the next iteration
+        cache.set(request.GET['dataset']+'_'+str(v.idx),v_new)
+
+        # matsci.gco.Slice(v.img,u.labels.v)
+    return HttpResponse(json.dumps('propagated copy successful'),
                         content_type='application/javascript; charset=utf8')

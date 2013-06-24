@@ -52,6 +52,14 @@ var remote = (function ($,log) {
 		  }, f).error(err);
     }
 
+    function prop(dataset,dilation,slices,f,err) {
+        $.getJSON("/prop/", 
+		  {'dataset'	: dataset,
+		   'dilation'	: dilation,
+		   'slices'	: slices.join(','),
+		  }, f).error(err);
+    }
+
     // todo: remaining commands
 
     return {
@@ -62,6 +70,7 @@ var remote = (function ($,log) {
         reload   : reload,
         save     : save,
         copy     : copy,
+        prop     : prop
     }
 
 }($,log));
