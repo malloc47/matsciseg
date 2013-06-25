@@ -128,7 +128,7 @@ var callbacks = (function ($,log,workcanvas,tools,sliceSelector,remote) {
 		                function() {log.append("error: no source slice");
 				                    workcanvas.redraw();});
 
-            remopte.prop(tools.getProp('dataset'),
+            remote.prop(tools.getProp('dataset'),
 		                tools.getProp('dilation'),
                         after,
                    	    function() {log.append("propr successful");
