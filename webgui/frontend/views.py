@@ -145,7 +145,7 @@ def img_edge(request,v):
 
 @retrieve_cached
 def img_salient(request,v):
-    output = matsci.draw.salient(v.img,v.labels.v)
+    output = matsci.draw.salient(v.img, v.labels.v)
     http_output = Image.fromarray(np.uint8(output))
     response = HttpResponse(mimetype="image/png")
     http_output.save(response, "PNG")
