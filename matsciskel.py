@@ -4,30 +4,9 @@ import numpy as np
 import scipy
 from scipy import ndimage
 import recipes_old
+from matsci.draw import label_to_bmp, draw_on_img
+from matsci.io import read_img
 
-def display(im):
-    cv2.namedWindow("tmp",cv2.CV_WINDOW_AUTOSIZE)
-    cv2.imshow("tmp",im)
-    cv2.waitKey(0)
-
-def label_to_bmp(labels):
-    grad = np.gradient(labels)
-    seg = np.maximum(abs(grad[0]),abs(grad[1]))
-    return seg
-
-def draw_on_img(img,bmp,color=(255,0,0)):
-    out = img.copy()
-    out[np.nonzero(bmp>0)] = color
-    return out
-
-def read_img(img_name):
-    im = cv.LoadImageM(img_name)
-    im_gray = cv.CreateMat(im.rows, im.cols, cv.CV_8U)
-    cv.CvtColor(im,im_gray, cv.CV_RGB2GRAY)
-    # convert to numpy arrays
-    im_gray = np.asarray(im_gray[:,:])
-    im = np.asarray(im[:,:])
-    return (im,im_gray)
 
 def imgio(fn):
     """use to decorate recipes with io ops"""

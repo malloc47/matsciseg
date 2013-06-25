@@ -171,11 +171,11 @@ def clique_compare_cmd(vp,im,im_gray,labels,dilation,binary):
     v2.graph_cut(1)
     v = matsci.gco.Slice(im_gray,labels)
     v.clique_swap(dilation)
-    import matsciskel
+    from matsci.draw import draw_on_img, label_to_bmp
     import cv2
-    cv2.imwrite('cliquetest.png',matsciskel.draw_on_img(matsciskel.draw_on_img(im,matsciskel.label_to_bmp(v2.labels.v)),matsciskel.label_to_bmp(v.labels.v),color=(0,0,255)))
-    cv2.imwrite('cliquetest_global.png',matsciskel.draw_on_img(im,matsciskel.label_to_bmp(v2.labels.v),color=(0,0,255)))
-    cv2.imwrite('cliquetest_local.png',matsciskel.draw_on_img(im,matsciskel.label_to_bmp(v.labels.v),color=(0,0,255)))
+    cv2.imwrite('cliquetest.png',draw_on_img(draw_on_img(im,label_to_bmp(v2.labels.v)),label_to_bmp(v.labels.v),color=(0,0,255)))
+    cv2.imwrite('cliquetest_global.png',draw_on_img(im,label_to_bmp(v2.labels.v),color=(0,0,255)))
+    cv2.imwrite('cliquetest_local.png',draw_on_img(im,label_to_bmp(v.labels.v),color=(0,0,255)))
     return v.labels.v
 
 def clique_compare2_cmd(vp,im,im_gray,dilation,labels):
@@ -186,11 +186,11 @@ def clique_compare2_cmd(vp,im,im_gray,dilation,labels):
                                  key=lambda y: y[1])[1] > 3)
     v = matsci.gco.Slice(im_gray,labels)
     v.clique_swap(dilation)
-    import matsciskel
+    from matsci.draw import draw_on_img, label_to_bmp
     import cv2
-    cv2.imwrite('cliquetest.png',matsciskel.draw_on_img(matsciskel.draw_on_img(im,matsciskel.label_to_bmp(v2.labels.v)),matsciskel.label_to_bmp(v.labels.v),color=(0,0,255)))
-    cv2.imwrite('cliquetest_global.png',matsciskel.draw_on_img(im,matsciskel.label_to_bmp(v2.labels.v),color=(0,0,255)))
-    cv2.imwrite('cliquetest_local.png',matsciskel.draw_on_img(im,matsciskel.label_to_bmp(v.labels.v),color=(0,0,255)))
+    cv2.imwrite('cliquetest.png',draw_on_img(draw_on_img(im,label_to_bmp(v2.labels.v)),label_to_bmp(v.labels.v),color=(0,0,255)))
+    cv2.imwrite('cliquetest_global.png',draw_on_img(im,label_to_bmp(v2.labels.v),color=(0,0,255)))
+    cv2.imwrite('cliquetest_local.png',draw_on_img(im,label_to_bmp(v.labels.v),color=(0,0,255)))
     return v.labels.v
 
 def compare_cmd(vp,im,im_gray,labels,binary):
@@ -201,9 +201,9 @@ def compare_cmd(vp,im,im_gray,labels,binary):
     # v.clique_swap(arg['d'])
     # v.non_homeomorphic_remove(arg['d'],arg['d'])
     v.non_homeomorphic_yjunction(dilation,r3=7)
-    import matsciskel
+    from matsci.draw import draw_on_img, label_to_bmp
     import cv2
-    cv2.imwrite('cliquetest_local.png',matsciskel.draw_on_img(im,matsciskel.label_to_bmp(v.labels.v),color=(0,0,255)))
+    cv2.imwrite('cliquetest_local.png',draw_on_img(im,label_to_bmp(v.labels.v),color=(0,0,255)))
     return v.labels.v
 
 def local_stats_cmd(vp,arg,im_gray,labels,binary):

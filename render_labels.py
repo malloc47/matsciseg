@@ -3,23 +3,8 @@ import os,sys
 import numpy as np
 import scipy
 from scipy import ndimage
-
-def draw_on_img(img,bmp,color=(255,0,0)):
-    out = img.copy()
-    out[np.nonzero(bmp>0)] = color
-    return out
-
-def label_to_bmp(labels):
-    grad = np.gradient(labels)
-    seg = np.maximum(abs(grad[0]),abs(grad[1]))
-    return seg
-
-def read_grey_as_rgb(imgin):
-    im = scipy.misc.imread(imgin,flatten=True).astype('float32')
-    im = np.divide(im,im.max())
-    im = np.multiply(im,255).astype('uint8')
-    im = np.dstack((im,im,im))
-    return im
+from matsci.draw import label_to_bmp, draw_on_img
+from matsci.io import read_grey_as_rgb
 
 def main(*args):
     if(len(args) < 4):

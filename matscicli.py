@@ -7,7 +7,7 @@ from scipy import ndimage
 import recipes
 import argparse
 import inspect
-import matsciskel
+from matsci.io import read_img
 
 edge_types = {
     'i' : 0,
@@ -19,14 +19,14 @@ edge_types = {
 
 def run_jobs(pargs,fn):
     for f in range(0,len(pargs.files),4):
-        im_prev,im_prev_gray =  matsciskel.read_img(pargs.files[f])
-        im,im_gray =  matsciskel.read_img(pargs.files[f+2])
+        im_prev,im_prev_gray =  read_img(pargs.files[f])
+        im,im_gray =  read_img(pargs.files[f+2])
         if pargs.files[f+1].endswith(('.png','.jpg')):
             from matsci.label import pts_to_label
             labels_prev = pts_to_label(scipy.misc.imread(pargs.files[f+1],flatten=True).astype('bool'))
             # cv2.imwrite(pargs.output_image[:-4]+'-orig.png',
-            #             matsciskel.draw_on_img(im,
-            #                                    matsciskel.label_to_bmp(labels_prev)))
+            #             draw_on_img(im,
+            #                                    label_to_bmp(labels_prev)))
         else:
             labels_prev =  np.genfromtxt(pargs.files[f+1],dtype='int16')
         # import code; code.interact(local=locals())
@@ -45,8 +45,8 @@ def run_jobs(pargs,fn):
         np.savetxt(labels_out,output,fmt='%1d')
         if not pargs.output_image is None:
             cv2.imwrite(pargs.output_image,
-                        matsciskel.draw_on_img(im,
-                                               matsciskel.label_to_bmp(output)))
+                        draw_on_img(im,
+                                    label_to_bmp(output)))
 
 def main(*args):
     parser = argparse.ArgumentParser(

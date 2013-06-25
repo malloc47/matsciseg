@@ -4,14 +4,9 @@ import numpy as np
 import scipy
 from scipy import ndimage
 import matsci
-from matsci.draw import jet_colors, randmap
+from matsci.draw import jet_colors, randmap, alpha_blend, label_to_bmp
 import matsciskel
 import random
-
-def alpha_blend(img,bmp,color=(255,0,0,0.5)):
-    out = img.copy()
-    out[np.nonzero(bmp>0)] = np.add(out[np.nonzero(bmp>0)],tuple([c*color[-1] for c in color[:-1]]))
-    return out
 
 def plot_that_prints_out_values_when_clicked(labels):
     from matplotlib import pyplot as plt
@@ -57,7 +52,7 @@ def main(*args):
     im_gray = np.multiply(im,255).astype('uint8')
     im = np.dstack((im_gray,im_gray,im_gray))
     labels = np.genfromtxt(label_path,dtype='int16')
-    bmp = matsciskel.label_to_bmp(labels)
+    bmp = label_to_bmp(labels)
     # if(len(args) > 4):
     #     bmp = scipy.ndimage.morphology.binary_dilation(bmp,iterations=int(args[4]))
 
