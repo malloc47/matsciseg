@@ -42,12 +42,15 @@ def grey_to_rgb(im):
     return np.repeat(im,3,axis=1).reshape(im.shape+(3,))
 
 def salient(label,im):
+    import matsci.io, matsci.draw
     # label = matsci.io.read_labels('seq1/global-20/90/image0099.label')
     # _,im = matsci.io.read_img('seq1/img/image0099.png')
-    import matsci.io
     from skimage.transform import probabilistic_hough
     from skimage.morphology import remove_small_objects
+    from skimage.morphology import label as label_im
+    from skimage.measure import regionprops
     from skimage.filter import canny, threshold_adaptive
+    from skimage.draw import polygon
     from scipy.ndimage.morphology import distance_transform_edt
     # lines = probabilistic_hough(im_grey, threshold=50, line_length=5, line_gap=3)
     im_edges = canny(im.astype('float')/255, sigma=1.0, low_threshold=0.1, high_threshold=0.2, mask=None)
@@ -68,11 +71,37 @@ def salient(label,im):
     # - learn ellipse parameters
     # - classify components
 
+    props = regionprops(label_im(im_edges, neighbors=8, background=0),
+                        properties=['Area','BoundingBox','Centroid',
+                                    'EquivDiameter', 'MajorAxisLength',
+                                    'MinorAxisLength'])
+
+    mask = np.zeros(im_edges.shape,dtype=bool)
+
+    for p in props:
+        y0, x0, y1, x1 = p['BoundingBox']
+        # x0,y0 -> x0,y1 -> x1,y1 -> x1 y0 -> x0,y0
+        rr, cc = polygon(y=np.array((y0,y1,y1,y0,y0)),
+                         x=np.array((x0,x0,x1,x1,x0)))
+        # rr, cc = ellipse(cy=p['Centroid'][0],
+        #                  cx=p['Centroid'][1],
+        #                  xradius=p['MajorAxisLength'],
+        #                  yradius=p['MinorAxisLength'])
+        mask[rr,cc] = True
+
+    out = im.copy()
+
+    out[np.logical_not(mask)] /= 8
+
+    out = np.dstack((out,out,out))
+    out = matsci.draw.draw_on_img(out,seg)
+
     import matplotlib.pyplot as plt
     import matplotlib.cm as cm
     plt.figure()
-    plt.imshow(im_edges, cmap = cm.Greys_r)
+    plt.imshow(out, cmap = cm.Greys_r)
     # for line in lines:
     #     p0, p1 = line
     #     plt.plot((p0[0], p1[0]), (p0[1], p1[1]))
     plt.show()
+    return out
