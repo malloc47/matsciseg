@@ -86,6 +86,7 @@ var init = (function ($,log,workcanvas,tools,callbacks,remote) {
 	$('#img').button({icons: {primary: "ui-icon-image"}});
 	$('#seg').button({icons: {primary: "ui-icon-video"}});
 	$('#edg').button({icons: {primary: "ui-icon-script"}});
+	$('#sal').button({icons: {primary: "ui-icon-flag"}});
 	$('#global').button({icons: {primary: "ui-icon-refresh"}});
 	$('#local').button({icons: {primary: "ui-icon-arrowreturn-1-e"}});
 	$('#prop').button({icons: {primary: "ui-icon-arrow-2-e-w"}});

@@ -143,6 +143,14 @@ def img_edge(request,v):
     http_output.save(response, "PNG")
     return response
 
+@retrieve_cached
+def img_salient(request,v):
+    output = matsci.draw.salient(v.img,v.labels.v)
+    http_output = Image.fromarray(np.uint8(output))
+    response = HttpResponse(mimetype="image/png")
+    http_output.save(response, "PNG")
+    return response
+
 def index(req):
     return render_to_response('matsci.html', {})
 

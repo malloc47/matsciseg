@@ -54,7 +54,7 @@ def salient(label,im):
     from scipy.ndimage.morphology import distance_transform_edt
     # lines = probabilistic_hough(im_grey, threshold=50, line_length=5, line_gap=3)
     im_edges = canny(im.astype('float')/255, sigma=1.0, low_threshold=0.1, high_threshold=0.2, mask=None)
-    im_edges = remove_small_objects(im_edges,50,2)
+    im_edges = remove_small_objects(im_edges,40,2)
     # edges = threshold_adaptive(im,101,method='gaussian')
     # lines = probabilistic_hough(edges, threshold=50, line_length=10, line_gap=1)
 
@@ -96,12 +96,12 @@ def salient(label,im):
     out = np.dstack((out,out,out))
     out = matsci.draw.draw_on_img(out,seg)
 
-    import matplotlib.pyplot as plt
-    import matplotlib.cm as cm
-    plt.figure()
-    plt.imshow(out, cmap = cm.Greys_r)
-    # for line in lines:
-    #     p0, p1 = line
-    #     plt.plot((p0[0], p1[0]), (p0[1], p1[1]))
-    plt.show()
+    # import matplotlib.pyplot as plt
+    # import matplotlib.cm as cm
+    # plt.figure()
+    # plt.imshow(out, cmap = cm.Greys_r)
+    # # for line in lines:
+    # #     p0, p1 = line
+    # #     plt.plot((p0[0], p1[0]), (p0[1], p1[1]))
+    # plt.show()
     return out

@@ -9,8 +9,9 @@ var tools = (function () {
 		'line'     : []};
 
     var imgPaths = {'img'	: 'raw',
-		     'seg'	: 'labeled',
-		     'edg'	: 'edge'};
+		            'seg'	: 'labeled',
+		            'edg'	: 'edge',
+                    'sal'	: 'salient'};
 
     var cursorMode = {'none'		:{'cursor':'default'},
 		      'addition'	:{'cursor':'crosshair'},
