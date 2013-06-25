@@ -10,3 +10,4 @@ wsgiref==0.1.2
 matplotlib==1.1.1
 #wxPython==2.8.12.1
 #wxPython-common==2.8.12.1
+scikit-image==0.8.2
