@@ -11,7 +11,6 @@ from PIL import Image
 
 from webgui.settings import datasets
 
-import render_labels
 import matsci.draw
 import matsci
 
@@ -137,8 +136,8 @@ def img_thumb(request):
 def img_edge(request,v):
     im = v.img
     im = np.dstack((im,im,im))
-    bmp = render_labels.label_to_bmp(v.labels.v)
-    output = render_labels.draw_on_img(im,bmp)
+    bmp = matsci.draw.label_to_bmp(v.labels.v)
+    output = matsci.draw.draw_on_img(im,bmp)
     http_output = Image.fromarray(np.uint8(output))
     response = HttpResponse(mimetype="image/png")
     http_output.save(response, "PNG")
