@@ -48,15 +48,30 @@ def salient(label,im):
     from skimage.transform import probabilistic_hough
     from skimage.morphology import remove_small_objects
     from skimage.filter import canny, threshold_adaptive
+    from scipy.ndimage.morphology import distance_transform_edt
     # lines = probabilistic_hough(im_grey, threshold=50, line_length=5, line_gap=3)
-    edges = canny(im.astype('float')/255, sigma=1.0, low_threshold=0.1, high_threshold=0.2, mask=None)
-    edges = remove_small_objects(edges,50,2)
+    im_edges = canny(im.astype('float')/255, sigma=1.0, low_threshold=0.1, high_threshold=0.2, mask=None)
+    im_edges = remove_small_objects(im_edges,50,2)
     # edges = threshold_adaptive(im,101,method='gaussian')
     # lines = probabilistic_hough(edges, threshold=50, line_length=10, line_gap=1)
+
+    seg = label_to_bmp(label)
+    dt = distance_transform_edt(np.logical_not(seg))
+    min_d, max_d = 5, 50
+
+    im_edges[dt<min_d] = 0
+    im_edges[dt>max_d] = 0
+
+    # future pipeline:
+    # - connected components
+    # - elipse fitting
+    # - learn ellipse parameters
+    # - classify components
+
     import matplotlib.pyplot as plt
     import matplotlib.cm as cm
     plt.figure()
-    plt.imshow(edges, cmap = cm.Greys_r)
+    plt.imshow(im_edges, cmap = cm.Greys_r)
     # for line in lines:
     #     p0, p1 = line
     #     plt.plot((p0[0], p1[0]), (p0[1], p1[1]))
