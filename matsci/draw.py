@@ -41,6 +41,23 @@ def color_jet(img,labels,alpha=0.5):
 def grey_to_rgb(im):
     return np.repeat(im,3,axis=1).reshape(im.shape+(3,))
 
-def salient(labels,im):
-    label = matsci.io.read_labels('seq1/global-20/90/image0099.label')
-    im,im_grey = matsci.io.read_img('seq1/img/image0099.png')
+def salient(label,im):
+    # label = matsci.io.read_labels('seq1/global-20/90/image0099.label')
+    # _,im = matsci.io.read_img('seq1/img/image0099.png')
+    import matsci.io
+    from skimage.transform import probabilistic_hough
+    from skimage.morphology import remove_small_objects
+    from skimage.filter import canny, threshold_adaptive
+    # lines = probabilistic_hough(im_grey, threshold=50, line_length=5, line_gap=3)
+    edges = canny(im.astype('float')/255, sigma=1.0, low_threshold=0.1, high_threshold=0.2, mask=None)
+    edges = remove_small_objects(edges,50,2)
+    # edges = threshold_adaptive(im,101,method='gaussian')
+    # lines = probabilistic_hough(edges, threshold=50, line_length=10, line_gap=1)
+    import matplotlib.pyplot as plt
+    import matplotlib.cm as cm
+    plt.figure()
+    plt.imshow(edges, cmap = cm.Greys_r)
+    # for line in lines:
+    #     p0, p1 = line
+    #     plt.plot((p0[0], p1[0]), (p0[1], p1[1]))
+    plt.show()
