@@ -78,6 +78,11 @@ def extract_features(im,label):
 #                  ('seq1/img/image0099.png','seq1/global-20/90/image0099.label'),
 #                  ('seq1/img/image0100.png','seq1/global-20/90/image0100.label')))
 def export_features(im_label_pairs):
+    """dumps out a file with feature vectors in a python-readable format
+    along with the raw images corresponding to each feature; all the
+    feature vectors are labeled with 0, so the images facilitate
+    manual intervention choose which should be labeled as 1 """
+
     import os
     import matsci.io
     from skimage.measure import regionprops
@@ -129,6 +134,8 @@ def export_features(im_label_pairs):
         f.write(']\n')
 
 def train_classifier(feature_path):
+    """takes in input from the feature file output above, trains an SVM
+    classifier, and dumps it out as serialized numpy arrays """
     from sklearn import svm
     from sklearn.externals import joblib
 
@@ -156,12 +163,6 @@ def salient(im,label,use_classifier=True):
     from skimage.measure import regionprops
     from skimage.draw import polygon, line
 
-    # future pipeline:
-    # - connected components
-    # - elipse fitting
-    # - learn ellipse parameters
-    # - classify components
-
     salient_regions = extract_features(im,label)
 
     props = regionprops(salient_regions,
@@ -174,6 +175,8 @@ def salient(im,label,use_classifier=True):
     mask = np.zeros(im.shape,dtype=bool)
 
     if use_classifier:
+        # cache the classifier on the module-level so that there is no
+        # need to reload it constantly
         global classifier
 
         if not classifier:
@@ -195,10 +198,6 @@ def salient(im,label,use_classifier=True):
         # x0,y0 -> x0,y1 -> x1,y1 -> x1 y0 -> x0,y0
         rr, cc = polygon(y=np.array((y0,y1,y1,y0,y0)),
                          x=np.array((x0,x0,x1,x1,x0)))
-        # rr, cc = ellipse(cy=p['Centroid'][0],
-        #                  cx=p['Centroid'][1],
-        #                  xradius=p['MajorAxisLength'],
-        #                  yradius=p['MinorAxisLength'])
         mask[rr,cc] = True
 
     out = im.copy()
@@ -214,7 +213,7 @@ def salient(im,label,use_classifier=True):
         y1 = min(y1,im.shape[0]-1)
         x0 = min(x0,im.shape[1]-1)
         x1 = min(x1,im.shape[1]-1)
-        # x0,y0 -> x0,y1 -> x1,y1 -> x1 y0 -> x0,y0
+        # ugly, but whateva
         rr, cc = line(y0,x0,y1,x0)
         blue[rr,cc] = 255
         rr, cc = line(y1,x0,y1,x1)
