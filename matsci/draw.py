@@ -41,22 +41,20 @@ def color_jet(img,labels,alpha=0.5):
 def grey_to_rgb(im):
     return np.repeat(im,3,axis=1).reshape(im.shape+(3,))
 
-def salient(im,label):
-    import matsci.io, matsci.draw
-    # label = matsci.io.read_labels('seq1/global-20/90/image0099.label')
-    # _,im = matsci.io.read_img('seq1/img/image0099.png')
-    from skimage.transform import probabilistic_hough
+def extract_features(im,label):
+    from scipy.ndimage.morphology import distance_transform_edt
     from skimage.morphology import remove_small_objects, binary_dilation, disk
     from skimage.morphology import label as label_im
-    from skimage.measure import regionprops
-    from skimage.filter import canny, threshold_adaptive
-    from skimage.draw import polygon, line
-    from scipy.ndimage.morphology import distance_transform_edt
+    from skimage.filter import canny
+    # from skimage.filter import threshold_adaptive
+
     # lines = probabilistic_hough(im_grey, threshold=50, line_length=5, line_gap=3)
-    im_edges = canny(im.astype('float')/255, sigma=1.0, low_threshold=0.1, high_threshold=0.2, mask=None)
-    im_edges = remove_small_objects(im_edges,40,2)
+
     # edges = threshold_adaptive(im,101,method='gaussian')
     # lines = probabilistic_hough(edges, threshold=50, line_length=10, line_gap=1)
+
+    im_edges = canny(im.astype('float')/255, sigma=1.0, low_threshold=0.1, high_threshold=0.2, mask=None)
+    im_edges = remove_small_objects(im_edges,40,2)
 
     seg = label_to_bmp(label)
     dt = distance_transform_edt(np.logical_not(seg))
@@ -67,18 +65,130 @@ def salient(im,label):
 
     im_edges = binary_dilation(im_edges,disk(5))
 
+    return label_im(im_edges, neighbors=8, background=0)
+
+# export_features((('seq1/img/image0091.png','seq1/global-20/90/image0091.label'),
+#                  ('seq1/img/image0092.png','seq1/global-20/90/image0092.label'),
+#                  ('seq1/img/image0093.png','seq1/global-20/90/image0093.label'),
+#                  ('seq1/img/image0094.png','seq1/global-20/90/image0094.label'),
+#                  ('seq1/img/image0095.png','seq1/global-20/90/image0095.label'),
+#                  ('seq1/img/image0096.png','seq1/global-20/90/image0096.label'),
+#                  ('seq1/img/image0097.png','seq1/global-20/90/image0097.label'),
+#                  ('seq1/img/image0098.png','seq1/global-20/90/image0098.label'),
+#                  ('seq1/img/image0099.png','seq1/global-20/90/image0099.label'),
+#                  ('seq1/img/image0100.png','seq1/global-20/90/image0100.label')))
+def export_features(im_label_pairs):
+    import os
+    import matsci.io
+    from skimage.measure import regionprops
+    win = 35
+    try:
+        os.mkdir('features')
+    except:
+        pass
+    idx = 0
+    feature_file = 'features/features'
+    with open(feature_file, 'a') as f:
+        f.write('[\n')
+    for im_path, label_path in im_label_pairs:
+        label = matsci.io.read_labels(label_path)
+        _,im = matsci.io.read_img(im_path)
+        salient_regions = extract_features(im,label)
+        props = regionprops(salient_regions,
+                            intensity_image=im,
+                            properties=['Area','BoundingBox','EquivDiameter', 
+                                        'MajorAxisLength','MinorAxisLength',
+                                        'Eccentricity','EquivDiameter',
+                                        'MaxIntensity','MeanIntensity'])
+        for p in props:
+            y0, x0, y1, x1 = p['BoundingBox']
+            ymin = max(min(y0,y1)-win,0)
+            ymax = min(max(y0,y1)+win,im.shape[0]-1)
+            xmin = max(min(x0,x1)-win,0)
+            xmax = min(max(x0,x1)+win,im.shape[1]-1)
+            feature_vector = (idx,
+                              p['Area'], 
+                              p['EquivDiameter'],
+                              p['MajorAxisLength'],
+                              p['MinorAxisLength'],
+                              p['Eccentricity'],
+                              p['EquivDiameter'],
+                              p['MaxIntensity'],
+                              p['MeanIntensity'],
+                              0) # last is class to be changed later
+            img = im.copy()
+            mask = np.zeros(im.shape,dtype=bool)
+            mask[y0:y1,x0:x1] = True
+            img[np.logical_not(mask)] /= 4
+            matsci.io.write_img(img[ymin:ymax,xmin:xmax],
+                                'features/'+str(idx)+'.png')
+            with open(feature_file, 'a') as f:
+                f.write(str(feature_vector)+',\n')
+            idx += 1
+    with open(feature_file, 'a') as f:
+        f.write(']\n')
+
+def train_classifier(feature_path):
+    from sklearn import svm
+    from sklearn.externals import joblib
+
+    with open(feature_path,'r') as f:
+        raw_features = eval(f.read())
+
+    features = [f[1:-1] for f in raw_features]
+    targets = [f[-1] for f in raw_features]
+
+    classifier = svm.SVC()
+    classifier.fit(features,targets)
+
+    joblib.dump(classifier,'classifiers/salient')
+
+    return classifier
+
+classifier = None
+            
+def salient(im,label,use_classifier=True):
+    import matsci.io, matsci.draw
+    # label = matsci.io.read_labels('seq1/global-20/90/image0099.label')
+    # _,im = matsci.io.read_img('seq1/img/image0099.png')
+    # from skimage.transform import probabilistic_hough
+
+    from skimage.measure import regionprops
+    from skimage.draw import polygon, line
+
     # future pipeline:
     # - connected components
     # - elipse fitting
     # - learn ellipse parameters
     # - classify components
 
-    props = regionprops(label_im(im_edges, neighbors=8, background=0),
-                        properties=['Area','BoundingBox','Centroid',
-                                    'EquivDiameter', 'MajorAxisLength',
-                                    'MinorAxisLength'])
+    salient_regions = extract_features(im,label)
 
-    mask = np.zeros(im_edges.shape,dtype=bool)
+    props = regionprops(salient_regions,
+                        intensity_image=im,
+                        properties=['Area','BoundingBox','EquivDiameter', 
+                                        'MajorAxisLength','MinorAxisLength',
+                                        'Eccentricity','EquivDiameter',
+                                        'MaxIntensity','MeanIntensity'])
+
+    mask = np.zeros(im.shape,dtype=bool)
+
+    if use_classifier:
+        global classifier
+
+        if not classifier:
+            from sklearn.externals import joblib
+            classifier = joblib.load('classifiers/salient')
+
+        props = [p for p in props 
+                    if classifier.predict((p['Area'], 
+                                           p['EquivDiameter'],
+                                           p['MajorAxisLength'],
+                                           p['MinorAxisLength'],
+                                           p['Eccentricity'],
+                                           p['EquivDiameter'],
+                                           p['MaxIntensity'],
+                                           p['MeanIntensity']))[0]]
 
     for p in props:
         y0, x0, y1, x1 = p['BoundingBox']
@@ -115,7 +225,7 @@ def salient(im,label):
         blue[rr,cc] = 255
 
     out = np.dstack((out,out,blue))
-    out = matsci.draw.draw_on_img(out,seg)
+    out = matsci.draw.draw_on_img(out,label_to_bmp(label))
 
     # import matplotlib.pyplot as plt
     # import matplotlib.cm as cm

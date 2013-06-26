@@ -28,3 +28,7 @@ def read_img(img_name):
     im_gray = np.asarray(im_gray[:,:])
     im = np.asarray(im[:,:])
     return (im,im_gray)
+
+def write_img(im,im_path):
+    import cv2
+    cv2.imwrite(im_path,im)
