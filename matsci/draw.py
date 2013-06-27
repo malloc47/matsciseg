@@ -168,9 +168,9 @@ def salient(im,label,use_classifier=True):
     props = regionprops(salient_regions,
                         intensity_image=im,
                         properties=['Area','BoundingBox','EquivDiameter', 
-                                        'MajorAxisLength','MinorAxisLength',
-                                        'Eccentricity','EquivDiameter',
-                                        'MaxIntensity','MeanIntensity'])
+                                    'MajorAxisLength','MinorAxisLength',
+                                    'Eccentricity','MaxIntensity',
+                                    'MeanIntensity'])
 
     mask = np.zeros(im.shape,dtype=bool)
 
@@ -189,7 +189,6 @@ def salient(im,label,use_classifier=True):
                                            p['MajorAxisLength'],
                                            p['MinorAxisLength'],
                                            p['Eccentricity'],
-                                           p['EquivDiameter'],
                                            p['MaxIntensity'],
                                            p['MeanIntensity']))[0]]
 
