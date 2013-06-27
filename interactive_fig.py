@@ -36,11 +36,15 @@ def main(*args):
     magic_scissors_time = map(to_minutes,[1655, 1562, 1300, 1069, 1039, 1016, 1021, 1042, 1079, 950, 834])
     hybrid_time = map(to_minutes,[1655, 252, 207, 180, 229, 266, 235, 239, 252, 298, 265])
     auto_time = map(to_minutes, [1655, 44, 57, 50, 61, 44, 56, 71, 67, 72, 90])
+    assisted_time = map(to_minutes, [1655, 23, 25, 22, 27, 27, 25, 46, 53, 73, 96])
 
     plt.figure()
 #    plt.xlim(1,11)
     plt.plot(range(0, len(proposed_time)), proposed_time, '-ro', label='Proposed')
-    plt.plot(range(0, len(auto_time)), auto_time, '-mo', label='Proposed + Parameter Estimation')
+    plt.plot(range(0, len(auto_time)), auto_time, '-mo', label='Proposed + Parameter Estimation'
+)
+    plt.plot(range(0, len(assisted_time)), assisted_time, '-yo', label='Proposed + Estimation + Salient Region Detection')
+
     plt.plot(range(0, len(magic_scissors_time)), magic_scissors_time, '-go', label='Intelligent Scissors')
     plt.plot(range(0, len(hybrid_time)), hybrid_time, '-bo', label='Intelligent Scissors + Propagation')
     plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.13))
