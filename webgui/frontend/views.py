@@ -212,6 +212,21 @@ def globalgc(request,v):
                         content_type='application/javascript; charset=utf8')
 
 @retrieve_cached
+def topogc(request,v):
+    dilation = int(request.GET['dilation'])
+    # the local operation doesn't regenerate the data term over the
+    # whole image to speed interaction (positing global is rare)
+    # if needed, regenerate here
+    if hasattr(v,'data') and v.data:
+        v.clique_swap(dilation,f=None)
+    else:
+        v.data = matsci.data.Data(v.labels.v)
+        v.clique_swap(dilation,f=None)
+
+    return HttpResponse(json.dumps('global graph cut successful'),
+                        content_type='application/javascript; charset=utf8')
+
+@retrieve_cached
 def save(request,v):
     output = datasets[request.GET['dataset']][int(request.GET['slice'])]
     # reload data term, in case it wasn't defined

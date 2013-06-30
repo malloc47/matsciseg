@@ -88,6 +88,7 @@ var init = (function ($,log,workcanvas,tools,callbacks,remote) {
 	$('#edg').button({icons: {primary: "ui-icon-script"}});
 	$('#sal').button({icons: {primary: "ui-icon-flag"}});
 	$('#global').button({icons: {primary: "ui-icon-refresh"}});
+	$('#topo').button({icons: {primary: "ui-icon-link"}});
 	$('#local').button({icons: {primary: "ui-icon-arrowreturn-1-e"}});
 	$('#prop').button({icons: {primary: "ui-icon-arrow-2-e-w"}});
 	$('#copyr').button({icons: {primary: "ui-icon-triangle-1-e"}});
@@ -103,6 +104,7 @@ var init = (function ($,log,workcanvas,tools,callbacks,remote) {
 
         $('#local').click(callbacks.local);
         $('#global').click(callbacks.global);
+        $('#topo').click(callbacks.topo);
 
         $('#prop').click(callbacks.prop);
 

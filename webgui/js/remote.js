@@ -15,6 +15,14 @@ var remote = (function ($,log) {
 		  }, f).error(err);
     }
 
+    function topo(dataset,slice,dilation,f,err) {
+        $.getJSON("/topo/", 
+		  {'dataset'	: dataset,
+		   'slice'	: slice,
+		   'dilation'	: dilation,
+		  }, f).error(err);
+    }
+
     function reload(dataset,slice,f,err) {
         $.getJSON("/reset/", 
 		  {'dataset'	: dataset,
@@ -66,6 +74,7 @@ var remote = (function ($,log) {
         datasets : datasets,
         slices   : slices,
         global   : global,
+        topo     : topo,
         local    : local,
         reload   : reload,
         save     : save,

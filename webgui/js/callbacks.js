@@ -75,6 +75,19 @@ var callbacks = (function ($,log,workcanvas,tools,sliceSelector,remote) {
 				  workcanvas.redraw();});
     }
 
+    function topo() {
+	log.append("starting topo");
+	workcanvas.loading();
+	remote.topo(tools.getProp('dataset'),
+		      tools.getProp('image'),
+		      tools.getProp('dilation'),
+		      function() {log.append("topo successful");
+				  workcanvas.src(tools.getDataset());
+				  workcanvas.redraw();},
+		      function() {log.append("error: no response");
+				  workcanvas.redraw();});
+    }
+
     function local_annotations(success) {
 	    if(!(tools.getStr('addition').length > 0 ||
 	         tools.getStr('auto').length > 0 ||
@@ -290,6 +303,7 @@ var callbacks = (function ($,log,workcanvas,tools,sliceSelector,remote) {
 	slider         : slider,
         zoom           : zoom,
         global         : global,
+        topo           : topo,
         local          : local,
         prop           : prop,
         copyr          : copyr,
