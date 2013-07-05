@@ -4,6 +4,9 @@ import numpy as np
 def read_labels(path):
     return np.genfromtxt(path,dtype='int16')
 
+def write_labels(labels,path):
+    np.savetxt(path,labels,fmt='%1d')
+
 def read_grey_as_rgb(imgin):
     im = scipy.misc.imread(imgin,flatten=True).astype('float32')
     im = np.divide(im,im.max())
