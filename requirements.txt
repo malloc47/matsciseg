@@ -12,3 +12,4 @@ matplotlib==1.1.1
 #wxPython-common==2.8.12.1
 scikit-image==0.8.2
 scikit-learn==0.13.1
+Cython==0.19.1
