@@ -24,8 +24,8 @@ def main(*args):
     plt.plot(range(0, len(magic_scissors)), magic_scissors, '-go', label='Intelligent Scissors')
     plt.plot(range(0, len(hybrid)), hybrid, '-bo', label='Intelligent Scissors + Propagation')
     plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.13))
-    plt.xlabel('Slice')
-    plt.ylabel('Number of Clicks')
+    plt.xlabel('Slice', fontsize=18)
+    plt.ylabel('Number of Clicks', fontsize=18)
     plt.savefig('interactive_eval.pdf')
 
     def to_minutes(t):
@@ -48,8 +48,8 @@ def main(*args):
     plt.plot(range(0, len(magic_scissors_time)), magic_scissors_time, '-go', label='Intelligent Scissors')
     plt.plot(range(0, len(hybrid_time)), hybrid_time, '-bo', label='Intelligent Scissors + Propagation')
     plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.13))
-    plt.xlabel('Slice')
-    plt.ylabel('Time (Minutes)')
+    plt.xlabel('Slice', fontsize=18)
+    plt.ylabel('Time (Minutes)', fontsize=18)
     plt.savefig('interactive_eval_time.pdf')
 
     iscores = map(f.read_score, [ 'seq1/interactive/image{0:04d}.score'.format(i) for i in range(91,101) ])
@@ -64,8 +64,8 @@ def main(*args):
         plt.plot(range(1, 11), [ i._asdict()[field] for i in iscores ], '-ro', label=ilabel)
         plt.plot(range(1, 11), [ i._asdict()[field] for i in pscores ], '-bo', label=plabel)
         plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.13))
-        plt.xlabel('Slice')
-        plt.ylabel(label)
+        plt.xlabel('Slice', fontsize=18)
+        plt.ylabel(label, fontsize=18)
         plt.savefig('interactive_'+field+'.pdf')
 
     precision_fig('f','F-measure')
@@ -119,8 +119,8 @@ def main(*args):
 
     # plt.plot(range(0, len(hybrid)), hybrid, '-bo', label='Intelligent Scissors + Propagation')
     plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.13))
-    plt.xlabel('Synthetic Slice Number')
-    plt.ylabel('Number of Clicks')
+    plt.xlabel('Synthetic Slice Number', fontsize=18)
+    plt.ylabel('Number of Clicks', fontsize=18)
     plt.savefig('interactive_eval_syn.pdf')
 
     plt.figure()
@@ -138,8 +138,8 @@ def main(*args):
     # plt.plot(range(0, len(hybrid_time)), hybrid_time, '-bo', label='Intelligent Scissors + Propagation')
 
     plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.13))
-    plt.xlabel('Slice')
-    plt.ylabel('Time (Minutes)')
+    plt.xlabel('Slice', fontsize=18)
+    plt.ylabel('Time (Minutes)', fontsize=18)
     plt.savefig('interactive_eval_time_syn.pdf')
 
 if __name__ == '__main__':
